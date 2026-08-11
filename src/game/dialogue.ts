@@ -270,7 +270,7 @@ function pick(lines: string[], seed: number): string {
 
 export function generateSuspectReply(ctx: ReplyContext): ReplyResult {
   const topic = detectTopic(ctx.message);
-  const script = SCRIPTS[ctx.suspectId] ?? SCRIPTS.fahad!;
+  const script = SCRIPTS[ctx.suspectId] ?? SCRIPTS['fahad']!;
   const weights = STRESS_WEIGHT[ctx.suspectId] ?? {};
   const lower = ctx.message;
 
@@ -300,7 +300,13 @@ export function generateSuspectReply(ctx: ReplyContext): ReplyResult {
   const unlock =
     evidenceTopic && !ctx.unlockedEvidence.includes(evidenceTopic) ? evidenceTopic : undefined;
 
-  return { text, stressDelta: Math.max(-6, Math.round(stressDelta)), unlock, topic };
+  const result: ReplyResult = {
+    text,
+    stressDelta: Math.max(-6, Math.round(stressDelta)),
+    topic,
+  };
+  if (unlock) result.unlock = unlock;
+  return result;
 }
 
 export const suggestedQuestions = [
