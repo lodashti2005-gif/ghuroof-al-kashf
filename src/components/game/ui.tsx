@@ -155,7 +155,7 @@ export function SuspectCard({
   href?: { to: string; params?: Record<string, string> };
 }) {
   const body = (
-    <div className="surface-panel cine-in grid grid-cols-[9.5rem_minmax(0,1fr)] gap-4 overflow-hidden p-0 transition-colors duration-300 hover:border-primary/45 sm:grid-cols-[13rem_minmax(0,1fr)]">
+    <div className="surface-panel cine-in grid grid-cols-[7.5rem_minmax(0,1fr)] gap-4 overflow-hidden p-0 transition-colors duration-300 hover:border-primary/45 sm:grid-cols-[10rem_minmax(0,1fr)]">
       <div className="relative h-full min-h-[13rem] shrink-0 overflow-hidden">
         <img
           src={suspect.portrait}
@@ -167,10 +167,10 @@ export function SuspectCard({
         />
         <div className="absolute inset-0 bg-gradient-to-l from-transparent to-card/85" />
       </div>
-      <div className="flex min-w-0 flex-col justify-between gap-3 py-5 pl-5 pr-1 sm:py-6">
+      <div className="flex min-w-0 flex-col justify-between gap-3 py-5 pl-4 pr-1 sm:py-6 sm:pl-5">
         <div className="min-w-0">
           <Eyebrow>{suspect.role}</Eyebrow>
-          <h3 className="mt-1 truncate text-xl font-bold sm:text-2xl">{suspect.name}</h3>
+          <h3 className="mt-1 text-xl font-bold leading-tight sm:text-2xl">{suspect.name}</h3>
           <p className="mt-0.5 font-mono text-xs text-muted-foreground">العمر {suspect.age}</p>
           <p className="mt-2.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
             {suspect.personality}
