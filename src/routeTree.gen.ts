@@ -14,6 +14,7 @@ import { Route as AccusationRouteImport } from './routes/accusation'
 import { Route as CaseRouteImport } from './routes/case'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as LobbyRouteImport } from './routes/lobby'
+import { Route as RevealRouteImport } from './routes/reveal'
 import { Route as InterrogationSuspectIdRouteImport } from './routes/interrogation.$suspectId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,6 +42,11 @@ const LobbyRoute = LobbyRouteImport.update({
   path: '/lobby',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RevealRoute = RevealRouteImport.update({
+  id: '/reveal',
+  path: '/reveal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InterrogationSuspectIdRoute = InterrogationSuspectIdRouteImport.update({
   id: '/interrogation/$suspectId',
   path: '/interrogation/$suspectId',
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/case': typeof CaseRoute
   '/dashboard': typeof DashboardRoute
   '/lobby': typeof LobbyRoute
+  '/reveal': typeof RevealRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/case': typeof CaseRoute
   '/dashboard': typeof DashboardRoute
   '/lobby': typeof LobbyRoute
+  '/reveal': typeof RevealRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
 }
 export interface FileRoutesById {
@@ -70,6 +78,7 @@ export interface FileRoutesById {
   '/case': typeof CaseRoute
   '/dashboard': typeof DashboardRoute
   '/lobby': typeof LobbyRoute
+  '/reveal': typeof RevealRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
 }
 export interface FileRouteTypes {
@@ -80,6 +89,7 @@ export interface FileRouteTypes {
     | '/case'
     | '/dashboard'
     | '/lobby'
+    | '/reveal'
     | '/interrogation/$suspectId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -88,6 +98,7 @@ export interface FileRouteTypes {
     | '/case'
     | '/dashboard'
     | '/lobby'
+    | '/reveal'
     | '/interrogation/$suspectId'
   id:
     | '__root__'
@@ -96,6 +107,7 @@ export interface FileRouteTypes {
     | '/case'
     | '/dashboard'
     | '/lobby'
+    | '/reveal'
     | '/interrogation/$suspectId'
   fileRoutesById: FileRoutesById
 }
@@ -105,6 +117,7 @@ export interface RootRouteChildren {
   CaseRoute: typeof CaseRoute
   DashboardRoute: typeof DashboardRoute
   LobbyRoute: typeof LobbyRoute
+  RevealRoute: typeof RevealRoute
   InterrogationSuspectIdRoute: typeof InterrogationSuspectIdRoute
 }
 
@@ -145,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LobbyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reveal': {
+      id: '/reveal'
+      path: '/reveal'
+      fullPath: '/reveal'
+      preLoaderRoute: typeof RevealRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/interrogation/$suspectId': {
       id: '/interrogation/$suspectId'
       path: '/interrogation/$suspectId'
@@ -161,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   CaseRoute: CaseRoute,
   DashboardRoute: DashboardRoute,
   LobbyRoute: LobbyRoute,
+  RevealRoute: RevealRoute,
   InterrogationSuspectIdRoute: InterrogationSuspectIdRoute,
 }
 export const routeTree = rootRouteImport
