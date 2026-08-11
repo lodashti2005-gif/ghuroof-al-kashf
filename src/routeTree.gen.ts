@@ -10,11 +10,23 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CaseRouteImport } from './routes/case'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as LobbyRouteImport } from './routes/lobby'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CaseRoute = CaseRouteImport.update({
+  id: '/case',
+  path: '/case',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LobbyRoute = LobbyRouteImport.update({
@@ -25,27 +37,35 @@ const LobbyRoute = LobbyRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/case': typeof CaseRoute
+  '/dashboard': typeof DashboardRoute
   '/lobby': typeof LobbyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/case': typeof CaseRoute
+  '/dashboard': typeof DashboardRoute
   '/lobby': typeof LobbyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/case': typeof CaseRoute
+  '/dashboard': typeof DashboardRoute
   '/lobby': typeof LobbyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/lobby'
+  fullPaths: '/' | '/case' | '/dashboard' | '/lobby'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/lobby'
-  id: '__root__' | '/' | '/lobby'
+  to: '/' | '/case' | '/dashboard' | '/lobby'
+  id: '__root__' | '/' | '/case' | '/dashboard' | '/lobby'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CaseRoute: typeof CaseRoute
+  DashboardRoute: typeof DashboardRoute
   LobbyRoute: typeof LobbyRoute
 }
 
@@ -56,6 +76,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/case': {
+      id: '/case'
+      path: '/case'
+      fullPath: '/case'
+      preLoaderRoute: typeof CaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lobby': {
@@ -70,6 +104,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CaseRoute: CaseRoute,
+  DashboardRoute: DashboardRoute,
   LobbyRoute: LobbyRoute,
 }
 export const routeTree = rootRouteImport
