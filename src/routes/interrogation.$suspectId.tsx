@@ -182,7 +182,9 @@ function InterrogationRoom() {
                 الجلسة مسجلة · {room?.players.length ?? 1} محققين متصلين
               </p>
             </div>
-            <CaseTag tone={locked ? "muted" : "danger"}>{locked ? "الجلسة مغلقة" : "جارية"}</CaseTag>
+            <CaseTag tone={locked ? "muted" : "danger"}>
+              {locked ? "الجلسة مغلقة" : "جارية"}
+            </CaseTag>
           </div>
 
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-5 py-5">

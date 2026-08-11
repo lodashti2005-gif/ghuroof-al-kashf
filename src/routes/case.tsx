@@ -54,7 +54,11 @@ function CaseIntro() {
             <p className="mt-1 font-mono text-sm text-muted-foreground">العمر {v.age} سنة</p>
 
             <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-              <Detail icon={<Clock className="size-3.5" />} label="وقت الوفاة" value={v.timeOfDeath} />
+              <Detail
+                icon={<Clock className="size-3.5" />}
+                label="وقت الوفاة"
+                value={v.timeOfDeath}
+              />
               <Detail icon={<MapPin className="size-3.5" />} label="الموقع" value={v.location} />
               <Detail label="سبب الوفاة" value={v.cause} />
               <Detail label="عدد المشتبهين" value="أربعة أشخاص" />
@@ -152,15 +156,7 @@ function CaseIntro() {
   );
 }
 
-function Detail({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: string;
-  icon?: React.ReactNode;
-}) {
+function Detail({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
     <div className="min-w-0 rounded-xl border border-border bg-surface-2 px-4 py-3">
       <dt className="flex items-center gap-1.5 text-eyebrow uppercase">

@@ -31,7 +31,13 @@ export function Eyebrow({ children, className }: { children: ReactNode; classNam
   return <p className={cn("text-eyebrow uppercase", className)}>{children}</p>;
 }
 
-export function CaseTag({ children, tone = "muted" }: { children: ReactNode; tone?: "muted" | "danger" | "evidence" }) {
+export function CaseTag({
+  children,
+  tone = "muted",
+}: {
+  children: ReactNode;
+  tone?: "muted" | "danger" | "evidence";
+}) {
   return (
     <span
       className={cn(
@@ -47,7 +53,8 @@ export function CaseTag({ children, tone = "muted" }: { children: ReactNode; ton
 }
 
 export function StressMeter({ value, compact = false }: { value: number; compact?: boolean }) {
-  const label = value >= 80 ? "على حد الانفجار" : value >= 60 ? "متوتر بشدة" : value >= 35 ? "متوتر" : "مرتاح";
+  const label =
+    value >= 80 ? "على حد الانفجار" : value >= 60 ? "متوتر بشدة" : value >= 35 ? "متوتر" : "مرتاح";
   return (
     <div className="w-full">
       <div className="mb-1.5 flex items-center justify-between text-xs">
@@ -56,7 +63,12 @@ export function StressMeter({ value, compact = false }: { value: number; compact
           {value} <span className="text-muted-foreground">/ 100</span>
         </span>
       </div>
-      <div className={cn("relative overflow-hidden rounded-full bg-secondary", compact ? "h-1.5" : "h-2.5")}>
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-full bg-secondary",
+          compact ? "h-1.5" : "h-2.5",
+        )}
+      >
         <div
           className="h-full rounded-full transition-all duration-700 ease-out"
           style={{

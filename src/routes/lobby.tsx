@@ -54,8 +54,7 @@ function Lobby() {
             </button>
           </div>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            عطِ أصحابك هالرمز عشان يدخلون نفس الغرفة. كل واحد يختار اسمه، وبعدين المضيف يبدأ
-            القضية.
+            عطِ أصحابك هالرمز عشان يدخلون نفس الغرفة. كل واحد يختار اسمه، وبعدين المضيف يبدأ القضية.
           </p>
 
           <div className="mt-6 rounded-xl border border-border bg-surface-2 p-4">

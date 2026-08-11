@@ -20,7 +20,8 @@ export const Route = createFileRoute("/dashboard")({
       { title: "لوحة التحقيق — غرفة التحقيق" },
       {
         name: "description",
-        content: "لوحة القضية: الضحية، المشتبهين، الأدلة المكتشفة، الملاحظات المشتركة وتقدم التحقيق.",
+        content:
+          "لوحة القضية: الضحية، المشتبهين، الأدلة المكتشفة، الملاحظات المشتركة وتقدم التحقيق.",
       },
       { property: "og:title", content: "لوحة التحقيق" },
       { property: "og:description", content: "تابع الأدلة والملاحظات وتقدم فريقك بالقضية." },
@@ -38,7 +39,9 @@ function Dashboard() {
   const interrogated = suspects.filter((s) => room?.suspects[s.id]?.finished).length;
   const progress = Math.min(
     100,
-    Math.round(((unlocked.length / evidence.length) * 0.7 + (interrogated / suspects.length) * 0.3) * 100),
+    Math.round(
+      ((unlocked.length / evidence.length) * 0.7 + (interrogated / suspects.length) * 0.3) * 100,
+    ),
   );
   const detail = evidence.find((e) => e.id === openEvidence);
 
@@ -64,7 +67,10 @@ function Dashboard() {
                 </p>
               </div>
             </div>
-            <ProgressRing value={progress} label={`${unlocked.length} من ${evidence.length} أدلة · ${interrogated} استجوابات مغلقة`} />
+            <ProgressRing
+              value={progress}
+              label={`${unlocked.length} من ${evidence.length} أدلة · ${interrogated} استجوابات مغلقة`}
+            />
           </Panel>
 
           <section>
@@ -128,7 +134,11 @@ function Dashboard() {
                 >
                   <span className="size-1.5 shrink-0 rounded-full bg-evidence" />
                   <span className="truncate">{p.name}</span>
-                  {p.isHost && <span className="ms-auto shrink-0 font-mono text-[0.65rem] text-primary">HOST</span>}
+                  {p.isHost && (
+                    <span className="ms-auto shrink-0 font-mono text-[0.65rem] text-primary">
+                      HOST
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -161,18 +171,27 @@ function Dashboard() {
           className="fixed inset-0 z-50 grid place-items-center bg-background/85 p-4 backdrop-blur-sm"
           onClick={() => setOpenEvidence(null)}
         >
-          <div className="surface-panel cine-in w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="surface-panel cine-in w-full max-w-lg p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between gap-3">
               <span className="font-mono text-xs text-muted-foreground">{detail.number}</span>
               <CaseTag tone="evidence">مكتشف</CaseTag>
             </div>
             <h3 className="mt-2 text-2xl font-bold">{detail.title}</h3>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{detail.description}</p>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              {detail.description}
+            </p>
             <div className="mt-4 rounded-xl border border-evidence/25 bg-evidence/8 p-4">
               <Eyebrow>تحليل المختبر</Eyebrow>
               <p className="mt-1.5 text-sm leading-relaxed">{detail.detail}</p>
             </div>
-            <ActionButton variant="outline" className="mt-5 w-full" onClick={() => setOpenEvidence(null)}>
+            <ActionButton
+              variant="outline"
+              className="mt-5 w-full"
+              onClick={() => setOpenEvidence(null)}
+            >
               إغلاق
             </ActionButton>
           </div>
@@ -213,7 +232,12 @@ function NotesPanel() {
           placeholder="اكتب ملاحظة عن مشتبه أو دليل..."
           className="w-full resize-none rounded-xl border border-input bg-surface-2 px-3.5 py-3 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-primary/60"
         />
-        <ActionButton type="submit" variant="outline" className="mt-2 w-full py-2.5" disabled={!text.trim()}>
+        <ActionButton
+          type="submit"
+          variant="outline"
+          className="mt-2 w-full py-2.5"
+          disabled={!text.trim()}
+        >
           احفظ الملاحظة
         </ActionButton>
       </form>
@@ -227,7 +251,9 @@ function NotesPanel() {
         {room?.notes.map((n) => (
           <li key={n.id} className="rounded-lg border border-border bg-surface-2 px-3 py-2.5">
             <div className="flex items-center justify-between gap-2">
-              <span className="truncate font-mono text-[0.65rem] text-muted-foreground">{n.author}</span>
+              <span className="truncate font-mono text-[0.65rem] text-muted-foreground">
+                {n.author}
+              </span>
               <button
                 type="button"
                 onClick={() => actions.removeNote(n.id)}

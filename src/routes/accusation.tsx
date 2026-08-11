@@ -54,7 +54,9 @@ function Accusation() {
               disabled={!!myVote}
               onClick={() => setSelected(s.id)}
               className={`surface-panel cine-in grid grid-cols-[6.5rem_minmax(0,1fr)] gap-4 overflow-hidden p-0 text-right transition-all duration-300 sm:grid-cols-[8rem_minmax(0,1fr)] ${
-                active ? "border-primary/60 shadow-[var(--shadow-blood)]" : "hover:border-primary/35"
+                active
+                  ? "border-primary/60 shadow-[var(--shadow-blood)]"
+                  : "hover:border-primary/35"
               } disabled:cursor-default`}
             >
               <div className="relative min-h-[9rem]">
