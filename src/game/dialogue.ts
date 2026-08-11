@@ -264,13 +264,13 @@ const STRESS_WEIGHT: Record<string, Partial<Record<Topic, number>>> = {
   dana: { accuse: 6, coffee: 4, watch: 4, default: 1 },
 };
 
-function pick(lines: string[], seed: number) {
-  return lines[seed % lines.length];
+function pick(lines: string[], seed: number): string {
+  return lines[seed % lines.length] ?? lines[0] ?? "...";
 }
 
 export function generateSuspectReply(ctx: ReplyContext): ReplyResult {
   const topic = detectTopic(ctx.message);
-  const script = SCRIPTS[ctx.suspectId];
+  const script = SCRIPTS[ctx.suspectId] ?? SCRIPTS.fahad!;
   const weights = STRESS_WEIGHT[ctx.suspectId] ?? {};
   const lower = ctx.message;
 
