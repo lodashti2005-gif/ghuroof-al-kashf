@@ -6,6 +6,7 @@ import { ActionButton, GameShell } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel, StressMeter } from "@/components/game/ui";
 import { INTERROGATION_SECONDS, getEvidence, getSuspect } from "@/game/case-data";
 import { generateSuspectReply, suggestedQuestions } from "@/game/dialogue";
+import * as store from "@/game/room-store";
 import { formatClock, useRoom } from "@/game/use-room";
 
 export const Route = createFileRoute("/interrogation/$suspectId")({
@@ -34,22 +35,19 @@ function InterrogationRoom() {
   const [unlockToast, setUnlockToast] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const askedTopics = useMemo(
-    () => (runtime?.transcript ?? []).filter((m) => m.role === "investigator").map((m) => m.text),
-    [runtime?.transcript],
-  );
+  const transcript = useMemo(() => runtime?.transcript ?? [], [runtime?.transcript]);
 
-  // Countdown — the host-independent local clock. A Supabase-backed room would
-  // read a server deadline instead.
+  // Countdown — each suspect has its own independent 5 minutes. The interval is
+  // keyed on the suspect only, so sending a message never restarts or resets it.
   useEffect(() => {
-    if (!runtime || runtime.finished || runtime.timeLeft <= 0) return;
     const id = setInterval(() => {
-      const current = room?.suspects[suspectId];
-      if (!current || current.finished) return;
+      const current = store.getSnapshot()?.suspects[suspectId];
+      if (!current || current.finished || current.timeLeft <= 0) return;
       actions.setTimeLeft(suspectId, current.timeLeft - 1);
     }, 1000);
     return () => clearInterval(id);
-  }, [runtime, room, suspectId, actions]);
+  }, [suspectId, actions]);
+
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -76,7 +74,7 @@ function InterrogationRoom() {
       suspectId,
       message: text,
       stress: runtime?.stress ?? 0,
-      askedTopics,
+      transcript,
       unlockedEvidence: room?.unlockedEvidence ?? [],
     });
 
@@ -271,10 +269,12 @@ function InterrogationRoom() {
         <div className="fixed bottom-6 right-1/2 z-50 translate-x-1/2 sm:right-6 sm:translate-x-0">
           <div className="cine-in flex items-center gap-3 rounded-xl border border-evidence/40 bg-card px-4 py-3 shadow-[var(--shadow-noir)]">
             <Unlock className="size-4 shrink-0 text-evidence" />
-            <p className="text-sm">
-              دليل جديد انفتح: <span className="font-bold">{unlockToast}</span>
-            </p>
+            <div className="min-w-0">
+              <p className="text-sm font-bold">🔎 تم اكتشاف دليل جديد</p>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">{unlockToast}</p>
+            </div>
           </div>
+
         </div>
       )}
     </GameShell>

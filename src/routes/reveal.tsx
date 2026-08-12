@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { RotateCcw, Skull } from "lucide-react";
+import { Fingerprint, RotateCcw, Skull } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
@@ -19,16 +19,23 @@ export const Route = createFileRoute("/reveal")({
   component: Reveal,
 });
 
+/** Cinematic stages: 0 title · 1 killer · 2 decisive clue · 3 timeline · 4 lies · 5 motive */
+const STAGE_DELAYS = [900, 2400, 3900, 5400, 6900];
+
 function Reveal() {
-  const { room, isHost, actions } = useRoom();
+  const { room, me, isHost, actions } = useRoom();
   const navigate = useNavigate();
   const [stage, setStage] = useState(0);
   const killer = getSuspect(killerId)!;
 
   useEffect(() => {
-    const timers = [600, 1800, 3000].map((ms, i) => setTimeout(() => setStage(i + 1), ms));
+    const timers = STAGE_DELAYS.map((ms, i) => setTimeout(() => setStage(i + 1), ms));
     return () => timers.forEach(clearTimeout);
   }, []);
+
+  const myVote = me ? room?.votes[me.id] : undefined;
+  const mySolved = myVote === killerId;
+  const myPick = myVote ? getSuspect(myVote) : undefined;
 
   const tally = suspects
     .map((s) => ({
@@ -39,9 +46,47 @@ function Reveal() {
   const groupPick = tally[0];
   const groupCorrect = groupPick?.count ? groupPick.id === killerId : false;
 
+  const fade = (from: number) =>
+    `transition-all duration-700 ${stage >= from ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}`;
+
   return (
     <GameShell title="كشف الحقيقة" right={<LeaveRoomButton />}>
-      <section className="cine-in surface-panel overflow-hidden p-0">
+      {/* Stage 0 — headline only */}
+      <section className="cine-in mb-5 text-center">
+        <div className="inline-flex items-center gap-2 rounded-full file-tape px-3.5 py-1.5">
+          <Skull className="size-3.5" />
+          <span className="font-display text-xs">ملف القضية انسدل</span>
+        </div>
+        <h1 className="mt-4 text-4xl font-extrabold sm:text-5xl">كشف الحقيقة</h1>
+        <p className="mt-2 text-sm text-muted-foreground">الحقيقة ما تنقال... تنكشف.</p>
+      </section>
+
+      {/* Result of the accusation */}
+      <Panel className={`mb-5 ${fade(1)}`}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <Eyebrow>نتيجة اتهامك</Eyebrow>
+            <h2 className={`mt-1.5 text-2xl font-extrabold ${mySolved ? "" : "text-primary"}`}>
+              {myVote ? (mySolved ? "تم حل القضية" : "اتهام غير صحيح") : "ما ثبتت اتهام"}
+            </h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              {myVote
+                ? mySolved
+                  ? "قرأت التناقضات صح وربطت الأدلة بالشخص الصحيح."
+                  : `اتهمت ${myPick?.name ?? "شخص ثاني"}، وهو كذب بشي بس ما قتل بدر.`
+                : "القضية انكشفت بدون تصويت منك."}
+            </p>
+          </div>
+          <CaseTag tone={mySolved ? "muted" : "danger"}>
+            {groupPick?.count
+              ? `الفريق اتهم ${groupPick.name} · ${groupPick.count} صوت${groupCorrect ? " · إصابة" : " · خطأ"}`
+              : "ما في تصويت جماعي"}
+          </CaseTag>
+        </div>
+      </Panel>
+
+      {/* Stage 1 — killer name + portrait */}
+      <section className={`surface-panel overflow-hidden p-0 ${fade(1)}`}>
         <div className="grid md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
           <div className="relative min-h-[18rem] md:min-h-[24rem]">
             <img
@@ -50,7 +95,7 @@ function Reveal() {
               width={912}
               height={1104}
               className={`absolute inset-0 size-full object-cover object-top transition-all duration-1000 ${
-                stage >= 1 ? "grayscale-0 opacity-100" : "grayscale opacity-40"
+                stage >= 1 ? "grayscale-0 opacity-100" : "grayscale opacity-30"
               }`}
             />
             <div
@@ -60,44 +105,36 @@ function Reveal() {
             />
           </div>
           <div className="p-6 sm:p-8">
-            <Eyebrow>نتيجة الفريق</Eyebrow>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              {groupPick?.count
-                ? `الفريق اتهم ${groupPick.name} بـ ${groupPick.count} صوت`
-                : "ما في تصويت مسجل"}
-              {groupPick?.count ? (groupCorrect ? " — إصابة صحيحة." : " — اتهام خاطئ.") : ""}
-            </p>
-
-            <div className="mt-5 inline-flex items-center gap-2 rounded-full file-tape px-3.5 py-1.5">
-              <Skull className="size-3.5" />
-              <span className="font-display text-xs">القاتل</span>
-            </div>
-            <h1
+            <Eyebrow>القاتل</Eyebrow>
+            <h2
               className={`mt-3 text-4xl font-extrabold transition-all duration-700 sm:text-5xl ${
                 stage >= 1 ? "opacity-100 blur-0" : "opacity-0 blur-sm"
               }`}
             >
               {solution.killer}
-            </h1>
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {killer.role} · {killer.age} سنة
+            </p>
 
-            <div
-              className={`mt-6 transition-all duration-700 ${stage >= 2 ? "opacity-100" : "opacity-0"}`}
-            >
-              <Eyebrow>الدافع</Eyebrow>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-                {solution.motive}
+            {/* Stage 2 — decisive evidence */}
+            <div className={`mt-7 rounded-xl border border-evidence/40 bg-surface-2 p-4 ${fade(2)}`}>
+              <div className="flex items-center gap-2">
+                <Fingerprint className="size-4 text-evidence" />
+                <Eyebrow>الدليل الحاسم</Eyebrow>
+              </div>
+              <h3 className="mt-2 text-base font-bold">{solution.decisive.title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                {solution.decisive.text}
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <div
-        className={`mt-5 grid gap-5 transition-all duration-700 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] ${
-          stage >= 3 ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        <Panel>
+      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+        {/* Stage 3 — timeline */}
+        <Panel className={fade(3)}>
           <Eyebrow>الخط الزمني</Eyebrow>
           <h2 className="mt-1.5 text-xl font-bold">شنو صار بالضبط</h2>
           <ol className="mt-5 space-y-4 border-e border-border pe-5">
@@ -114,8 +151,9 @@ function Reveal() {
         </Panel>
 
         <div className="min-w-0 space-y-5">
-          <Panel>
-            <Eyebrow>الأدلة اللي أثبتت الجريمة</Eyebrow>
+          {/* Stage 4 — contradictions that exposed the lie */}
+          <Panel className={fade(4)}>
+            <Eyebrow>التناقضات اللي كشفت كذبه</Eyebrow>
             <ul className="mt-4 space-y-3">
               {solution.provingClues.map((c, i) => (
                 <li key={i} className="flex gap-3 text-sm leading-relaxed text-muted-foreground">
@@ -128,7 +166,7 @@ function Reveal() {
             </ul>
           </Panel>
 
-          <Panel>
+          <Panel className={fade(4)}>
             <Eyebrow>منو كذب وليش</Eyebrow>
             <ul className="mt-4 space-y-3">
               {solution.liars.map((l) => (
@@ -144,6 +182,14 @@ function Reveal() {
                 </li>
               ))}
             </ul>
+          </Panel>
+
+          {/* Stage 5 — motive */}
+          <Panel className={fade(5)}>
+            <Eyebrow>سبب الجريمة</Eyebrow>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
+              {solution.motive}
+            </p>
           </Panel>
         </div>
       </div>
