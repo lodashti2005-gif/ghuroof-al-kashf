@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { EvidenceBoard } from "@/components/game/evidence-board";
 import { ActionButton, GameShell } from "@/components/game/shell";
 import { SuspectAvatar } from "@/components/game/suspect-avatar";
 import {
@@ -45,6 +46,9 @@ import { askSuspect } from "@/lib/interrogation.functions";
 
 
 export const Route = createFileRoute("/interrogation/$suspectId")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    confront: typeof search.confront === "string" ? search.confront : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "غرفة الاستجواب — غرفة التحقيق" },
@@ -64,6 +68,7 @@ export const Route = createFileRoute("/interrogation/$suspectId")({
 
 function InterrogationRoom() {
   const { suspectId } = Route.useParams();
+  const { confront: confrontParam } = Route.useSearch();
   const { room, me, actions } = useRoom();
   const navigate = useNavigate();
   const ask = useServerFn(askSuspect);
@@ -446,242 +451,29 @@ function InterrogationRoom() {
                     <X className="size-4" />
                   </button>
                 </div>
-                {unlocked.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    ما عندك أدلة مكتشفة بعد. اسأل أكثر عشان تفتح ملفات الأدلة.
-                  </p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {unlocked.map((e) => (
-                      <button
-                        key={e.id}
-                        type="button"
-                        disabled={locked || busy}
-                        onClick={() => confront(e.id)}
-                        className="rounded-lg border border-evidence/40 bg-card px-3 py-2 text-right text-xs text-foreground transition-colors hover:border-evidence disabled:opacity-40"
-                      >
-                        <span className="font-mono text-[0.65rem] text-muted-foreground">
-                          {e.number}
-                        </span>
-                        <span className="mr-2">{e.title}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
-              <button
-                type="button"
-                disabled={locked || busy}
-                onClick={() => setConfrontOpen((v) => !v)}
-                className="shrink-0 rounded-full border border-evidence/60 bg-evidence/15 px-3.5 py-1.5 text-xs font-bold text-evidence transition-colors hover:bg-evidence/25 disabled:opacity-40"
-              >
-                <FileSearch className="ml-1 inline size-3.5" /> واجهة بدليل
-              </button>
-              {suggestedQuestions.map((q) => (
-                <button
-                  key={q}
-                  type="button"
-                  disabled={locked || busy}
-                  onClick={() => void send(q)}
-                  className="shrink-0 rounded-full border border-border bg-secondary px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground disabled:opacity-40"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-            <form
-              className="flex items-end gap-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                void send(draft);
-              }}
-            >
-              {voice.micSupported && (
-                <button
-                  type="button"
-                  disabled={locked || busy}
-                  onClick={voice.listening ? voice.stopListening : voice.startListening}
-                  aria-label={voice.listening ? "إيقاف التسجيل" : "تسجيل صوتي"}
-                  className={`grid size-12 shrink-0 place-items-center rounded-xl border transition-colors disabled:opacity-40 ${
-                    voice.listening
-                      ? "border-primary/60 bg-primary/15 text-primary"
-                      : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {voice.listening ? <MicOff className="size-4" /> : <Mic className="size-4" />}
-                </button>
-              )}
-              <textarea
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    void send(draft);
-                  }
-                }}
-                rows={1}
-                disabled={locked || busy}
-                placeholder={
-                  locked
-                    ? "انتهى وقت الاستجواب"
-                    : busy
-                      ? "ينتظر رده..."
-                      : voice.listening
-                      ? "نسمعك..."
-                      : "اكتب سؤالك بأي صيغة..."
-                }
-                className="min-h-12 flex-1 resize-none rounded-xl border border-input bg-surface-2 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-primary/60 disabled:opacity-50"
-              />
-              <button
-                type="submit"
-                disabled={locked || !draft.trim() || typing}
-                aria-label="إرسال"
-                className="grid size-12 shrink-0 place-items-center rounded-xl file-tape disabled:opacity-40"
-              >
-                <Send className="size-4" />
-              </button>
-            </form>
-          </div>
-        </Panel>
-      </div>
-
-      {suspectsOpen && (
-        <div
-          className="fixed inset-0 z-50 grid place-items-center bg-background/85 p-4 backdrop-blur-sm"
-          onClick={() => setSuspectsOpen(false)}
-        >
-          <div
-            className="surface-panel cine-in max-h-[85vh] w-full max-w-2xl overflow-y-auto p-5 sm:p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <Eyebrow>تنقل بين المشتبه فيهم</Eyebrow>
-                <h3 className="mt-1 text-xl font-bold">المشتبه فيهم</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSuspectsOpen(false)}
-                aria-label="إغلاق"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="size-5" />
-              </button>
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              وقت كل واحد ينقص بس وأنت داخل استجوابه، ولمن ترجع له يكمل من نفس الثانية.
-            </p>
-            <div className="mt-4 grid gap-3">
-              {allSuspects.map((s) => {
-                const rt = room?.suspects[s.id];
-                const left = rt?.timeLeft ?? INTERROGATION_SECONDS;
-                const done = rt?.finished || left <= 0;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => switchTo(s.id)}
-                    className={`flex w-full items-center gap-3 rounded-xl border p-3 text-right transition-colors ${
-                      s.id === suspectId
-                        ? "border-primary/50 bg-primary/10"
-                        : "border-border bg-surface-2 hover:border-primary/40"
-                    }`}
-                  >
-                    <img
-                      src={s.portrait}
-                      alt={`صورة ${s.name}`}
-                      loading="lazy"
-                      className="size-14 shrink-0 rounded-lg border border-border object-cover object-top grayscale-[35%]"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-sm font-bold">{s.name}</p>
-                        <span
-                          dir="ltr"
-                          className={`font-mono text-xs ${
-                            done ? "text-muted-foreground" : left < 60 ? "text-primary" : "text-foreground"
-                          }`}
-                        >
-                          {formatClock(left)}
-                        </span>
-                      </div>
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">{s.role}</p>
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <CaseTag tone={done ? "muted" : "danger"}>
-                          {done ? "انتهى وقته" : s.id === suspectId ? "جلسة جارية" : "متاح"}
-                        </CaseTag>
-                        <span className="font-mono text-[0.65rem] text-muted-foreground">
-                          توتر {rt?.stress ?? 0} / 100
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            <ActionButton
-              variant="outline"
-              className="mt-5 w-full"
-              onClick={() => navigate({ to: "/dashboard" })}
-            >
-              لوحة التحقيق <ArrowLeft className="size-4" />
-            </ActionButton>
-          </div>
-        </div>
-      )}
-
-      {boardOpen && (
-        <div
-          className="fixed inset-0 z-50 grid place-items-center bg-background/85 p-4 backdrop-blur-sm"
-          onClick={() => setBoardOpen(false)}
-        >
-          <div
-            className="surface-panel cine-in max-h-[85vh] w-full max-w-3xl overflow-y-auto p-5 sm:p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <Eyebrow>الأدلة المكتشفة</Eyebrow>
-                <h3 className="mt-1 text-xl font-bold">لوحة الأدلة</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setBoardOpen(false)}
-                aria-label="إغلاق"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="size-5" />
-              </button>
-            </div>
-            {unlocked.length === 0 ? (
-              <p className="mt-4 rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-                ما عندكم أدلة مكتشفة بعد. اسألوا أكثر عشان تفتحون ملفات الأدلة.
-              </p>
-            ) : (
-              <>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  اختر دليلاً عشان تواجه {suspect.name} فيه.
-                </p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {unlocked.map((item) => (
-                    <EvidenceCard
-                      key={item.id}
-                      item={item}
-                      unlocked
-                      selectLabel="واجهه بدليل"
-                      onSelect={() => {
-                        if (locked || busy) return;
-                        confront(item.id);
-                      }}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
+              اختر دليلاً وبعدها «استخدم في الاستجواب» عشان تواجه فيه أي مشتبه.
+            </p>
+            <div className="mt-4">
+              <EvidenceBoard
+                unlockedIds={room?.unlockedEvidence ?? []}
+                compact
+                onConfront={(evidenceId, targetId) => {
+                  setBoardOpen(false);
+                  if (targetId === suspectId) {
+                    if (locked || busy) return;
+                    confront(evidenceId);
+                    return;
+                  }
+                  voice.stopSpeaking();
+                  navigate({
+                    to: "/interrogation/$suspectId",
+                    params: { suspectId: targetId },
+                    search: { confront: evidenceId },
+                  });
+                }}
+              />
+            </div>
           </div>
         </div>
       )}
