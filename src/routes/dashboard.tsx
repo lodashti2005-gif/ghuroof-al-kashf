@@ -1,5 +1,5 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Gavel, NotebookPen, Trash2, Users } from "lucide-react";
+import { Gavel, NotebookPen, Search, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
@@ -71,6 +71,19 @@ function Dashboard() {
               value={progress}
               label={`${unlocked.length} من ${evidence.length} أدلة · ${interrogated} استجوابات مغلقة`}
             />
+          </Panel>
+
+          <Panel className="cine-in flex flex-wrap items-center justify-between gap-4">
+            <div className="min-w-0">
+              <Eyebrow>معاينة الموقع</Eyebrow>
+              <h2 className="mt-1 text-lg font-bold">مسرح الجريمة</h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                افحصوا الشاليه بأنفسكم ودققوا بالتفاصيل — الأدلة اللي تكتشفونها تنفتح باللوحة.
+              </p>
+            </div>
+            <ActionButton onClick={() => navigate({ to: "/scene" })}>
+              <Search className="size-4" /> ادخل مسرح الجريمة
+            </ActionButton>
           </Panel>
 
           <section>

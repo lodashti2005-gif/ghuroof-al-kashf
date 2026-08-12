@@ -7,6 +7,7 @@ import {
   Mic,
   MicOff,
   RotateCcw,
+  Search,
   Send,
   Square,
   Timer,
