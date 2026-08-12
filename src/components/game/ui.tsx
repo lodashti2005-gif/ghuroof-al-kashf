@@ -158,6 +158,7 @@ function EvidenceLightbox({ item, onClose }: { item: EvidenceItem; onClose: () =
             <span className="font-mono text-xs text-muted-foreground">{item.number}</span>
             <h3 className="mt-1 text-lg font-bold">{item.title}</h3>
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{item.detail}</p>
+            <p className="mt-2 text-xs text-muted-foreground">مكان العثور: {item.foundAt}</p>
           </div>
           <button
             type="button"
@@ -243,6 +244,7 @@ export function EvidenceCard({
           <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
             {item.description}
           </p>
+          <p className="mt-1.5 text-xs text-muted-foreground/85">مكان العثور: {item.foundAt}</p>
           {onSelect && (
             <button
               type="button"
