@@ -21,7 +21,7 @@ import { ActionButton, GameShell } from "@/components/game/shell";
 import { SuspectAvatar } from "@/components/game/suspect-avatar";
 import { CaseTag, Eyebrow, Panel, StressMeter } from "@/components/game/ui";
 import { INTERROGATION_SECONDS, evidence as allEvidence, getEvidence, getSuspect } from "@/game/case-data";
-import { generateSuspectReply, suggestedQuestions } from "@/game/dialogue";
+import { suggestedQuestions } from "@/game/dialogue";
 import * as store from "@/game/room-store";
 import { formatClock, useRoom } from "@/game/use-room";
 import { useVoice } from "@/game/use-voice";
