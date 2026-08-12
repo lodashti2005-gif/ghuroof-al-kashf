@@ -45,9 +45,11 @@ import { askSuspect } from "@/lib/interrogation.functions";
 
 
 export const Route = createFileRoute("/interrogation/$suspectId")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    confront: typeof search.confront === "string" ? search.confront : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { confront?: string } => {
+    const raw = search["confront"];
+    return typeof raw === "string" && raw ? { confront: raw } : {};
+  },
+
   head: () => ({
     meta: [
       { title: "غرفة الاستجواب — غرفة التحقيق" },
