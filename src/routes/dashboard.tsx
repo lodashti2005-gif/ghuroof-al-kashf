@@ -2,10 +2,10 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Gavel, NotebookPen, Search, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 
+import { EvidenceBoard } from "@/components/game/evidence-board";
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
 import {
   CaseTag,
-  EvidenceCard,
   Eyebrow,
   Panel,
   ProgressRing,
@@ -33,7 +33,6 @@ export const Route = createFileRoute("/dashboard")({
 function Dashboard() {
   const { room, me, isHost, actions } = useRoom();
   const navigate = useNavigate();
-  const [openEvidence, setOpenEvidence] = useState<string | null>(null);
 
   const unlocked = room?.unlockedEvidence ?? [];
   const interrogated = suspects.filter((s) => room?.suspects[s.id]?.finished).length;
@@ -43,7 +42,6 @@ function Dashboard() {
       ((unlocked.length / evidence.length) * 0.7 + (interrogated / suspects.length) * 0.3) * 100,
     ),
   );
-  const detail = evidence.find((e) => e.id === openEvidence);
 
   return (
     <GameShell title="لوحة التحقيق" right={<LeaveRoomButton />}>
@@ -180,37 +178,6 @@ function Dashboard() {
         </aside>
       </div>
 
-      {detail && (
-        <div
-          className="fixed inset-0 z-50 grid place-items-center bg-background/85 p-4 backdrop-blur-sm"
-          onClick={() => setOpenEvidence(null)}
-        >
-          <div
-            className="surface-panel cine-in w-full max-w-lg p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <span className="font-mono text-xs text-muted-foreground">{detail.number}</span>
-              <CaseTag tone="evidence">مكتشف</CaseTag>
-            </div>
-            <h3 className="mt-2 text-2xl font-bold">{detail.title}</h3>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              {detail.description}
-            </p>
-            <div className="mt-4 rounded-xl border border-evidence/25 bg-evidence/8 p-4">
-              <Eyebrow>تحليل المختبر</Eyebrow>
-              <p className="mt-1.5 text-sm leading-relaxed">{detail.detail}</p>
-            </div>
-            <ActionButton
-              variant="outline"
-              className="mt-5 w-full"
-              onClick={() => setOpenEvidence(null)}
-            >
-              إغلاق
-            </ActionButton>
-          </div>
-        </div>
-      )}
     </GameShell>
   );
 }
