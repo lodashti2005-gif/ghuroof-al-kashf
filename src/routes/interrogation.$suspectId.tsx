@@ -216,8 +216,21 @@ function InterrogationRoom() {
   const confront = (id: string) => {
     const item = getEvidence(id);
     if (!item) return;
-    void send(`أواجهك بدليل — ${item.title}: ${item.description} شنو ردك؟`, id);
+    void send(`أواجهك بدليل — ${item.title}: ${item.description} شنو ردك؟`, id, {
+      displayText: item.title,
+    });
   };
+
+  /** Switching suspects only navigates — the timer interval unmounts here and the
+   * session (transcript, stress, evidence confrontations, remaining time) stays
+   * stored in the room, so returning resumes from the exact same second. */
+  const switchTo = (id: string) => {
+    setSuspectsOpen(false);
+    if (id === suspectId) return;
+    voice.stopSpeaking();
+    navigate({ to: "/interrogation/$suspectId", params: { suspectId: id } });
+  };
+
 
   return (
     <GameShell
