@@ -15,6 +15,7 @@ import { useState, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import { evidence as allEvidence } from "@/game/case-data";
+import { SceneCrop } from "@/components/game/scene-crop";
 import type { EvidenceItem, Suspect } from "@/game/types";
 
 export function Panel({
@@ -108,14 +109,7 @@ export function EvidenceConfrontCard({ item }: { item: EvidenceItem }) {
   return (
     <div className="flex items-start gap-3 rounded-2xl rounded-tr-sm border border-evidence/45 bg-evidence/8 px-3.5 py-3">
       <span className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-evidence/35">
-        <img
-          src={item.photo}
-          alt={item.title}
-          loading="lazy"
-          width={1024}
-          height={768}
-          className="absolute inset-0 size-full object-cover"
-        />
+        <SceneCrop crop={item.crop} alt={item.title} className="absolute inset-0 size-full" />
       </span>
       <div className="min-w-0">
         <div className="flex items-center gap-2">
@@ -146,12 +140,11 @@ function EvidenceLightbox({ item, onClose }: { item: EvidenceItem; onClose: () =
         onClick={(e) => e.stopPropagation()}
         className="cine-in surface-panel w-full max-w-3xl overflow-hidden p-0"
       >
-        <img
-          src={item.photo}
+        <SceneCrop
+          crop={item.crop}
           alt={item.title}
-          width={1024}
-          height={768}
-          className="max-h-[70vh] w-full object-contain bg-black"
+          detail
+          className="aspect-[4/3] max-h-[70vh] w-full"
         />
         <div className="flex items-start justify-between gap-3 p-4">
           <div className="min-w-0">
@@ -220,13 +213,10 @@ export function EvidenceCard({
           aria-label={`تكبير صورة ${item.title}`}
           className="relative h-40 w-full overflow-hidden rounded-xl border border-evidence/25"
         >
-          <img
-            src={item.photo}
+          <SceneCrop
+            crop={item.crop}
             alt={item.title}
-            loading="lazy"
-            width={1024}
-            height={768}
-            className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+            className="absolute inset-0 size-full transition-transform duration-700 group-hover:scale-[1.04]"
           />
           <span className="absolute inset-0 bg-gradient-to-t from-card/85 via-transparent to-transparent" />
           <span className="absolute bottom-2 left-2 grid size-8 place-items-center rounded-lg border border-evidence/40 bg-card/80 text-evidence">

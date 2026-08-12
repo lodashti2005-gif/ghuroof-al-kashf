@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Fingerprint, Search, Unlock, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { SceneCrop } from "@/components/game/scene-crop";
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
 import { CaseTag, EvidenceCard, Eyebrow, Panel } from "@/components/game/ui";
 import { caseFile, evidence, getEvidence } from "@/game/case-data";
@@ -141,12 +142,11 @@ function SceneRoute() {
             className="surface-panel cine-in w-full max-w-2xl overflow-hidden p-0"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={foundItem.photo}
+            <SceneCrop
+              crop={foundItem.crop}
               alt={foundItem.title}
-              width={1024}
-              height={768}
-              className="max-h-[60vh] w-full bg-black object-contain"
+              detail
+              className="aspect-[16/10] max-h-[60vh] w-full"
             />
             <div className="p-5">
               <div className="flex items-center justify-between gap-3">

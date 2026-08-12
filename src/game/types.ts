@@ -64,6 +64,16 @@ export interface RoomState {
   votes: Record<string, string>; // playerId -> suspectId
 }
 
+/** A magnified region of the master crime-scene photograph. */
+export interface EvidenceCrop {
+  /** Focus point X in % of the scene image width. */
+  x: number;
+  /** Focus point Y in % of the scene image height. */
+  y: number;
+  /** Magnification factor applied to the scene image. */
+  zoom: number;
+}
+
 export interface EvidenceItem {
   id: string;
   number: string;
@@ -71,8 +81,8 @@ export interface EvidenceItem {
   description: string;
   detail: string;
   icon: "watch" | "phone" | "cup" | "message" | "camera" | "key";
-  /** Photorealistic crime-scene photo, revealed only after discovery. */
-  photo: string;
+  /** Close-up crop of the single crime-scene photo, revealed after discovery. */
+  crop: EvidenceCrop;
   /** Where the item was found in the chalet. */
   foundAt: string;
   unlockHint: string;
