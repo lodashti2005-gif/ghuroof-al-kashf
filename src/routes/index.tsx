@@ -210,9 +210,11 @@ function EntryModal({ mode, onClose }: { mode: "create" | "join"; onClose: () =>
             </p>
           )}
 
-          <ActionButton type="submit" className="w-full py-3.5 text-base">
-            {mode === "create" ? "أنشئ الغرفة" : "دخول"} <ArrowLeft className="size-4" />
+          <ActionButton type="submit" disabled={busy} className="w-full py-3.5 text-base">
+            {busy ? "لحظة..." : mode === "create" ? "أنشئ الغرفة" : "دخول"}{" "}
+            <ArrowLeft className="size-4" />
           </ActionButton>
+
         </form>
       </div>
     </div>
