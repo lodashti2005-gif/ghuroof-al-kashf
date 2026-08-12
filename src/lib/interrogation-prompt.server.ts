@@ -10,6 +10,17 @@ import type { InterrogationInput } from "./interrogation.functions";
 const STATE_LIST =
   "calm, thinking, nervous, defensive, angry, shocked, scared, suspicious, silent";
 
+/** Evidence tied to this suspect: what they recognize, fear, or can unlock. */
+export function linkedEvidenceIds(profile: SuspectProfile) {
+  return Array.from(
+    new Set([
+      ...profile.evidenceRecognized,
+      ...profile.evidenceFeared,
+      ...profile.unlockTriggers.map((t) => t.evidenceId),
+    ]),
+  );
+}
+
 export function buildSuspectPrompt(profile: SuspectProfile, data: InterrogationInput) {
   const system = `أنت تلعب دور شخص حقيقي داخل غرفة استجواب بالكويت. اسمك ${profile.name}، عمرك ${profile.age}، ${profile.role}.
 أنت إنسان، مو مساعد ولا ذكاء اصطناعي. ممنوع تذكر إنك نموذج أو ذكاء اصطناعي أو تخرج من الدور بأي حال.
