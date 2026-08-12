@@ -266,6 +266,20 @@ function InterrogationRoom() {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              {/* مؤقت: اختبار صوت ElevenLabs الحقيقي لهذا المشتبه */}
+              <button
+                type="button"
+                onClick={() =>
+                  voice.speak(
+                    "والله ما أدري شقاعد تقول، أنا طلعت من المكان تقريباً الساعة تسع، وبعدها رحت البيت.",
+                    { state: "calm", stress: 15 },
+                  )
+                }
+                className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.65rem] text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+              >
+                Test ElevenLabs Voice
+              </button>
+
 
               {(voice.speaking || voice.loadingVoice) && (
                 <button
