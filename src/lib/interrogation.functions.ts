@@ -65,25 +65,29 @@ export const askSuspect = createServerFn({ method: "POST" })
     const { profiles } = await import("@/game/profiles.server");
     const profile = profiles[data.suspectId];
     if (!profile) throw new Error("unknown suspect");
-
-    const { fallbackReply } = await import("./interrogation-fallback.server");
-    if (!apiKey) return fallbackReply(profile, data);
+    if (!apiKey) throw new Error("ai_unavailable");
 
     const { buildSuspectPrompt } = await import("./interrogation-prompt.server");
     const { system, user } = buildSuspectPrompt(profile, data);
 
     // Two attempts: reasoning models occasionally finish with reasoning only and
-    // no answer text. A turn must never end without a spoken reply.
+    // no answer text. Never substitute a canned line — the caller retries or
+    // surfaces a retry button instead.
+    let lastError: unknown = null;
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const reply = await callModel({ system, user, profile });
         if (reply) return reply;
       } catch (error) {
+        lastError = error;
         console.error(`interrogation attempt ${attempt + 1} failed`, error);
       }
     }
-    return fallbackReply(profile, data);
+    throw new Error(
+      `ai_reply_failed${lastError instanceof Error ? `: ${lastError.message}` : ""}`,
+    );
   });
+
 
 async function callModel({
   system,
