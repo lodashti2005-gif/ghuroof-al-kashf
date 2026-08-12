@@ -21,7 +21,10 @@ export interface ChatMessage {
   author: string;
   text: string;
   createdAt: number;
+  /** When set, this investigator turn was an evidence confrontation. */
+  evidenceId?: string;
 }
+
 
 export const SUSPECT_STATES = [
   "calm",

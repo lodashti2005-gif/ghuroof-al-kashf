@@ -11,6 +11,7 @@ import {
   Square,
   Timer,
   Unlock,
+  Users,
   Volume2,
   VolumeX,
   X,
@@ -19,9 +20,23 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionButton, GameShell } from "@/components/game/shell";
 import { SuspectAvatar } from "@/components/game/suspect-avatar";
-import { CaseTag, Eyebrow, Panel, StressMeter } from "@/components/game/ui";
-import { INTERROGATION_SECONDS, evidence as allEvidence, getEvidence, getSuspect } from "@/game/case-data";
+import {
+  CaseTag,
+  EvidenceCard,
+  EvidenceConfrontCard,
+  Eyebrow,
+  Panel,
+  StressMeter,
+} from "@/components/game/ui";
+import {
+  INTERROGATION_SECONDS,
+  evidence as allEvidence,
+  getEvidence,
+  getSuspect,
+  suspects as allSuspects,
+} from "@/game/case-data";
 import { suggestedQuestions } from "@/game/dialogue";
+
 import * as store from "@/game/room-store";
 import { formatClock, useRoom } from "@/game/use-room";
 import { useVoice } from "@/game/use-voice";
@@ -59,6 +74,9 @@ function InterrogationRoom() {
   const [retry, setRetry] = useState<{ text: string; evidenceId?: string | undefined } | null>(null);
 
   const [confrontOpen, setConfrontOpen] = useState(false);
+  const [suspectsOpen, setSuspectsOpen] = useState(false);
+  const [boardOpen, setBoardOpen] = useState(false);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const busyRef = useRef(false);
 
@@ -123,19 +141,26 @@ function InterrogationRoom() {
   const send = async (
     value: string,
     evidenceId?: string,
-    options?: { skipPush?: boolean },
+    options?: { skipPush?: boolean; displayText?: string },
   ) => {
     const text = value.trim();
     if (!text || locked || !me || busyRef.current) return;
     busyRef.current = true;
     setDraft("");
     setConfrontOpen(false);
+    setBoardOpen(false);
     setRetry(null);
     const timeAtStart = store.getSnapshot()?.suspects[suspectId]?.timeLeft ?? null;
     const baseTranscript = transcript;
     if (!options?.skipPush) {
-      actions.pushMessage(suspectId, { role: "investigator", author: me.name, text });
+      actions.pushMessage(suspectId, {
+        role: "investigator",
+        author: me.name,
+        text: options?.displayText ?? text,
+        ...(evidenceId ? { evidenceId } : {}),
+      });
     }
+
     setTyping(true);
     actions.setSuspectState(suspectId, "thinking");
 
@@ -191,8 +216,21 @@ function InterrogationRoom() {
   const confront = (id: string) => {
     const item = getEvidence(id);
     if (!item) return;
-    void send(`أواجهك بدليل — ${item.title}: ${item.description} شنو ردك؟`, id);
+    void send(`أواجهك بدليل — ${item.title}: ${item.description} شنو ردك؟`, id, {
+      displayText: item.title,
+    });
   };
+
+  /** Switching suspects only navigates — the timer interval unmounts here and the
+   * session (transcript, stress, evidence confrontations, remaining time) stays
+   * stored in the room, so returning resumes from the exact same second. */
+  const switchTo = (id: string) => {
+    setSuspectsOpen(false);
+    if (id === suspectId) return;
+    voice.stopSpeaking();
+    navigate({ to: "/interrogation/$suspectId", params: { suspectId: id } });
+  };
+
 
   return (
     <GameShell
@@ -239,6 +277,16 @@ function InterrogationRoom() {
               ))}
             </ul>
           </Panel>
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <ActionButton variant="outline" className="w-full" onClick={() => setSuspectsOpen(true)}>
+              <Users className="size-4" /> المشتبه فيهم
+            </ActionButton>
+            <ActionButton variant="outline" className="w-full" onClick={() => setBoardOpen(true)}>
+              <FileSearch className="size-4" /> لوحة الأدلة
+            </ActionButton>
+          </div>
+
 
           <ActionButton
             variant="danger"
@@ -318,25 +366,33 @@ function InterrogationRoom() {
               </div>
             )}
 
-            {runtime?.transcript.map((m) => (
-              <div
-                key={m.id}
-                className={`flex ${m.role === "investigator" ? "justify-end" : "justify-start"}`}
-              >
-                <div className="max-w-[85%] sm:max-w-[70%]">
-                  <p className="mb-1 font-mono text-[0.65rem] text-muted-foreground">{m.author}</p>
-                  <div
-                    className={
-                      m.role === "investigator"
-                        ? "rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground"
-                        : "rounded-2xl rounded-tl-sm border border-border bg-surface-2 px-4 py-2.5 text-sm leading-relaxed"
-                    }
-                  >
-                    {m.text}
+            {runtime?.transcript.map((m) => {
+              const confronted = m.evidenceId ? getEvidence(m.evidenceId) : undefined;
+              return (
+                <div
+                  key={m.id}
+                  className={`flex ${m.role === "investigator" ? "justify-end" : "justify-start"}`}
+                >
+                  <div className="max-w-[85%] sm:max-w-[70%]">
+                    <p className="mb-1 font-mono text-[0.65rem] text-muted-foreground">{m.author}</p>
+                    {confronted ? (
+                      <EvidenceConfrontCard item={confronted} />
+                    ) : (
+                      <div
+                        className={
+                          m.role === "investigator"
+                            ? "rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground"
+                            : "rounded-2xl rounded-tl-sm border border-border bg-surface-2 px-4 py-2.5 text-sm leading-relaxed"
+                        }
+                      >
+                        {m.text}
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+
 
             {typing && (
               <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
@@ -484,6 +540,143 @@ function InterrogationRoom() {
           </div>
         </Panel>
       </div>
+
+      {suspectsOpen && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-background/85 p-4 backdrop-blur-sm"
+          onClick={() => setSuspectsOpen(false)}
+        >
+          <div
+            className="surface-panel cine-in max-h-[85vh] w-full max-w-2xl overflow-y-auto p-5 sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Eyebrow>تنقل بين المشتبه فيهم</Eyebrow>
+                <h3 className="mt-1 text-xl font-bold">المشتبه فيهم</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSuspectsOpen(false)}
+                aria-label="إغلاق"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              وقت كل واحد ينقص بس وأنت داخل استجوابه، ولمن ترجع له يكمل من نفس الثانية.
+            </p>
+            <div className="mt-4 grid gap-3">
+              {allSuspects.map((s) => {
+                const rt = room?.suspects[s.id];
+                const left = rt?.timeLeft ?? INTERROGATION_SECONDS;
+                const done = rt?.finished || left <= 0;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => switchTo(s.id)}
+                    className={`flex w-full items-center gap-3 rounded-xl border p-3 text-right transition-colors ${
+                      s.id === suspectId
+                        ? "border-primary/50 bg-primary/10"
+                        : "border-border bg-surface-2 hover:border-primary/40"
+                    }`}
+                  >
+                    <img
+                      src={s.portrait}
+                      alt={`صورة ${s.name}`}
+                      loading="lazy"
+                      className="size-14 shrink-0 rounded-lg border border-border object-cover object-top grayscale-[35%]"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm font-bold">{s.name}</p>
+                        <span
+                          dir="ltr"
+                          className={`font-mono text-xs ${
+                            done ? "text-muted-foreground" : left < 60 ? "text-primary" : "text-foreground"
+                          }`}
+                        >
+                          {formatClock(left)}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">{s.role}</p>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <CaseTag tone={done ? "muted" : "danger"}>
+                          {done ? "انتهى وقته" : s.id === suspectId ? "جلسة جارية" : "متاح"}
+                        </CaseTag>
+                        <span className="font-mono text-[0.65rem] text-muted-foreground">
+                          توتر {rt?.stress ?? 0} / 100
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <ActionButton
+              variant="outline"
+              className="mt-5 w-full"
+              onClick={() => navigate({ to: "/dashboard" })}
+            >
+              لوحة التحقيق <ArrowLeft className="size-4" />
+            </ActionButton>
+          </div>
+        </div>
+      )}
+
+      {boardOpen && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-background/85 p-4 backdrop-blur-sm"
+          onClick={() => setBoardOpen(false)}
+        >
+          <div
+            className="surface-panel cine-in max-h-[85vh] w-full max-w-3xl overflow-y-auto p-5 sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Eyebrow>الأدلة المكتشفة</Eyebrow>
+                <h3 className="mt-1 text-xl font-bold">لوحة الأدلة</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBoardOpen(false)}
+                aria-label="إغلاق"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            {unlocked.length === 0 ? (
+              <p className="mt-4 rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+                ما عندكم أدلة مكتشفة بعد. اسألوا أكثر عشان تفتحون ملفات الأدلة.
+              </p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  اختر دليلاً عشان تواجه {suspect.name} فيه.
+                </p>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {unlocked.map((item) => (
+                    <EvidenceCard
+                      key={item.id}
+                      item={item}
+                      unlocked
+                      onSelect={() => {
+                        if (locked || busy) return;
+                        confront(item.id);
+                      }}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
 
       {unlockToast && (
         <div className="fixed bottom-6 right-1/2 z-50 translate-x-1/2 sm:right-6 sm:translate-x-0">

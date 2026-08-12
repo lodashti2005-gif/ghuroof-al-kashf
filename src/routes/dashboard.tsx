@@ -11,7 +11,7 @@ import {
   ProgressRing,
   SuspectCard,
 } from "@/components/game/ui";
-import { caseFile, evidence, suspects } from "@/game/case-data";
+import { INTERROGATION_SECONDS, caseFile, evidence, suspects } from "@/game/case-data";
 import { useRoom } from "@/game/use-room";
 
 export const Route = createFileRoute("/dashboard")({
@@ -88,8 +88,10 @@ function Dashboard() {
                   suspect={s}
                   stress={room?.suspects[s.id]?.stress ?? 0}
                   finished={room?.suspects[s.id]?.finished ?? false}
+                  timeLeft={room?.suspects[s.id]?.timeLeft ?? INTERROGATION_SECONDS}
                   href={{ to: "/interrogation/$suspectId", params: { suspectId: s.id } }}
                 />
+
               ))}
             </div>
           </section>
