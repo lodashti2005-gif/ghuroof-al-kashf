@@ -248,3 +248,139 @@
     transform: translateY(1000%);
   }
 }
+
+/* ---- Live suspect simulation (portrait "camera feed" states) -------------- */
+.sim-stage {
+  transform-origin: 50% 32%;
+  will-change: transform, filter;
+  transition:
+    filter 700ms ease,
+    transform 700ms ease;
+  animation: sim-breathe 7s ease-in-out infinite;
+}
+
+@keyframes sim-breathe {
+  0%,
+  100% {
+    transform: scale(1.02) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.045) translate3d(0, -0.5%, 0);
+  }
+}
+
+@keyframes sim-breathe-fast {
+  0%,
+  100% {
+    transform: scale(1.04) translate3d(0.4%, 0, 0);
+  }
+  50% {
+    transform: scale(1.075) translate3d(-0.4%, -0.9%, 0);
+  }
+}
+
+@keyframes sim-sway {
+  0%,
+  100% {
+    transform: scale(1.05) translate3d(-0.7%, 0, 0) rotate(-0.25deg);
+  }
+  50% {
+    transform: scale(1.05) translate3d(0.7%, -0.4%, 0) rotate(0.25deg);
+  }
+}
+
+@keyframes sim-tremor {
+  0%,
+  100% {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  25% {
+    transform: scale(1.06) translate3d(0.5%, -0.3%, 0);
+  }
+  50% {
+    transform: scale(1.065) translate3d(-0.4%, 0.2%, 0);
+  }
+  75% {
+    transform: scale(1.06) translate3d(0.3%, 0.3%, 0);
+  }
+}
+
+@keyframes sim-reaction {
+  0% {
+    transform: scale(1.02);
+  }
+  20% {
+    transform: scale(1.11) translate3d(0, -1.2%, 0);
+  }
+  100% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes sim-speak {
+  0%,
+  100% {
+    transform: scale(1.035);
+  }
+  50% {
+    transform: scale(1.05) translate3d(0, -0.3%, 0);
+  }
+}
+
+.sim-calm {
+  filter: grayscale(0.05) contrast(1.02) brightness(0.98);
+}
+.sim-thinking {
+  filter: contrast(1.05) brightness(0.94) saturate(0.9);
+  animation: sim-sway 9s ease-in-out infinite;
+}
+.sim-nervous {
+  filter: contrast(1.1) brightness(1.02) saturate(1.05);
+  animation: sim-breathe-fast 3.4s ease-in-out infinite;
+}
+.sim-defensive {
+  filter: contrast(1.14) brightness(0.96);
+  animation: sim-breathe-fast 4s ease-in-out infinite;
+}
+.sim-angry {
+  filter: contrast(1.24) brightness(1.05) saturate(1.15);
+  animation: sim-tremor 1.5s ease-in-out infinite;
+}
+.sim-shocked {
+  filter: contrast(1.2) brightness(1.12);
+  animation: sim-breathe-fast 2.6s ease-in-out infinite;
+}
+.sim-scared {
+  filter: contrast(1.12) brightness(0.9) saturate(0.85);
+  animation: sim-tremor 2.2s ease-in-out infinite;
+}
+.sim-suspicious {
+  filter: contrast(1.08) brightness(0.93);
+  animation: sim-sway 6s ease-in-out infinite;
+}
+.sim-silent {
+  filter: grayscale(0.5) contrast(1.03) brightness(0.86);
+  animation: sim-breathe 11s ease-in-out infinite;
+}
+
+.sim-react {
+  animation: sim-reaction 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sim-speaking {
+  animation: sim-speak 1.5s ease-in-out infinite;
+}
+
+.sim-pulse {
+  background: radial-gradient(circle at 50% 40%, transparent 45%, var(--primary) 160%);
+  opacity: 0.16;
+  animation: pulse-blood 1.9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sim-stage,
+  .sim-react,
+  .sim-speaking,
+  .sim-pulse {
+    animation: none !important;
+  }
+}
