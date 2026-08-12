@@ -20,7 +20,6 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { EvidenceBoard } from "@/components/game/evidence-board";
-import { SceneCrop } from "@/components/game/scene-crop";
 
 import { ActionButton, GameShell } from "@/components/game/shell";
 import { SuspectAvatar } from "@/components/game/suspect-avatar";
@@ -177,7 +176,7 @@ function InterrogationRoom() {
   const send = async (
     value: string,
     evidenceId?: string,
-    options?: { skipPush?: boolean; displayText?: string },
+    options?: { skipPush?: boolean; displayText?: string; maxStress?: number },
   ) => {
     const text = value.trim();
     if (!text || locked || !me || busyRef.current) return;
@@ -231,12 +230,17 @@ function InterrogationRoom() {
       if (!line) throw new Error("empty reply");
       // Exactly one suspect message per successful question.
       actions.pushMessage(suspectId, { role: "suspect", author: suspect.name, text: line });
-      actions.bumpStress(suspectId, reply.stressDelta);
+      // إعادة استخدام نفس الدليل على نفس المشتبه فيه ما تعطي نفس الأثر.
+      const delta =
+        options?.maxStress !== undefined
+          ? Math.min(reply.stressDelta, options.maxStress)
+          : reply.stressDelta;
+      actions.bumpStress(suspectId, delta);
       actions.setSuspectState(suspectId, reply.state, reply.level);
       if (reply.unlock) announceUnlock(reply.unlock);
       voice.speak(line, {
         state: reply.state,
-        stress: Math.min(100, (runtime?.stress ?? 0) + reply.stressDelta),
+        stress: Math.min(100, (runtime?.stress ?? 0) + delta),
       });
     } catch (error) {
       console.error(error);
@@ -254,25 +258,32 @@ function InterrogationRoom() {
 
 
   /**
-   * طرح دليل على الطاولة: يظهر كبطاقة صغيرة داخل المحادثة، بدون أي سؤال جاهز،
-   * وينضم لأول سؤال يكتبه اللاعب بعده حتى يكون رد المشتبه مبنياً عليه.
+   * مواجهة بدليل: تظهر بطاقة الدليل داخل سجل المحادثة (صورة + اسم + وصف مختصر)،
+   * وبعدها المشتبه فيه يرد مباشرة على هذا الدليل حسب شخصيته وأقواله السابقة.
+   * تكرار نفس الدليل على نفس المشتبه فيه يقل أثره على التوتر ولا يعطي جديد.
    */
   const confront = (id: string) => {
     const item = getEvidence(id);
-    if (!item || locked || !me) return;
+    if (!item || locked || !me || busyRef.current) return;
     setConfrontOpen(false);
     setBoardOpen(false);
-    if (!runtime?.transcript.some((m) => m.evidenceId === id)) {
-      actions.pushMessage(suspectId, {
-        role: "investigator",
-        author: me.name,
-        text: item.title,
-        evidenceId: id,
-      });
-    }
-    setPendingEvidence(id);
-    pendingRef.current = id;
+    const times = (runtime?.transcript ?? []).filter((m) => m.evidenceId === id).length;
+    actions.pushMessage(suspectId, {
+      role: "investigator",
+      author: me.name,
+      text: item.title,
+      evidenceId: id,
+    });
+    const repeatNote =
+      times > 0
+        ? " (سبق عرضت عليك نفس الدليل بهذي الجلسة — ردك يكون مثل إنسان يتضايق من التكرار، نفس معلوماتك بدون أي معلومة جديدة، وبدون انهيار)"
+        : "";
+    void send(`أواجهك بهذا الدليل: ${item.title} — ${item.description}. شنو ردك عليه؟${repeatNote}`, id, {
+      skipPush: true,
+      ...(times > 0 ? { maxStress: times >= 2 ? 1 : 3 } : {}),
+    });
   };
+
 
 
   confrontRef.current = confront;
@@ -523,31 +534,8 @@ function InterrogationRoom() {
               </div>
             )}
 
-            {pendingEvidence && !locked && (() => {
-              const item = getEvidence(pendingEvidence);
-              if (!item) return null;
-              return (
-                <div className="cine-in mb-3 flex items-center gap-3 rounded-xl border border-evidence/40 bg-evidence/8 px-3 py-2.5">
-                  <span className="relative size-10 shrink-0 overflow-hidden rounded-lg border border-evidence/35">
-                    <SceneCrop crop={item.crop} alt={item.title} className="absolute inset-0 size-full" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold">{item.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      الدليل على الطاولة — اسأله عنه بأسلوبك.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPendingEvidence(null)}
-                    aria-label="إزالة الدليل"
-                    className="shrink-0 text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
-              );
-            })()}
+
+
 
 
             {!locked && (
