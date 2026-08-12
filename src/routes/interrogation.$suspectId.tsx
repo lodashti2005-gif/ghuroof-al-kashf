@@ -74,6 +74,9 @@ function InterrogationRoom() {
   const [retry, setRetry] = useState<{ text: string; evidenceId?: string | undefined } | null>(null);
 
   const [confrontOpen, setConfrontOpen] = useState(false);
+  const [suspectsOpen, setSuspectsOpen] = useState(false);
+  const [boardOpen, setBoardOpen] = useState(false);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const busyRef = useRef(false);
 
