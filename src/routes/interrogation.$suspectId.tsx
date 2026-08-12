@@ -266,9 +266,39 @@ function InterrogationRoom() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
+            <div className="flex items-center gap-2">
+              {(voice.speaking || voice.loadingVoice) && (
+                <button
+                  type="button"
+                  onClick={voice.stopSpeaking}
+                  aria-label="إيقاف الصوت"
+                  className="grid size-9 place-items-center rounded-lg border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {voice.loadingVoice ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Square className="size-4" />
+                  )}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={voice.replay}
+                disabled={!voice.hasLast || voice.muted}
+                aria-label="إعادة تشغيل آخر رد"
+                className="grid size-9 place-items-center rounded-lg border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+              >
+                <RotateCcw className="size-4" />
+              </button>
+              <button
+                type="button"
                 onClick={voice.toggleMute}
                 aria-label={voice.muted ? "تشغيل صوت المشتبه" : "كتم صوت المشتبه"}
-                className="grid size-9 place-items-center rounded-lg border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground"
+                className={`grid size-9 place-items-center rounded-lg border bg-secondary transition-colors hover:text-foreground ${
+                  voice.muted
+                    ? "border-primary/50 text-primary"
+                    : "border-border text-muted-foreground"
+                }`}
               >
                 {voice.muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
               </button>
@@ -276,6 +306,7 @@ function InterrogationRoom() {
                 {locked ? "الجلسة مغلقة" : "جارية"}
               </CaseTag>
             </div>
+
           </div>
 
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
