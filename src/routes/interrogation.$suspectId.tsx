@@ -372,7 +372,7 @@ function InterrogationRoom() {
             {confrontOpen && (
               <div className="cine-in mb-3 rounded-xl border border-evidence/35 bg-evidence/5 p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <Eyebrow>اختر دليل للمواجهة</Eyebrow>
+                  <Eyebrow>اختر دليلاً من الأدلة المكتشفة</Eyebrow>
                   <button
                     type="button"
                     onClick={() => setConfrontOpen(false)}
@@ -412,9 +412,9 @@ function InterrogationRoom() {
                 type="button"
                 disabled={locked || busy}
                 onClick={() => setConfrontOpen((v) => !v)}
-                className="shrink-0 rounded-full border border-evidence/45 bg-evidence/10 px-3 py-1.5 text-xs text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-40"
+                className="shrink-0 rounded-full border border-evidence/60 bg-evidence/15 px-3.5 py-1.5 text-xs font-bold text-evidence transition-colors hover:bg-evidence/25 disabled:opacity-40"
               >
-                <FileSearch className="ml-1 inline size-3.5" /> واجهه بدليل
+                <FileSearch className="ml-1 inline size-3.5" /> واجهة بدليل
               </button>
               {suggestedQuestions.map((q) => (
                 <button
