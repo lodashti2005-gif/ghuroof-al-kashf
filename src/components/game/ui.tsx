@@ -208,13 +208,30 @@ export function SuspectCard({
         </div>
 
         {typeof stress === "number" && (
-          <div className="mt-auto flex items-center gap-3">
-            <div className="min-w-0 flex-1">
-              <StressMeter value={stress} compact />
+          <div className="mt-auto space-y-2.5">
+            {typeof timeLeft === "number" && (
+              <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-surface-2 px-2.5 py-1.5">
+                <span className="text-xs text-muted-foreground">الوقت المتبقي</span>
+                <span
+                  dir="ltr"
+                  className={cn(
+                    "font-mono text-xs",
+                    timeLeft <= 0 ? "text-muted-foreground" : timeLeft < 60 ? "text-primary" : "text-foreground",
+                  )}
+                >
+                  {formatClock(timeLeft)}
+                </span>
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <div className="min-w-0 flex-1">
+                <StressMeter value={stress} compact />
+              </div>
+              <CaseTag tone={finished ? "muted" : "danger"}>{finished ? "انتهى" : "متاح"}</CaseTag>
             </div>
-            <CaseTag tone={finished ? "muted" : "danger"}>{finished ? "انتهى" : "متاح"}</CaseTag>
           </div>
         )}
+
       </div>
     </div>
   );
