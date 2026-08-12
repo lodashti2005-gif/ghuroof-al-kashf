@@ -473,7 +473,187 @@ function InterrogationRoom() {
                     <X className="size-4" />
                   </button>
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">
+                {unlocked.length === 0 ? (
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    ما عندكم أدلة مكتشفة بعد — دقّقوا بمسرح الجريمة أو اسألوا أكثر.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {unlocked.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        disabled={locked || busy}
+                        onClick={() => confront(item.id)}
+                        className="rounded-lg border border-evidence/45 bg-evidence/10 px-3 py-2 text-xs font-bold text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
+                      >
+                        {item.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!locked && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {suggestedQuestions.slice(0, 4).map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void send(q)}
+                    className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/45 hover:text-foreground disabled:opacity-45"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <form
+              className="flex items-end gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void send(draft);
+              }}
+            >
+              <textarea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    void send(draft);
+                  }
+                }}
+                rows={2}
+                disabled={locked || busy}
+                placeholder={locked ? "انتهى وقت هذا المشتبه" : "اكتب سؤالك بأسلوبك..."}
+                className="min-w-0 flex-1 resize-none rounded-xl border border-input bg-surface-2 px-3.5 py-3 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-primary/60 disabled:opacity-50"
+              />
+              {voice.micSupported && (
+                <button
+                  type="button"
+                  disabled={locked || busy}
+                  onClick={voice.listening ? voice.stopListening : voice.startListening}
+                  aria-label={voice.listening ? "إيقاف التسجيل" : "تكلم بالمايك"}
+                  className={`grid size-11 shrink-0 place-items-center rounded-xl border transition-colors disabled:opacity-45 ${
+                    voice.listening
+                      ? "border-primary/55 bg-primary/15 text-primary"
+                      : "border-border bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {voice.listening ? <MicOff className="size-4" /> : <Mic className="size-4" />}
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={locked || busy || unlocked.length === 0}
+                onClick={() => setConfrontOpen((v) => !v)}
+                aria-label="واجهه بدليل"
+                className="grid size-11 shrink-0 place-items-center rounded-xl border border-evidence/45 bg-evidence/10 text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
+              >
+                <FileSearch className="size-4" />
+              </button>
+              <button
+                type="submit"
+                disabled={locked || busy || !draft.trim()}
+                aria-label="إرسال"
+                className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground transition-opacity disabled:opacity-45"
+              >
+                {busy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+              </button>
+            </form>
+          </div>
+        </Panel>
+      </div>
+
+      {suspectsOpen && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-background/85 p-4 backdrop-blur-sm"
+          onClick={() => setSuspectsOpen(false)}
+        >
+          <div
+            className="surface-panel cine-in max-h-[85vh] w-full max-w-2xl overflow-y-auto p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Eyebrow>تنقل بين الجلسات</Eyebrow>
+                <h3 className="mt-1 text-xl font-bold">المشتبه فيهم</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSuspectsOpen(false)}
+                aria-label="إغلاق"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {allSuspects.map((s) => {
+                const rt = room?.suspects[s.id];
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => switchTo(s.id)}
+                    className={`flex items-center gap-3 rounded-xl border p-3 text-right transition-colors ${
+                      s.id === suspectId
+                        ? "border-primary/55 bg-primary/10"
+                        : "border-border bg-surface-2 hover:border-primary/45"
+                    }`}
+                  >
+                    <img
+                      src={s.portrait}
+                      alt={s.name}
+                      loading="lazy"
+                      className="size-12 shrink-0 rounded-lg border border-border object-cover object-top grayscale-[35%]"
+                    />
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-bold">{s.name}</span>
+                      <span
+                        dir="ltr"
+                        className="mt-0.5 block font-mono text-[0.65rem] text-muted-foreground"
+                      >
+                        {formatClock(rt?.timeLeft ?? INTERROGATION_SECONDS)}
+                        {rt?.finished ? " · مغلقة" : ""}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {boardOpen && (
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto bg-background/90 p-4 backdrop-blur-sm"
+          onClick={() => setBoardOpen(false)}
+        >
+          <div
+            className="surface-panel cine-in mx-auto w-full max-w-3xl p-5 sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Eyebrow>الأدلة المكتشفة</Eyebrow>
+                <h3 className="mt-1 text-xl font-bold">لوحة الأدلة</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBoardOpen(false)}
+                aria-label="إغلاق"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
               اختر دليلاً وبعدها «استخدم في الاستجواب» عشان تواجه فيه أي مشتبه.
             </p>
             <div className="mt-4">
@@ -500,7 +680,6 @@ function InterrogationRoom() {
         </div>
       )}
 
-
       {unlockToast && (
         <div className="fixed bottom-6 right-1/2 z-50 translate-x-1/2 sm:right-6 sm:translate-x-0">
           <div className="cine-in flex items-center gap-3 rounded-xl border border-evidence/40 bg-card px-4 py-3 shadow-[var(--shadow-noir)]">
@@ -515,3 +694,4 @@ function InterrogationRoom() {
     </GameShell>
   );
 }
+
