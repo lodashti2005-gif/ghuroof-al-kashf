@@ -20,6 +20,8 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { EvidenceBoard } from "@/components/game/evidence-board";
+import { SceneCrop } from "@/components/game/scene-crop";
+
 import { ActionButton, GameShell } from "@/components/game/shell";
 import { SuspectAvatar } from "@/components/game/suspect-avatar";
 import {
