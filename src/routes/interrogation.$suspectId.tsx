@@ -68,8 +68,9 @@ function InterrogationRoom() {
 
   const voice = useVoice({
     onTranscript: (text) => sendRef.current?.(text),
-    profile: VOICE_PROFILES[suspectId] ?? { gender: "male" },
+    suspectId,
   });
+
   const sendRef = useRef<((text: string, evidenceId?: string) => void) | null>(null);
 
   // Countdown — each suspect has its own independent 5 minutes. The interval is
