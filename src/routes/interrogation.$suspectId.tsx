@@ -79,6 +79,12 @@ function InterrogationRoom() {
   const [typing, setTyping] = useState(false);
   const [unlockToast, setUnlockToast] = useState<string | null>(null);
   const [retry, setRetry] = useState<{ text: string; evidenceId?: string | undefined } | null>(null);
+  /** الدليل المطروح على الطاولة: يظهر كبطاقة بالمحادثة وينضم لأول سؤال يجي بعده. */
+  const [pendingEvidence, setPendingEvidence] = useState<string | null>(null);
+  const pendingRef = useRef<string | null>(null);
+  pendingRef.current = pendingEvidence;
+
+
 
   const [confrontOpen, setConfrontOpen] = useState(false);
   const [suspectsOpen, setSuspectsOpen] = useState(false);
