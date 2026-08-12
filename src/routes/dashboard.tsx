@@ -117,6 +117,23 @@ function Dashboard() {
             </div>
             <EvidenceBoard
               unlockedIds={unlocked}
+              deductions={room?.deductions ?? []}
+              onDeduction={(link) =>
+                actions.addDeduction({
+                  linkId: link.id,
+                  title: link.title,
+                  insight: link.insight,
+                  evidenceIds: link.pair,
+                  author: me?.name ?? "محقق",
+                })
+              }
+              onUseDeduction={(text, suspectId) =>
+                navigate({
+                  to: "/interrogation/$suspectId",
+                  params: { suspectId },
+                  search: { ask: text },
+                })
+              }
               onConfront={(evidenceId, suspectId) =>
                 navigate({
                   to: "/interrogation/$suspectId",
