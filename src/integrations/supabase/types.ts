@@ -14,7 +14,103 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      room_players: {
+        Row: {
+          id: string
+          is_host: boolean
+          joined_at: string
+          name: string
+          player_id: string
+          room_code: string
+        }
+        Insert: {
+          id?: string
+          is_host?: boolean
+          joined_at?: string
+          name: string
+          player_id: string
+          room_code: string
+        }
+        Update: {
+          id?: string
+          is_host?: boolean
+          joined_at?: string
+          name?: string
+          player_id?: string
+          room_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_players_room_code_fkey"
+            columns: ["room_code"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      room_votes: {
+        Row: {
+          created_at: string
+          id: string
+          player_id: string
+          room_code: string
+          suspect_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          player_id: string
+          room_code: string
+          suspect_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          player_id?: string
+          room_code?: string
+          suspect_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_votes_room_code_fkey"
+            columns: ["room_code"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          case_id: string
+          code: string
+          created_at: string
+          host_player_id: string
+          phase: string
+          state: Json
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          code: string
+          created_at?: string
+          host_player_id: string
+          phase?: string
+          state?: Json
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          code?: string
+          created_at?: string
+          host_player_id?: string
+          phase?: string
+          state?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
