@@ -95,6 +95,34 @@ const EVIDENCE_ICONS = {
   key: KeyRound,
 } as const;
 
+function formatClock(seconds: number) {
+  const s = Math.max(0, seconds);
+  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+}
+
+/** Compact evidence card used inside the interrogation transcript. */
+export function EvidenceConfrontCard({ item }: { item: EvidenceItem }) {
+  const Icon = EVIDENCE_ICONS[item.icon];
+  return (
+    <div className="flex items-start gap-3 rounded-2xl rounded-tr-sm border border-evidence/45 bg-evidence/8 px-3.5 py-3">
+      <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-evidence/35 bg-evidence/10">
+        <Icon className="size-5 text-evidence" strokeWidth={1.5} />
+      </span>
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[0.65rem] text-muted-foreground">{item.number}</span>
+          <CaseTag tone="evidence">مواجهة بدليل</CaseTag>
+        </div>
+        <p className="mt-1 text-sm font-bold leading-tight">{item.title}</p>
+        <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+          {item.description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
 export function EvidenceCard({
   item,
   unlocked,
