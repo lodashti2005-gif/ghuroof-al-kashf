@@ -48,17 +48,26 @@ export const Route = createFileRoute("/api/public/tts")({
             body: JSON.stringify({
               text: shapeForSpeech(parsed.text, parsed.state),
               model_id: "eleven_multilingual_v2",
-              language_code: "ar",
               voice_settings: settings,
             }),
           },
-        );
+        ).catch((error: unknown) => {
+          console.error("ElevenLabs TTS request failed", error);
+          return null;
+        });
 
-        if (!res.ok || !res.body) {
-          const detail = await res.text().catch(() => "");
-          console.error(`ElevenLabs TTS failed [${res.status}]: ${detail}`);
-          return Response.json({ error: "tts_failed", status: res.status }, { status: 502 });
+        // A provider failure is not an app crash: answer 200 with a fallback
+        // flag so the client quietly uses browser speech instead of surfacing
+        // a runtime error.
+        if (!res || !res.ok || !res.body) {
+          const detail = res ? await res.text().catch(() => "") : "network_error";
+          console.error(`ElevenLabs TTS failed [${res?.status ?? 0}]: ${detail}`);
+          return Response.json(
+            { fallback: true, status: res?.status ?? 0 },
+            { status: 200, headers: { "Cache-Control": "no-store" } },
+          );
         }
+
 
         return new Response(res.body, {
           headers: { "Content-Type": "audio/mpeg", "Cache-Control": "no-store" },

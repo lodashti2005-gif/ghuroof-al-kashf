@@ -160,7 +160,13 @@ export function useVoice({
           signal: controller.signal,
         });
         if (!res.ok) throw new Error(`tts ${res.status}`);
+        // The endpoint answers with JSON (not audio) when the voice provider
+        // is unavailable — treat that as a fallback signal, not a crash.
+        if (!(res.headers.get("Content-Type") ?? "").startsWith("audio/")) {
+          throw new Error("tts_fallback");
+        }
         const blob = await res.blob();
+
         if (controller.signal.aborted) return;
 
         const url = URL.createObjectURL(blob);
