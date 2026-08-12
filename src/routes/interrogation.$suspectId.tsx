@@ -11,6 +11,7 @@ import {
   Square,
   Timer,
   Unlock,
+  Users,
   Volume2,
   VolumeX,
   X,
@@ -19,9 +20,23 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionButton, GameShell } from "@/components/game/shell";
 import { SuspectAvatar } from "@/components/game/suspect-avatar";
-import { CaseTag, Eyebrow, Panel, StressMeter } from "@/components/game/ui";
-import { INTERROGATION_SECONDS, evidence as allEvidence, getEvidence, getSuspect } from "@/game/case-data";
+import {
+  CaseTag,
+  EvidenceCard,
+  EvidenceConfrontCard,
+  Eyebrow,
+  Panel,
+  StressMeter,
+} from "@/components/game/ui";
+import {
+  INTERROGATION_SECONDS,
+  evidence as allEvidence,
+  getEvidence,
+  getSuspect,
+  suspects as allSuspects,
+} from "@/game/case-data";
 import { suggestedQuestions } from "@/game/dialogue";
+
 import * as store from "@/game/room-store";
 import { formatClock, useRoom } from "@/game/use-room";
 import { useVoice } from "@/game/use-voice";
