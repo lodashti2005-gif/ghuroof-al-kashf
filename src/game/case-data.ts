@@ -122,6 +122,7 @@ export const suspects: Suspect[] = [
 export const evidence: EvidenceItem[] = [
   {
     id: "watch",
+    observation: "الزجاج مكسور من جهة واحدة والعقارب واقفة على 01:47 — الكسر يبين إنه من ضربة مو من طيحة.",
     number: "دليل 01",
     title: "ساعة مكسورة",
     description: "ساعة بدر واقفة على 01:47 والزجاج مكسور من الجهة اليمنى.",
@@ -133,6 +134,7 @@ export const evidence: EvidenceItem[] = [
   },
   {
     id: "phone",
+    observation: "الشاحن موصول ومكانه ما تغيّر، بس التلفون نفسه مو موجود بالغرفة ولا بالشاليه.",
     number: "دليل 02",
     title: "تلفون مفقود",
     description: "تلفون بدر مو موجود بالغرفة ولا بالشاليه، والشاحن باقي بمكانه.",
@@ -144,6 +146,7 @@ export const evidence: EvidenceItem[] = [
   },
   {
     id: "cup",
+    observation: "فنجالين مستخدمين، وحدهم فيه بقايا مادة مهدئة وعليه بصمة جزئية غير واضحة.",
     number: "دليل 03",
     title: "فنجال قهوة",
     description: "فنجالين قهوة بالمطبخ، وحدهم فيه بقايا مهدئ.",
@@ -155,6 +158,7 @@ export const evidence: EvidenceItem[] = [
   },
   {
     id: "message",
+    observation: "رسالة تهديد واصلة الساعة 11:48 مساءً من رقم مسجل باسم شركة.",
     number: "دليل 04",
     title: "رسالة تهديد",
     description: "رسالة موصلة لبدر: «لا توصل الموضوع للمحامي، بتخسر أكثر مني».",
@@ -166,6 +170,7 @@ export const evidence: EvidenceItem[] = [
   },
   {
     id: "camera",
+    observation: "التسجيل يبين سيارة داخلة 01:38 وطالعة 02:04، وحركة ثانية قبل منتصف الليل.",
     number: "دليل 05",
     title: "توقيت كاميرا المدخل",
     description: "الكاميرا تسجل سيارة داخلة 01:38 وطالعة 02:04.",
@@ -177,6 +182,7 @@ export const evidence: EvidenceItem[] = [
   },
   {
     id: "key",
+    observation: "مفتاح احتياطي ناقص من العلاقة، وهو نوع يفتح باب الغرفة الخاصة بدون كسر.",
     number: "دليل 06",
     title: "مفتاح احتياطي",
     description: "مفتاح احتياطي للشاليه ناقص من علاقة المفاتيح بالمطبخ.",

@@ -19,11 +19,11 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { EvidenceBoard } from "@/components/game/evidence-board";
 import { ActionButton, GameShell } from "@/components/game/shell";
 import { SuspectAvatar } from "@/components/game/suspect-avatar";
 import {
   CaseTag,
-  EvidenceCard,
   EvidenceConfrontCard,
   Eyebrow,
   Panel,
@@ -45,6 +45,11 @@ import { askSuspect } from "@/lib/interrogation.functions";
 
 
 export const Route = createFileRoute("/interrogation/$suspectId")({
+  validateSearch: (search: Record<string, unknown>): { confront?: string } => {
+    const raw = search["confront"];
+    return typeof raw === "string" && raw ? { confront: raw } : {};
+  },
+
   head: () => ({
     meta: [
       { title: "غرفة الاستجواب — غرفة التحقيق" },
@@ -64,6 +69,7 @@ export const Route = createFileRoute("/interrogation/$suspectId")({
 
 function InterrogationRoom() {
   const { suspectId } = Route.useParams();
+  const { confront: confrontParam } = Route.useSearch();
   const { room, me, actions } = useRoom();
   const navigate = useNavigate();
   const ask = useServerFn(askSuspect);
@@ -108,6 +114,27 @@ function InterrogationRoom() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [runtime?.transcript.length, typing]);
+
+  // Confrontation launched from the evidence board (possibly from another screen):
+  // fire it once the room state is ready, then drop the param from the URL.
+  const confrontRef = useRef<((id: string) => void) | null>(null);
+  const autoConfrontRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!confrontParam || !me) return;
+    const key = `${suspectId}:${confrontParam}`;
+    if (autoConfrontRef.current === key) return;
+    autoConfrontRef.current = key;
+    const id = setTimeout(() => {
+      confrontRef.current?.(confrontParam);
+      navigate({
+        to: "/interrogation/$suspectId",
+        params: { suspectId },
+        search: {},
+        replace: true,
+      });
+    }, 350);
+    return () => clearTimeout(id);
+  }, [confrontParam, suspectId, me, navigate]);
 
   if (!suspect) {
     return (
@@ -221,6 +248,8 @@ function InterrogationRoom() {
       displayText: item.title,
     });
   };
+
+  confrontRef.current = confront;
 
   /** Switching suspects only navigates — the timer interval unmounts here and the
    * session (transcript, stress, evidence confrontations, remaining time) stays
@@ -447,23 +476,20 @@ function InterrogationRoom() {
                   </button>
                 </div>
                 {unlocked.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    ما عندك أدلة مكتشفة بعد. اسأل أكثر عشان تفتح ملفات الأدلة.
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    ما عندكم أدلة مكتشفة بعد — دقّقوا بمسرح الجريمة أو اسألوا أكثر.
                   </p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {unlocked.map((e) => (
+                    {unlocked.map((item) => (
                       <button
-                        key={e.id}
+                        key={item.id}
                         type="button"
                         disabled={locked || busy}
-                        onClick={() => confront(e.id)}
-                        className="rounded-lg border border-evidence/40 bg-card px-3 py-2 text-right text-xs text-foreground transition-colors hover:border-evidence disabled:opacity-40"
+                        onClick={() => confront(item.id)}
+                        className="rounded-lg border border-evidence/45 bg-evidence/10 px-3 py-2 text-xs font-bold text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
                       >
-                        <span className="font-mono text-[0.65rem] text-muted-foreground">
-                          {e.number}
-                        </span>
-                        <span className="mr-2">{e.title}</span>
+                        {item.title}
                       </button>
                     ))}
                   </div>
@@ -471,27 +497,22 @@ function InterrogationRoom() {
               </div>
             )}
 
-            <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
-              <button
-                type="button"
-                disabled={locked || busy}
-                onClick={() => setConfrontOpen((v) => !v)}
-                className="shrink-0 rounded-full border border-evidence/60 bg-evidence/15 px-3.5 py-1.5 text-xs font-bold text-evidence transition-colors hover:bg-evidence/25 disabled:opacity-40"
-              >
-                <FileSearch className="ml-1 inline size-3.5" /> واجهة بدليل
-              </button>
-              {suggestedQuestions.map((q) => (
-                <button
-                  key={q}
-                  type="button"
-                  disabled={locked || busy}
-                  onClick={() => void send(q)}
-                  className="shrink-0 rounded-full border border-border bg-secondary px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground disabled:opacity-40"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
+            {!locked && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {suggestedQuestions.slice(0, 4).map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void send(q)}
+                    className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/45 hover:text-foreground disabled:opacity-45"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <form
               className="flex items-end gap-2"
               onSubmit={(e) => {
@@ -499,21 +520,6 @@ function InterrogationRoom() {
                 void send(draft);
               }}
             >
-              {voice.micSupported && (
-                <button
-                  type="button"
-                  disabled={locked || busy}
-                  onClick={voice.listening ? voice.stopListening : voice.startListening}
-                  aria-label={voice.listening ? "إيقاف التسجيل" : "تسجيل صوتي"}
-                  className={`grid size-12 shrink-0 place-items-center rounded-xl border transition-colors disabled:opacity-40 ${
-                    voice.listening
-                      ? "border-primary/60 bg-primary/15 text-primary"
-                      : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {voice.listening ? <MicOff className="size-4" /> : <Mic className="size-4" />}
-                </button>
-              )}
               <textarea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
@@ -523,26 +529,42 @@ function InterrogationRoom() {
                     void send(draft);
                   }
                 }}
-                rows={1}
+                rows={2}
                 disabled={locked || busy}
-                placeholder={
-                  locked
-                    ? "انتهى وقت الاستجواب"
-                    : busy
-                      ? "ينتظر رده..."
-                      : voice.listening
-                      ? "نسمعك..."
-                      : "اكتب سؤالك بأي صيغة..."
-                }
-                className="min-h-12 flex-1 resize-none rounded-xl border border-input bg-surface-2 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-primary/60 disabled:opacity-50"
+                placeholder={locked ? "انتهى وقت هذا المشتبه" : "اكتب سؤالك بأسلوبك..."}
+                className="min-w-0 flex-1 resize-none rounded-xl border border-input bg-surface-2 px-3.5 py-3 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-primary/60 disabled:opacity-50"
               />
+              {voice.micSupported && (
+                <button
+                  type="button"
+                  disabled={locked || busy}
+                  onClick={voice.listening ? voice.stopListening : voice.startListening}
+                  aria-label={voice.listening ? "إيقاف التسجيل" : "تكلم بالمايك"}
+                  className={`grid size-11 shrink-0 place-items-center rounded-xl border transition-colors disabled:opacity-45 ${
+                    voice.listening
+                      ? "border-primary/55 bg-primary/15 text-primary"
+                      : "border-border bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {voice.listening ? <MicOff className="size-4" /> : <Mic className="size-4" />}
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={locked || busy || unlocked.length === 0}
+                onClick={() => setConfrontOpen((v) => !v)}
+                aria-label="واجهه بدليل"
+                className="grid size-11 shrink-0 place-items-center rounded-xl border border-evidence/45 bg-evidence/10 text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
+              >
+                <FileSearch className="size-4" />
+              </button>
               <button
                 type="submit"
-                disabled={locked || !draft.trim() || typing}
+                disabled={locked || busy || !draft.trim()}
                 aria-label="إرسال"
-                className="grid size-12 shrink-0 place-items-center rounded-xl file-tape disabled:opacity-40"
+                className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground transition-opacity disabled:opacity-45"
               >
-                <Send className="size-4" />
+                {busy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
               </button>
             </form>
           </div>
@@ -555,12 +577,12 @@ function InterrogationRoom() {
           onClick={() => setSuspectsOpen(false)}
         >
           <div
-            className="surface-panel cine-in max-h-[85vh] w-full max-w-2xl overflow-y-auto p-5 sm:p-6"
+            className="surface-panel cine-in max-h-[85vh] w-full max-w-2xl overflow-y-auto p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-3">
               <div>
-                <Eyebrow>تنقل بين المشتبه فيهم</Eyebrow>
+                <Eyebrow>تنقل بين الجلسات</Eyebrow>
                 <h3 className="mt-1 text-xl font-bold">المشتبه فيهم</h3>
               </div>
               <button
@@ -572,75 +594,51 @@ function InterrogationRoom() {
                 <X className="size-5" />
               </button>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              وقت كل واحد ينقص بس وأنت داخل استجوابه، ولمن ترجع له يكمل من نفس الثانية.
-            </p>
-            <div className="mt-4 grid gap-3">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {allSuspects.map((s) => {
                 const rt = room?.suspects[s.id];
-                const left = rt?.timeLeft ?? INTERROGATION_SECONDS;
-                const done = rt?.finished || left <= 0;
                 return (
                   <button
                     key={s.id}
                     type="button"
                     onClick={() => switchTo(s.id)}
-                    className={`flex w-full items-center gap-3 rounded-xl border p-3 text-right transition-colors ${
+                    className={`flex items-center gap-3 rounded-xl border p-3 text-right transition-colors ${
                       s.id === suspectId
-                        ? "border-primary/50 bg-primary/10"
-                        : "border-border bg-surface-2 hover:border-primary/40"
+                        ? "border-primary/55 bg-primary/10"
+                        : "border-border bg-surface-2 hover:border-primary/45"
                     }`}
                   >
                     <img
                       src={s.portrait}
-                      alt={`صورة ${s.name}`}
+                      alt={s.name}
                       loading="lazy"
-                      className="size-14 shrink-0 rounded-lg border border-border object-cover object-top grayscale-[35%]"
+                      className="size-12 shrink-0 rounded-lg border border-border object-cover object-top grayscale-[35%]"
                     />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-sm font-bold">{s.name}</p>
-                        <span
-                          dir="ltr"
-                          className={`font-mono text-xs ${
-                            done ? "text-muted-foreground" : left < 60 ? "text-primary" : "text-foreground"
-                          }`}
-                        >
-                          {formatClock(left)}
-                        </span>
-                      </div>
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">{s.role}</p>
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <CaseTag tone={done ? "muted" : "danger"}>
-                          {done ? "انتهى وقته" : s.id === suspectId ? "جلسة جارية" : "متاح"}
-                        </CaseTag>
-                        <span className="font-mono text-[0.65rem] text-muted-foreground">
-                          توتر {rt?.stress ?? 0} / 100
-                        </span>
-                      </div>
-                    </div>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-bold">{s.name}</span>
+                      <span
+                        dir="ltr"
+                        className="mt-0.5 block font-mono text-[0.65rem] text-muted-foreground"
+                      >
+                        {formatClock(rt?.timeLeft ?? INTERROGATION_SECONDS)}
+                        {rt?.finished ? " · مغلقة" : ""}
+                      </span>
+                    </span>
                   </button>
                 );
               })}
             </div>
-            <ActionButton
-              variant="outline"
-              className="mt-5 w-full"
-              onClick={() => navigate({ to: "/dashboard" })}
-            >
-              لوحة التحقيق <ArrowLeft className="size-4" />
-            </ActionButton>
           </div>
         </div>
       )}
 
       {boardOpen && (
         <div
-          className="fixed inset-0 z-50 grid place-items-center bg-background/85 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 overflow-y-auto bg-background/90 p-4 backdrop-blur-sm"
           onClick={() => setBoardOpen(false)}
         >
           <div
-            className="surface-panel cine-in max-h-[85vh] w-full max-w-3xl overflow-y-auto p-5 sm:p-6"
+            className="surface-panel cine-in mx-auto w-full max-w-3xl p-5 sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-3">
@@ -657,35 +655,32 @@ function InterrogationRoom() {
                 <X className="size-5" />
               </button>
             </div>
-            {unlocked.length === 0 ? (
-              <p className="mt-4 rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-                ما عندكم أدلة مكتشفة بعد. اسألوا أكثر عشان تفتحون ملفات الأدلة.
-              </p>
-            ) : (
-              <>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  اختر دليلاً عشان تواجه {suspect.name} فيه.
-                </p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {unlocked.map((item) => (
-                    <EvidenceCard
-                      key={item.id}
-                      item={item}
-                      unlocked
-                      selectLabel="واجهه بدليل"
-                      onSelect={() => {
-                        if (locked || busy) return;
-                        confront(item.id);
-                      }}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
+            <p className="mt-2 text-xs text-muted-foreground">
+              اختر دليلاً وبعدها «استخدم في الاستجواب» عشان تواجه فيه أي مشتبه.
+            </p>
+            <div className="mt-4">
+              <EvidenceBoard
+                unlockedIds={room?.unlockedEvidence ?? []}
+                compact
+                onConfront={(evidenceId, targetId) => {
+                  setBoardOpen(false);
+                  if (targetId === suspectId) {
+                    if (locked || busy) return;
+                    confront(evidenceId);
+                    return;
+                  }
+                  voice.stopSpeaking();
+                  navigate({
+                    to: "/interrogation/$suspectId",
+                    params: { suspectId: targetId },
+                    search: { confront: evidenceId },
+                  });
+                }}
+              />
+            </div>
           </div>
         </div>
       )}
-
 
       {unlockToast && (
         <div className="fixed bottom-6 right-1/2 z-50 translate-x-1/2 sm:right-6 sm:translate-x-0">
@@ -701,3 +696,4 @@ function InterrogationRoom() {
     </GameShell>
   );
 }
+

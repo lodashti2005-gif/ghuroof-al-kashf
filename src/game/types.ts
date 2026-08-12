@@ -80,6 +80,9 @@ export interface EvidenceItem {
   title: string;
   description: string;
   detail: string;
+  /** Neutral forensic observation shown to players — never names an owner or links a suspect. */
+  observation: string;
+
   icon: "watch" | "phone" | "cup" | "message" | "camera" | "key";
   /** Close-up crop of the single crime-scene photo, revealed after discovery. */
   crop: EvidenceCrop;
