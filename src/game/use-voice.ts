@@ -1,12 +1,16 @@
 /**
  * Voice layer for the interrogation room.
  *
- * Today it uses the browser's built-in speech APIs so mic + audio replies work
- * with zero configuration. The exported surface (`listening`, `start`, `stop`,
- * `speak`, `muted`) is provider-agnostic, so swapping in ElevenLabs (or any
- * STT/TTS provider through a server function) later only replaces the bodies.
+ * Speech OUT goes through ElevenLabs (`/api/public/tts`): a different real human
+ * voice per suspect, with delivery driven by the suspect's emotional state and
+ * stress. Browser `speechSynthesis` is kept only as an emergency fallback if the
+ * ElevenLabs request fails, so a broken audio call never blocks the session.
+ *
+ * Speech IN still uses the browser recogniser (mic button).
  */
 import { useCallback, useEffect, useRef, useState } from "react";
+
+import type { SuspectState } from "@/game/types";
 
 type RecognitionLike = {
   lang: string;
@@ -19,17 +23,12 @@ type RecognitionLike = {
   onend: (() => void) | null;
 };
 
-/** Per-suspect voice colouring (kept provider-agnostic on purpose). */
-export interface VoiceProfile {
-  /** Preferred gender when several Arabic voices are installed. */
-  gender?: "male" | "female";
-  rate?: number;
-  pitch?: number;
-}
-
 function getRecognition(): RecognitionLike | null {
   if (typeof window === "undefined") return null;
-  const w = window as unknown as { SpeechRecognition?: new () => RecognitionLike; webkitSpeechRecognition?: new () => RecognitionLike };
+  const w = window as unknown as {
+    SpeechRecognition?: new () => RecognitionLike;
+    webkitSpeechRecognition?: new () => RecognitionLike;
+  };
   const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
   if (!Ctor) return null;
   const rec = new Ctor();
@@ -39,54 +38,47 @@ function getRecognition(): RecognitionLike | null {
   return rec;
 }
 
-const FEMALE_HINTS = ["female", "woman", "hala", "zariyah", "laila", "salma", "amira", "sara"];
-const MALE_HINTS = ["male", "man", "maged", "tarik", "naayf", "hamed", "khalid"];
+export interface SpeakOptions {
+  state?: SuspectState;
+  stress?: number;
+}
 
-/** Pick the best installed Arabic voice, biased toward the requested gender. */
-function pickVoice(profile?: VoiceProfile): SpeechSynthesisVoice | null {
-  if (typeof window === "undefined" || !window.speechSynthesis) return null;
-  const voices = window.speechSynthesis.getVoices();
-  const arabic = voices.filter((v) => v.lang?.toLowerCase().startsWith("ar"));
-  if (arabic.length === 0) return null;
-  const hints = profile?.gender === "female" ? FEMALE_HINTS : MALE_HINTS;
-  const match = arabic.find((v) => hints.some((h) => v.name.toLowerCase().includes(h)));
-  return match ?? arabic[0] ?? null;
+interface LastLine extends SpeakOptions {
+  text: string;
 }
 
 export function useVoice({
   onTranscript,
-  profile,
+  suspectId,
 }: {
   onTranscript: (text: string) => void;
-  profile?: VoiceProfile;
+  suspectId: string;
 }) {
   const [listening, setListening] = useState(false);
   // Voice playback is ON by default: the suspect talks back out loud.
   const [muted, setMuted] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [loadingVoice, setLoadingVoice] = useState(false);
+  const [voiceError, setVoiceError] = useState(false);
   const [micSupported, setMicSupported] = useState(false);
-  const [ttsSupported, setTtsSupported] = useState(false);
   const recRef = useRef<RecognitionLike | null>(null);
   const onTranscriptRef = useRef(onTranscript);
   onTranscriptRef.current = onTranscript;
-  const profileRef = useRef(profile);
-  profileRef.current = profile;
-  const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const urlRef = useRef<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const lastRef = useRef<LastLine | null>(null);
+  const mutedRef = useRef(muted);
+  mutedRef.current = muted;
 
   useEffect(() => {
     setMicSupported(!!getRecognition());
-    const synth = typeof window === "undefined" ? undefined : window.speechSynthesis;
-    setTtsSupported(!!synth);
-    // Voice list loads async in most browsers.
-    const load = () => {
-      voiceRef.current = pickVoice(profileRef.current);
-    };
-    load();
-    synth?.addEventListener?.("voiceschanged", load);
     return () => {
-      synth?.removeEventListener?.("voiceschanged", load);
       recRef.current?.stop();
-      synth?.cancel();
+      abortRef.current?.abort();
+      audioRef.current?.pause();
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      if (typeof window !== "undefined") window.speechSynthesis?.cancel();
     };
   }, []);
 
@@ -109,56 +101,123 @@ export function useVoice({
     setListening(false);
   }, []);
 
-  /** Speak a suspect line. No-op while muted; provider swap happens here. */
-  const speak = useCallback(
-    (text: string) => {
-      if (muted || typeof window === "undefined" || !window.speechSynthesis) return;
-      const clean = text.replace(/[«»"”“]/g, " ").trim();
-      if (!clean) return;
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(clean);
-      const picked = voiceRef.current ?? pickVoice(profileRef.current);
-      voiceRef.current = picked;
-      if (picked) utter.voice = picked;
-      utter.lang = picked?.lang ?? "ar-SA";
-      utter.rate = profileRef.current?.rate ?? 0.95;
-      utter.pitch = profileRef.current?.pitch ?? 0.9;
-      utter.onstart = () => setSpeaking(true);
-      utter.onend = () => setSpeaking(false);
-      utter.onerror = () => setSpeaking(false);
-      window.speechSynthesis.speak(utter);
-      // Safety net: some engines never fire onstart.
-      setSpeaking(true);
+  /** Hard-stop whatever is currently playing or being generated. */
+  const stopSpeaking = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.src = "";
+    }
+    if (urlRef.current) {
+      URL.revokeObjectURL(urlRef.current);
+      urlRef.current = null;
+    }
+    if (typeof window !== "undefined") window.speechSynthesis?.cancel();
+    setSpeaking(false);
+    setLoadingVoice(false);
+  }, []);
+
+  /** Emergency-only fallback so a failed ElevenLabs call still gives audio. */
+  const fallbackSpeak = useCallback((text: string) => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text.replace(/[«»"”“…]/g, " ").trim());
+    utter.lang = "ar-SA";
+    utter.rate = 0.95;
+    utter.onstart = () => setSpeaking(true);
+    utter.onend = () => setSpeaking(false);
+    utter.onerror = () => setSpeaking(false);
+    window.speechSynthesis.speak(utter);
+  }, []);
+
+  const play = useCallback(
+    async (line: LastLine) => {
+      const text = line.text.trim();
+      if (!text) return;
+      lastRef.current = line;
+      if (mutedRef.current) return;
+
+      // One suspect voice at a time — never let two replies overlap.
+      stopSpeaking();
+      setVoiceError(false);
+      setLoadingVoice(true);
+
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      try {
+        const res = await fetch("/api/public/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            suspectId,
+            text,
+            state: line.state ?? "calm",
+            stress: Math.round(line.stress ?? 0),
+          }),
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`tts ${res.status}`);
+        const blob = await res.blob();
+        if (controller.signal.aborted) return;
+
+        const url = URL.createObjectURL(blob);
+        urlRef.current = url;
+        const audio = audioRef.current ?? new Audio();
+        audioRef.current = audio;
+        audio.src = url;
+        audio.onended = () => setSpeaking(false);
+        audio.onerror = () => setSpeaking(false);
+        setLoadingVoice(false);
+        setSpeaking(true);
+        await audio.play().catch(() => setSpeaking(false));
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.error("elevenlabs playback failed", error);
+        setLoadingVoice(false);
+        setVoiceError(true);
+        fallbackSpeak(text);
+      }
     },
-    [muted],
+    [fallbackSpeak, stopSpeaking, suspectId],
   );
 
-  const stopSpeaking = useCallback(() => {
-    if (typeof window === "undefined") return;
-    window.speechSynthesis?.cancel();
-    setSpeaking(false);
-  }, []);
+  /** Speak a suspect line with its emotional delivery. */
+  const speak = useCallback(
+    (text: string, options?: SpeakOptions) => {
+      void play({ text, ...options });
+    },
+    [play],
+  );
+
+  /** Replay the last suspect reply. */
+  const replay = useCallback(() => {
+    const last = lastRef.current;
+    if (last) void play(last);
+  }, [play]);
 
   const toggleMute = useCallback(() => {
     setMuted((m) => {
-      if (!m && typeof window !== "undefined") {
-        window.speechSynthesis?.cancel();
-        setSpeaking(false);
-      }
+      if (!m) stopSpeaking();
       return !m;
     });
-  }, []);
+  }, [stopSpeaking]);
 
   return {
     listening,
     startListening,
     stopListening,
     micSupported,
-    ttsSupported,
     muted,
     toggleMute,
     speak,
+    replay,
     stopSpeaking,
     speaking,
+    loadingVoice,
+    voiceError,
+    hasLast: !!lastRef.current,
   };
 }

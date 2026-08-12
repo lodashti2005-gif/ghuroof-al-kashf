@@ -1,6 +1,20 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, FileSearch, Mic, MicOff, Send, Timer, Unlock, Volume2, VolumeX, X } from "lucide-react";
+import {
+  ArrowLeft,
+  FileSearch,
+  Loader2,
+  Mic,
+  MicOff,
+  RotateCcw,
+  Send,
+  Square,
+  Timer,
+  Unlock,
+  Volume2,
+  VolumeX,
+  X,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionButton, GameShell } from "@/components/game/shell";
@@ -10,8 +24,9 @@ import { INTERROGATION_SECONDS, evidence as allEvidence, getEvidence, getSuspect
 import { generateSuspectReply, suggestedQuestions } from "@/game/dialogue";
 import * as store from "@/game/room-store";
 import { formatClock, useRoom } from "@/game/use-room";
-import { useVoice, type VoiceProfile } from "@/game/use-voice";
+import { useVoice } from "@/game/use-voice";
 import { askSuspect } from "@/lib/interrogation.functions";
+
 
 export const Route = createFileRoute("/interrogation/$suspectId")({
   head: () => ({
@@ -28,13 +43,8 @@ export const Route = createFileRoute("/interrogation/$suspectId")({
   component: InterrogationRoom,
 });
 
-/** Per-suspect voice colouring for the spoken replies. */
-const VOICE_PROFILES: Record<string, VoiceProfile> = {
-  fahad: { gender: "male", rate: 0.95, pitch: 0.9 },
-  yousef: { gender: "male", rate: 1.02, pitch: 0.85 },
-  noura: { gender: "female", rate: 0.97, pitch: 1.05 },
-  dana: { gender: "female", rate: 0.9, pitch: 1.1 },
-};
+// كل مشتبه له صوت بشري مستقل عبر ElevenLabs — التفاصيل في `@/game/voices`.
+
 
 function InterrogationRoom() {
   const { suspectId } = Route.useParams();
@@ -58,8 +68,9 @@ function InterrogationRoom() {
 
   const voice = useVoice({
     onTranscript: (text) => sendRef.current?.(text),
-    profile: VOICE_PROFILES[suspectId] ?? { gender: "male" },
+    suspectId,
   });
+
   const sendRef = useRef<((text: string, evidenceId?: string) => void) | null>(null);
 
   // Countdown — each suspect has its own independent 5 minutes. The interval is
@@ -137,7 +148,11 @@ function InterrogationRoom() {
       actions.bumpStress(suspectId, reply.stressDelta);
       actions.setSuspectState(suspectId, reply.state, reply.level);
       if (reply.unlock) announceUnlock(reply.unlock);
-      voice.speak(line);
+      voice.speak(line, {
+        state: reply.state,
+        stress: Math.min(100, (runtime?.stress ?? 0) + reply.stressDelta),
+      });
+
     } catch (error) {
       console.error(error);
       // Never leave a question unanswered: try the offline engine, and if even
@@ -168,6 +183,8 @@ function InterrogationRoom() {
       actions.bumpStress(suspectId, fallbackStress);
       actions.setSuspectState(suspectId, "nervous");
       if (fallbackUnlock) announceUnlock(fallbackUnlock);
+      voice.speak(fallbackText, { state: "nervous", stress: runtime?.stress ?? 0 });
+
     } finally {
       setTyping(false);
       busyRef.current = false;
@@ -249,11 +266,39 @@ function InterrogationRoom() {
               </p>
             </div>
             <div className="flex items-center gap-2">
+
+              {(voice.speaking || voice.loadingVoice) && (
+                <button
+                  type="button"
+                  onClick={voice.stopSpeaking}
+                  aria-label="إيقاف الصوت"
+                  className="grid size-9 place-items-center rounded-lg border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {voice.loadingVoice ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Square className="size-4" />
+                  )}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={voice.replay}
+                disabled={!voice.hasLast || voice.muted}
+                aria-label="إعادة تشغيل آخر رد"
+                className="grid size-9 place-items-center rounded-lg border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+              >
+                <RotateCcw className="size-4" />
+              </button>
               <button
                 type="button"
                 onClick={voice.toggleMute}
                 aria-label={voice.muted ? "تشغيل صوت المشتبه" : "كتم صوت المشتبه"}
-                className="grid size-9 place-items-center rounded-lg border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground"
+                className={`grid size-9 place-items-center rounded-lg border bg-secondary transition-colors hover:text-foreground ${
+                  voice.muted
+                    ? "border-primary/50 text-primary"
+                    : "border-border text-muted-foreground"
+                }`}
               >
                 {voice.muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
               </button>
@@ -261,6 +306,7 @@ function InterrogationRoom() {
                 {locked ? "الجلسة مغلقة" : "جارية"}
               </CaseTag>
             </div>
+
           </div>
 
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-5 py-5">

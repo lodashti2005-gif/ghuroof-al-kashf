@@ -16,6 +16,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as LobbyRouteImport } from './routes/lobby'
 import { Route as RevealRouteImport } from './routes/reveal'
 import { Route as InterrogationSuspectIdRouteImport } from './routes/interrogation.$suspectId'
+import { Route as ApiPublicTtsRouteImport } from './routes/api/public/tts'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,6 +53,11 @@ const InterrogationSuspectIdRoute = InterrogationSuspectIdRouteImport.update({
   path: '/interrogation/$suspectId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTtsRoute = ApiPublicTtsRouteImport.update({
+  id: '/api/public/tts',
+  path: '/api/public/tts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/lobby': typeof LobbyRoute
   '/reveal': typeof RevealRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
+  '/api/public/tts': typeof ApiPublicTtsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByTo {
   '/lobby': typeof LobbyRoute
   '/reveal': typeof RevealRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
+  '/api/public/tts': typeof ApiPublicTtsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +88,7 @@ export interface FileRoutesById {
   '/lobby': typeof LobbyRoute
   '/reveal': typeof RevealRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
+  '/api/public/tts': typeof ApiPublicTtsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +100,7 @@ export interface FileRouteTypes {
     | '/lobby'
     | '/reveal'
     | '/interrogation/$suspectId'
+    | '/api/public/tts'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/lobby'
     | '/reveal'
     | '/interrogation/$suspectId'
+    | '/api/public/tts'
   id:
     | '__root__'
     | '/'
@@ -109,6 +120,7 @@ export interface FileRouteTypes {
     | '/lobby'
     | '/reveal'
     | '/interrogation/$suspectId'
+    | '/api/public/tts'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,6 +131,7 @@ export interface RootRouteChildren {
   LobbyRoute: typeof LobbyRoute
   RevealRoute: typeof RevealRoute
   InterrogationSuspectIdRoute: typeof InterrogationSuspectIdRoute
+  ApiPublicTtsRoute: typeof ApiPublicTtsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -172,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InterrogationSuspectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/tts': {
+      id: '/api/public/tts'
+      path: '/api/public/tts'
+      fullPath: '/api/public/tts'
+      preLoaderRoute: typeof ApiPublicTtsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -183,6 +203,7 @@ const rootRouteChildren: RootRouteChildren = {
   LobbyRoute: LobbyRoute,
   RevealRoute: RevealRoute,
   InterrogationSuspectIdRoute: InterrogationSuspectIdRoute,
+  ApiPublicTtsRoute: ApiPublicTtsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
