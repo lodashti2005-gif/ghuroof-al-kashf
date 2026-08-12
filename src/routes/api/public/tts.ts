@@ -4,6 +4,9 @@
  * The API key stays server-side; the browser only sends the suspect id, the
  * line to speak and the emotional state. Audio is streamed straight back as
  * mp3 so playback starts as fast as possible on phones and tablets.
+ *
+ * No browser-speech fallback: if ElevenLabs fails we surface the provider's
+ * exact status and error body so the problem is visible instead of hidden.
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
@@ -18,13 +21,22 @@ const bodySchema = z.object({
   stress: z.number().min(0).max(100).default(0),
 });
 
+/** v3 is the most expressive multilingual model; v2 is the stable fallback. */
+const MODELS = ["eleven_v3", "eleven_multilingual_v2"] as const;
+
+/** eleven_v3 only accepts discrete stability values. */
+const quantize = (s: number) => (s < 0.34 ? 0 : s < 0.67 ? 0.5 : 1);
+
 export const Route = createFileRoute("/api/public/tts")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         const apiKey = process.env["ELEVENLABS_API_KEY"];
         if (!apiKey) {
-          return Response.json({ error: "voice_not_configured" }, { status: 503 });
+          return Response.json(
+            { error: "voice_not_configured", message: "ELEVENLABS_API_KEY غير موجود على السيرفر" },
+            { status: 503 },
+          );
         }
 
         let parsed: z.infer<typeof bodySchema>;
@@ -39,39 +51,55 @@ export const Route = createFileRoute("/api/public/tts")({
           parsed.state,
           parsed.stress,
         );
+        const text = shapeForSpeech(parsed.text, parsed.state);
 
-        const res = await fetch(
-          `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_44100_128`,
-          {
-            method: "POST",
-            headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              text: shapeForSpeech(parsed.text, parsed.state),
-              model_id: "eleven_multilingual_v2",
-              voice_settings: settings,
-            }),
-          },
-        ).catch((error: unknown) => {
-          console.error("ElevenLabs TTS request failed", error);
-          return null;
-        });
+        let lastStatus = 0;
+        let lastDetail = "network_error";
 
-        // A provider failure is not an app crash: answer 200 with a fallback
-        // flag so the client quietly uses browser speech instead of surfacing
-        // a runtime error.
-        if (!res || !res.ok || !res.body) {
-          const detail = res ? await res.text().catch(() => "") : "network_error";
-          console.error(`ElevenLabs TTS failed [${res?.status ?? 0}]: ${detail}`);
-          return Response.json(
-            { fallback: true, status: res?.status ?? 0 },
-            { status: 200, headers: { "Cache-Control": "no-store" } },
-          );
+        for (const model of MODELS) {
+          const voice_settings =
+            model === "eleven_v3"
+              ? {
+                  stability: quantize(settings.stability),
+                  similarity_boost: settings.similarity_boost,
+                  style: settings.style,
+                  use_speaker_boost: true,
+                }
+              : settings;
+
+          const res = await fetch(
+            `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_44100_128`,
+            {
+              method: "POST",
+              headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
+              body: JSON.stringify({ text, model_id: model, voice_settings }),
+            },
+          ).catch((error: unknown) => {
+            console.error("ElevenLabs TTS request failed", error);
+            return null;
+          });
+
+          if (res?.ok && res.body) {
+            return new Response(res.body, {
+              headers: {
+                "Content-Type": "audio/mpeg",
+                "Cache-Control": "no-store",
+                "X-Voice-Model": model,
+              },
+            });
+          }
+
+          lastStatus = res?.status ?? 0;
+          lastDetail = res ? await res.text().catch(() => "") : "network_error";
+          console.error(`ElevenLabs TTS failed [${lastStatus}] on ${model}: ${lastDetail}`);
+          // Auth/permission problems will not improve with another model.
+          if (lastStatus === 401 || lastStatus === 403) break;
         }
 
-
-        return new Response(res.body, {
-          headers: { "Content-Type": "audio/mpeg", "Cache-Control": "no-store" },
-        });
+        return Response.json(
+          { error: "elevenlabs_failed", status: lastStatus, detail: lastDetail },
+          { status: 502, headers: { "Cache-Control": "no-store" } },
+        );
       },
     },
   },
