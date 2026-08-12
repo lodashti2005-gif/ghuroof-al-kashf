@@ -156,8 +156,9 @@ export function SuspectCard({
   href?: { to: string; params?: Record<string, string> };
 }) {
   const body = (
-    <div className="surface-panel cine-in grid grid-cols-[7.5rem_minmax(0,1fr)] gap-4 overflow-hidden p-0 transition-colors duration-300 hover:border-primary/45 sm:grid-cols-[10rem_minmax(0,1fr)]">
-      <div className="relative h-full min-h-[13rem] shrink-0 overflow-hidden">
+    <div className="surface-panel cine-in flex h-full flex-col gap-4 overflow-hidden p-0 transition-colors duration-300 hover:border-primary/45 sm:grid sm:grid-cols-[11rem_minmax(0,1fr)]">
+      {/* الصورة على اليمين في RTL */}
+      <div className="relative h-44 w-full overflow-hidden sm:h-full sm:min-h-[15rem]">
         <img
           src={suspect.portrait}
           alt={`صورة ${suspect.name}`}
@@ -166,30 +167,49 @@ export function SuspectCard({
           height={1104}
           className="absolute inset-0 size-full object-cover object-top grayscale-[35%] transition-transform duration-700 hover:scale-[1.04]"
         />
-        <div className="absolute inset-0 bg-gradient-to-l from-transparent to-card/85" />
+        <div className="absolute inset-0 bg-gradient-to-t from-card/90 to-transparent sm:bg-gradient-to-l sm:from-transparent sm:to-card/80" />
+        <span className="absolute bottom-2 right-3 font-mono text-[0.65rem] text-muted-foreground sm:hidden">
+          العمر {suspect.age}
+        </span>
       </div>
-      <div className="flex min-w-0 flex-col justify-between gap-3 py-5 pl-4 pr-1 sm:py-6 sm:pl-5">
+
+      <div className="flex min-w-0 flex-col gap-3 px-4 pb-5 sm:px-1 sm:py-6 sm:pe-5">
         <div className="min-w-0">
-          <Eyebrow>{suspect.role}</Eyebrow>
-          <h3 className="mt-1 text-xl font-bold leading-tight sm:text-2xl">{suspect.name}</h3>
-          <p className="mt-0.5 font-mono text-xs text-muted-foreground">العمر {suspect.age}</p>
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="min-w-0 truncate text-lg font-bold leading-tight sm:text-xl">
+              {suspect.name}
+            </h3>
+            <span
+              dir="ltr"
+              className="hidden shrink-0 font-mono text-xs text-muted-foreground sm:block"
+            >
+              {suspect.age}
+            </span>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <CaseTag>{suspect.role}</CaseTag>
+            {typeof stress !== "number" && (
+              <CaseTag tone="danger">
+                <Fingerprint className="size-3" /> ملف مفتوح
+              </CaseTag>
+            )}
+          </div>
           <p className="mt-2.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
             {suspect.personality}
           </p>
+          {suspect.known[0] && (
+            <p className="mt-2 line-clamp-2 border-r-2 border-border pe-0 ps-2.5 text-xs leading-relaxed text-muted-foreground/85">
+              {suspect.known[0]}
+            </p>
+          )}
         </div>
-        {typeof stress === "number" ? (
-          <div className="flex items-center gap-3">
+
+        {typeof stress === "number" && (
+          <div className="mt-auto flex items-center gap-3">
             <div className="min-w-0 flex-1">
               <StressMeter value={stress} compact />
             </div>
             <CaseTag tone={finished ? "muted" : "danger"}>{finished ? "انتهى" : "متاح"}</CaseTag>
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            <CaseTag>مشتبه به</CaseTag>
-            <CaseTag tone="danger">
-              <Fingerprint className="size-3" /> ملف مفتوح
-            </CaseTag>
           </div>
         )}
       </div>
@@ -198,11 +218,16 @@ export function SuspectCard({
 
   if (!href) return body;
   return (
-    <Link to={href.to} params={href.params as never} className="block focus-visible:outline-none">
+    <Link
+      to={href.to}
+      params={href.params as never}
+      className="block h-full focus-visible:outline-none"
+    >
       {body}
     </Link>
   );
 }
+
 
 export function ProgressRing({ value, label }: { value: number; label: string }) {
   return (

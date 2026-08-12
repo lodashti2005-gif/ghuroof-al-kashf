@@ -81,7 +81,7 @@ function Dashboard() {
               </div>
               <CaseTag>5 دقائق لكل واحد</CaseTag>
             </div>
-            <div className="grid gap-4 xl:grid-cols-2">
+            <div className="grid items-stretch gap-4 md:grid-cols-2">
               {suspects.map((s) => (
                 <SuspectCard
                   key={s.id}
