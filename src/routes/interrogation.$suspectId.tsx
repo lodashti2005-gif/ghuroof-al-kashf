@@ -269,10 +269,12 @@ function InterrogationRoom() {
         <div className="fixed bottom-6 right-1/2 z-50 translate-x-1/2 sm:right-6 sm:translate-x-0">
           <div className="cine-in flex items-center gap-3 rounded-xl border border-evidence/40 bg-card px-4 py-3 shadow-[var(--shadow-noir)]">
             <Unlock className="size-4 shrink-0 text-evidence" />
-            <p className="text-sm">
-              دليل جديد انفتح: <span className="font-bold">{unlockToast}</span>
-            </p>
+            <div className="min-w-0">
+              <p className="text-sm font-bold">🔎 تم اكتشاف دليل جديد</p>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">{unlockToast}</p>
+            </div>
           </div>
+
         </div>
       )}
     </GameShell>
