@@ -248,3 +248,64 @@ export const solution = {
 
 export const getSuspect = (id: string) => suspects.find((s) => s.id === id);
 export const getEvidence = (id: string) => evidence.find((e) => e.id === id);
+
+/**
+ * روابط منطقية حقيقية بين دليلين حسب سيناريو القضية. غير معروضة للاعب أبداً —
+ * تستخدم فقط للتحقق لمن يحاول يربط دليلين بلوحة الأدلة.
+ */
+export interface EvidenceLink {
+  id: string;
+  pair: [string, string];
+  title: string;
+  insight: string;
+}
+
+export const evidenceLinks: EvidenceLink[] = [
+  {
+    id: "time-inside",
+    pair: ["watch", "camera"],
+    title: "أحد كان داخل الشاليه وقت الوفاة",
+    insight:
+      "الساعة واقفة على 01:47، والكاميرا تسجل سيارة داخلة 01:38 وطالعة 02:04 — يعني في أحد كان جوّه بنفس اللحظة، ورواية «الجميع طلعوا قبل 01:30» ما تمشي.",
+  },
+  {
+    id: "silent-entry",
+    pair: ["key", "camera"],
+    title: "دخول بدون كسر باب",
+    insight:
+      "المفتاح الاحتياطي الناقص يفسر ليش الباب ما كان مكسور، والكاميرا تحدد وقت الدخول الثاني — الدخول كان بهدوء وبمعرفة مكان المفاتيح.",
+  },
+  {
+    id: "sedated-then-struck",
+    pair: ["cup", "watch"],
+    title: "مهدئ قبل المشادة",
+    insight:
+      "فنجال فيه مهدئ وفنجال ثاني مقابله، وبعدها ساعة تتكسر من ضربة على 01:47 — أحد جلس معه بهدوء أول، والمشادة صارت بعدها.",
+  },
+  {
+    id: "hidden-motive",
+    pair: ["phone", "message"],
+    title: "التلفون انشال عشان يخفي شي",
+    insight:
+      "الرسالة تحذّر بدر من إنه يوصّل الموضوع للمحامي، والتلفون نفسه مفقود والشاحن بمكانه — اللي أخذ التلفون كان يبي يخفي محتواه، مو يسرقه.",
+  },
+  {
+    id: "threat-and-return",
+    pair: ["message", "camera"],
+    title: "تهديد قبل الرجعة",
+    insight:
+      "رسالة تهديد 11:48 مساءً من رقم مسجل باسم الشركة، وبعدها بساعتين سيارة ترجع للشاليه — التهديد ما وقف عند الكلام.",
+  },
+  {
+    id: "key-and-cup",
+    pair: ["key", "cup"],
+    title: "أحد يعرف المطبخ",
+    insight:
+      "المفتاح الاحتياطي كان معلّق بالمطبخ، ونفس المطبخ فيه الفنجالين — اللي سوّى هذا يعرف الشاليه من داخل مو زائر غريب.",
+  },
+];
+
+export const findEvidenceLink = (a: string, b: string) =>
+  evidenceLinks.find(
+    (l) => (l.pair[0] === a && l.pair[1] === b) || (l.pair[0] === b && l.pair[1] === a),
+  );
