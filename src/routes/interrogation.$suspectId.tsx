@@ -56,7 +56,7 @@ function InterrogationRoom() {
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
   const [unlockToast, setUnlockToast] = useState<string | null>(null);
-  const [retry, setRetry] = useState<{ text: string; evidenceId?: string } | null>(null);
+  const [retry, setRetry] = useState<{ text: string; evidenceId?: string | undefined } | null>(null);
 
   const [confrontOpen, setConfrontOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
