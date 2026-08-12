@@ -10,7 +10,7 @@ import { INTERROGATION_SECONDS, evidence as allEvidence, getEvidence, getSuspect
 import { generateSuspectReply, suggestedQuestions } from "@/game/dialogue";
 import * as store from "@/game/room-store";
 import { formatClock, useRoom } from "@/game/use-room";
-import { useVoice } from "@/game/use-voice";
+import { useVoice, type VoiceProfile } from "@/game/use-voice";
 import { askSuspect } from "@/lib/interrogation.functions";
 
 export const Route = createFileRoute("/interrogation/$suspectId")({
@@ -27,6 +27,14 @@ export const Route = createFileRoute("/interrogation/$suspectId")({
   }),
   component: InterrogationRoom,
 });
+
+/** Per-suspect voice colouring for the spoken replies. */
+const VOICE_PROFILES: Record<string, VoiceProfile> = {
+  fahad: { gender: "male", rate: 0.95, pitch: 0.9 },
+  yousef: { gender: "male", rate: 1.02, pitch: 0.85 },
+  noura: { gender: "female", rate: 0.97, pitch: 1.05 },
+  dana: { gender: "female", rate: 0.9, pitch: 1.1 },
+};
 
 function InterrogationRoom() {
   const { suspectId } = Route.useParams();
@@ -48,7 +56,10 @@ function InterrogationRoom() {
     [room?.unlockedEvidence],
   );
 
-  const voice = useVoice({ onTranscript: (text) => sendRef.current?.(text) });
+  const voice = useVoice({
+    onTranscript: (text) => sendRef.current?.(text),
+    profile: VOICE_PROFILES[suspectId] ?? { gender: "male" },
+  });
   const sendRef = useRef<((text: string, evidenceId?: string) => void) | null>(null);
 
   // Countdown — each suspect has its own independent 5 minutes. The interval is

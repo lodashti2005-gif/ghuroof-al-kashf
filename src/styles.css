@@ -436,6 +436,8 @@
   .sim-stage,
   .sim-react,
   .sim-speaking,
+  .sim-mouth,
+  .voice-bar,
   .sim-pulse {
     animation: none !important;
   }
