@@ -110,15 +110,16 @@ function Accusation() {
             </ActionButton>
           )}
           <ActionButton
-            variant={isHost ? "danger" : "ghost"}
-            disabled={!isHost || votesCount === 0}
+            variant={myVote ? "danger" : "ghost"}
+            disabled={!myVote}
             onClick={() => {
-              actions.setPhase("reveal");
+              if (isHost) actions.setPhase("reveal");
               navigate({ to: "/reveal" });
             }}
           >
-            اكشف الحقيقة
+            {myVote ? "اكشف الحقيقة" : "ثبّت اتهامك أول"}
           </ActionButton>
+
         </div>
       </Panel>
     </GameShell>
