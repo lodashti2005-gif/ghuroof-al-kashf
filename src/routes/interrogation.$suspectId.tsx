@@ -1,6 +1,20 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, FileSearch, Mic, MicOff, Send, Timer, Unlock, Volume2, VolumeX, X } from "lucide-react";
+import {
+  ArrowLeft,
+  FileSearch,
+  Loader2,
+  Mic,
+  MicOff,
+  RotateCcw,
+  Send,
+  Square,
+  Timer,
+  Unlock,
+  Volume2,
+  VolumeX,
+  X,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionButton, GameShell } from "@/components/game/shell";
@@ -10,8 +24,9 @@ import { INTERROGATION_SECONDS, evidence as allEvidence, getEvidence, getSuspect
 import { generateSuspectReply, suggestedQuestions } from "@/game/dialogue";
 import * as store from "@/game/room-store";
 import { formatClock, useRoom } from "@/game/use-room";
-import { useVoice, type VoiceProfile } from "@/game/use-voice";
+import { useVoice } from "@/game/use-voice";
 import { askSuspect } from "@/lib/interrogation.functions";
+
 
 export const Route = createFileRoute("/interrogation/$suspectId")({
   head: () => ({
