@@ -148,13 +148,16 @@ export function SuspectCard({
   suspect,
   stress,
   finished,
+  timeLeft,
   href,
 }: {
   suspect: Suspect;
   stress?: number;
   finished?: boolean;
+  timeLeft?: number;
   href?: { to: string; params?: Record<string, string> };
 }) {
+
   const body = (
     <div className="surface-panel cine-in flex h-full flex-col gap-4 overflow-hidden p-0 transition-colors duration-300 hover:border-primary/45 sm:grid sm:grid-cols-[11rem_minmax(0,1fr)]">
       {/* الصورة على اليمين في RTL */}
