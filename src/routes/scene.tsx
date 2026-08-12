@@ -77,7 +77,7 @@ function SceneRoute() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <CaseTag tone="evidence">
-              {unlockedIds.length} / {evidence.length} أدلة
+              الأدلة المكتشفة: {unlockedIds.length}
             </CaseTag>
             <ActionButton variant="outline" onClick={() => setBoard(true)}>
               <Fingerprint className="size-4" /> لوحة الأدلة
@@ -201,7 +201,7 @@ function SceneRoute() {
               <div>
                 <Eyebrow>لوحة الأدلة</Eyebrow>
                 <h2 className="mt-1 text-lg font-bold">
-                  {unlockedItems.length} / {evidence.length} دليل مكتشف
+                  الأدلة المكتشفة: {unlockedItems.length}
                 </h2>
               </div>
               <button
