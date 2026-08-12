@@ -34,22 +34,19 @@ function InterrogationRoom() {
   const [unlockToast, setUnlockToast] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const askedTopics = useMemo(
-    () => (runtime?.transcript ?? []).filter((m) => m.role === "investigator").map((m) => m.text),
-    [runtime?.transcript],
-  );
+  const transcript = useMemo(() => runtime?.transcript ?? [], [runtime?.transcript]);
 
-  // Countdown — the host-independent local clock. A Supabase-backed room would
-  // read a server deadline instead.
+  // Countdown — each suspect has its own independent 5 minutes. The interval is
+  // keyed on the suspect only, so sending a message never restarts or resets it.
   useEffect(() => {
-    if (!runtime || runtime.finished || runtime.timeLeft <= 0) return;
     const id = setInterval(() => {
-      const current = room?.suspects[suspectId];
-      if (!current || current.finished) return;
+      const current = store.getSnapshot()?.suspects[suspectId];
+      if (!current || current.finished || current.timeLeft <= 0) return;
       actions.setTimeLeft(suspectId, current.timeLeft - 1);
     }, 1000);
     return () => clearInterval(id);
-  }, [runtime, room, suspectId, actions]);
+  }, [suspectId, actions]);
+
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
