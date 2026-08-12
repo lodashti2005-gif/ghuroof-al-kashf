@@ -179,11 +179,15 @@ function InterrogationRoom() {
   ) => {
     const text = value.trim();
     if (!text || locked || !me || busyRef.current) return;
+    // الدليل المطروح على الطاولة ينضم لهذا السؤال.
+    const confrontId = evidenceId ?? pendingRef.current ?? undefined;
     busyRef.current = true;
     setDraft("");
     setConfrontOpen(false);
     setBoardOpen(false);
     setRetry(null);
+    setPendingEvidence(null);
+    pendingRef.current = null;
     const timeAtStart = store.getSnapshot()?.suspects[suspectId]?.timeLeft ?? null;
     const baseTranscript = transcript;
     if (!options?.skipPush) {
@@ -191,7 +195,6 @@ function InterrogationRoom() {
         role: "investigator",
         author: me.name,
         text: options?.displayText ?? text,
-        ...(evidenceId ? { evidenceId } : {}),
       });
     }
 
@@ -208,8 +211,9 @@ function InterrogationRoom() {
           message: text,
           stress: runtime?.stress ?? 0,
           unlockedEvidence: room?.unlockedEvidence ?? [],
-          confrontEvidenceId: evidenceId ?? null,
-          transcript: history.slice(-40),
+          confrontEvidenceId: confrontId ?? null,
+          // ذاكرة كاملة: كل أقوال الجلسة من بدايتها.
+          transcript: history.slice(-60),
         },
       });
 
@@ -237,7 +241,7 @@ function InterrogationRoom() {
       // Technical failure: no fake reply, no time lost, and a retry control.
       if (timeAtStart !== null) actions.setTimeLeft(suspectId, timeAtStart);
       actions.setSuspectState(suspectId, "calm");
-      setRetry({ text, evidenceId });
+      setRetry({ text, ...(confrontId ? { evidenceId: confrontId } : {}) });
     } finally {
       setTyping(false);
       busyRef.current = false;
@@ -247,13 +251,27 @@ function InterrogationRoom() {
   sendRef.current = send;
 
 
+  /**
+   * طرح دليل على الطاولة: يظهر كبطاقة صغيرة داخل المحادثة، بدون أي سؤال جاهز،
+   * وينضم لأول سؤال يكتبه اللاعب بعده حتى يكون رد المشتبه مبنياً عليه.
+   */
   const confront = (id: string) => {
     const item = getEvidence(id);
-    if (!item) return;
-    void send(`أواجهك بدليل — ${item.title}: ${item.description} شنو ردك؟`, id, {
-      displayText: item.title,
-    });
+    if (!item || locked || !me) return;
+    setConfrontOpen(false);
+    setBoardOpen(false);
+    if (!runtime?.transcript.some((m) => m.evidenceId === id)) {
+      actions.pushMessage(suspectId, {
+        role: "investigator",
+        author: me.name,
+        text: item.title,
+        evidenceId: id,
+      });
+    }
+    setPendingEvidence(id);
+    pendingRef.current = id;
   };
+
 
   confrontRef.current = confront;
 
