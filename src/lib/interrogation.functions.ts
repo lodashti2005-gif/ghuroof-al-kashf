@@ -11,19 +11,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-export const SUSPECT_STATES = [
-  "calm",
-  "thinking",
-  "nervous",
-  "defensive",
-  "angry",
-  "shocked",
-  "scared",
-  "suspicious",
-  "silent",
-] as const;
 
-export type SuspectState = (typeof SUSPECT_STATES)[number];
+import { SUSPECT_STATES, type SuspectState } from "@/game/types";
 
 export interface AiReply {
   text: string;
