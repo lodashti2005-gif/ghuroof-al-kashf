@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 
 import { SceneCrop } from "@/components/game/scene-crop";
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
-import { CaseTag, EvidenceCard, Eyebrow, Panel } from "@/components/game/ui";
+import { EvidenceBoard } from "@/components/game/evidence-board";
+import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { caseFile, evidence, getEvidence } from "@/game/case-data";
 import { sceneDecoys, sceneHotspots, sceneImage } from "@/game/scene";
 import { useRoom } from "@/game/use-room";
@@ -213,14 +214,18 @@ function SceneRoute() {
                 <X className="size-4" />
               </button>
             </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {evidence.map((item) => (
-                <EvidenceCard
-                  key={item.id}
-                  item={item}
-                  unlocked={unlockedIds.includes(item.id)}
-                />
-              ))}
+            <div className="mt-4">
+              <EvidenceBoard
+                unlockedIds={unlockedIds}
+                compact
+                onConfront={(evidenceId, suspectId) =>
+                  navigate({
+                    to: "/interrogation/$suspectId",
+                    params: { suspectId },
+                    search: { confront: evidenceId },
+                  })
+                }
+              />
             </div>
           </div>
         </div>
