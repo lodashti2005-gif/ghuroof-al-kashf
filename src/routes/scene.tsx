@@ -6,7 +6,7 @@ import { SceneCrop } from "@/components/game/scene-crop";
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
 import { CaseTag, EvidenceCard, Eyebrow, Panel } from "@/components/game/ui";
 import { caseFile, evidence, getEvidence } from "@/game/case-data";
-import { sceneHotspots, sceneImage } from "@/game/scene";
+import { sceneDecoys, sceneHotspots, sceneImage } from "@/game/scene";
 import { useRoom } from "@/game/use-room";
 
 export const Route = createFileRoute("/scene")({
@@ -119,6 +119,25 @@ function SceneRoute() {
                 }}
               />
             ))}
+            {/* Decoy props: clickable, but nothing useful. */}
+            {sceneDecoys.map((d) => (
+              <button
+                key={d.id}
+                type="button"
+                aria-label="فحص تفصيلة في مسرح الجريمة"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMiss(d.message);
+                }}
+                className="absolute cursor-crosshair bg-transparent focus:outline-none"
+                style={{
+                  left: `${d.x - d.w / 2}%`,
+                  top: `${d.y - d.h / 2}%`,
+                  width: `${d.w}%`,
+                  height: `${d.h}%`,
+                }}
+              />
+            ))}
             {miss && (
               <div className="pointer-events-none absolute bottom-3 right-1/2 translate-x-1/2 rounded-lg border border-border bg-card/90 px-3 py-1.5 text-xs text-muted-foreground">
                 {miss}
@@ -158,7 +177,7 @@ function SceneRoute() {
                 {foundItem.description}
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
-                مكان العثور: <span className="text-foreground">{foundItem.foundAt}</span>
+                انضاف للوحة الأدلة. علاقته بالقضية تتوضح من الاستجواب.
               </p>
               <ActionButton variant="outline" className="mt-5 w-full" onClick={() => setFound(null)}>
                 رجوع لمسرح الجريمة
