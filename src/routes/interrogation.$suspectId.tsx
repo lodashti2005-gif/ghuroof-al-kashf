@@ -43,13 +43,8 @@ export const Route = createFileRoute("/interrogation/$suspectId")({
   component: InterrogationRoom,
 });
 
-/** Per-suspect voice colouring for the spoken replies. */
-const VOICE_PROFILES: Record<string, VoiceProfile> = {
-  fahad: { gender: "male", rate: 0.95, pitch: 0.9 },
-  yousef: { gender: "male", rate: 1.02, pitch: 0.85 },
-  noura: { gender: "female", rate: 0.97, pitch: 1.05 },
-  dana: { gender: "female", rate: 0.9, pitch: 1.1 },
-};
+// كل مشتبه له صوت بشري مستقل عبر ElevenLabs — التفاصيل في `@/game/voices`.
+
 
 function InterrogationRoom() {
   const { suspectId } = Route.useParams();
