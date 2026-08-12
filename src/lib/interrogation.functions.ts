@@ -56,10 +56,18 @@ export const askSuspect = createServerFn({ method: "POST" })
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const reply = await callModel({ system, user, profile });
-        if (reply)
-          return unrelatedConfront
-            ? { ...reply, stressDelta: clamp(reply.stressDelta, 1, 4) }
-            : reply;
+        if (reply) {
+          // Gate discoveries: prerequisites must already be on the board.
+          const unlock =
+            reply.unlock && canUnlockEvidence(reply.unlock, data.unlockedEvidence)
+              ? reply.unlock
+              : null;
+          return {
+            ...reply,
+            unlock,
+            stressDelta: unrelatedConfront ? clamp(reply.stressDelta, 1, 4) : reply.stressDelta,
+          };
+        }
       } catch (error) {
         lastError = error;
         console.error(`interrogation attempt ${attempt + 1} failed`, error);
