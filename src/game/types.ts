@@ -52,6 +52,17 @@ export interface SuspectRuntime {
   transcript: ChatMessage[];
 }
 
+/** استنتاج ناتج عن ربط دليلين مكتشفين بنجاح. */
+export interface Deduction {
+  id: string;
+  linkId: string;
+  title: string;
+  insight: string;
+  evidenceIds: string[];
+  createdAt: number;
+  author: string;
+}
+
 export interface RoomState {
   code: string;
   caseId: string;
@@ -60,6 +71,7 @@ export interface RoomState {
   players: Player[];
   unlockedEvidence: string[];
   notes: Note[];
+  deductions: Deduction[];
   suspects: Record<string, SuspectRuntime>;
   votes: Record<string, string>; // playerId -> suspectId
 }

@@ -11,7 +11,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { INTERROGATION_SECONDS, caseFile, suspects } from "./case-data";
-import type { Note, Player, RoomState, SuspectRuntime } from "./types";
+import type { Deduction, Note, Player, RoomState, SuspectRuntime } from "./types";
 
 const SESSION_KEY = "ghurfa:session";
 
@@ -23,7 +23,7 @@ export interface Session {
 type Listener = () => void;
 
 /** Portion of RoomState persisted inside `rooms.state`. */
-type SharedState = Pick<RoomState, "unlockedEvidence" | "notes" | "suspects">;
+type SharedState = Pick<RoomState, "unlockedEvidence" | "notes" | "deductions" | "suspects">;
 
 let state: RoomState | null = null;
 let session: Session | null = null;
@@ -52,6 +52,7 @@ const freshSuspects = (): Record<string, SuspectRuntime> =>
 const freshShared = (): SharedState => ({
   unlockedEvidence: [],
   notes: [],
+  deductions: [],
   suspects: freshSuspects(),
 });
 
@@ -104,6 +105,7 @@ async function fetchRoom(code: string): Promise<RoomState | null> {
     })),
     unlockedEvidence: shared.unlockedEvidence ?? [],
     notes: shared.notes ?? [],
+    deductions: shared.deductions ?? [],
     suspects: { ...freshSuspects(), ...(shared.suspects ?? {}) },
     votes: Object.fromEntries((votes ?? []).map((v) => [v.player_id, v.suspect_id])),
   };
@@ -194,6 +196,7 @@ function update(mutate: (s: RoomState) => void) {
         state: {
           unlockedEvidence: next.unlockedEvidence,
           notes: next.notes,
+          deductions: next.deductions,
           suspects: next.suspects,
         } as unknown as never,
         updated_at: new Date().toISOString(),
@@ -292,6 +295,12 @@ export const unlockEvidence = (id: string) =>
 export const addNote = (note: Omit<Note, "id" | "createdAt">) =>
   update((s) => {
     s.notes.unshift({ ...note, id: uid(), createdAt: Date.now() });
+  });
+
+export const addDeduction = (d: Omit<Deduction, "id" | "createdAt">) =>
+  update((s) => {
+    if (s.deductions.some((x) => x.linkId === d.linkId)) return;
+    s.deductions.unshift({ ...d, id: uid(), createdAt: Date.now() });
   });
 
 export const removeNote = (id: string) =>
