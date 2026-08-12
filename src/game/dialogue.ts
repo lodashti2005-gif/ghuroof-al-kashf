@@ -281,7 +281,21 @@ const SENSITIVE: Topic[] = ["money", "camera", "door", "coffee", "phone", "threa
 
 export function generateSuspectReply(ctx: ReplyContext): ReplyResult {
   const message = ctx.message.trim();
-  const topic = detectTopic(message);
+  let topic = detectTopic(message);
+  const isContradiction = CONTRADICTION.some((k) => message.includes(k));
+  // "you said something else before" has no topic of its own — it lands on the
+  // last real subject the investigator raised (session memory).
+  if (isContradiction && (topic === "default" || topic === "smalltalk")) {
+    for (let i = ctx.transcript.length - 1; i >= 0; i--) {
+      const m = ctx.transcript[i]!;
+      if (m.role !== "investigator") continue;
+      const t = detectTopic(m.text);
+      if (t !== "default" && t !== "smalltalk") {
+        topic = t;
+        break;
+      }
+    }
+  }
   const script = SCRIPTS[ctx.suspectId] ?? SCRIPTS["fahad"]!;
   const weights = TOPIC_WEIGHT[ctx.suspectId] ?? {};
   const tolerance = TOLERANCE[ctx.suspectId] ?? 1;
@@ -293,7 +307,7 @@ export function generateSuspectReply(ctx: ReplyContext): ReplyResult {
 
   const evidenceId = TOPIC_UNLOCK[topic];
   const confrontedWithEvidence = !!evidenceId && ctx.unlockedEvidence.includes(evidenceId);
-  const contradiction = CONTRADICTION.some((k) => message.includes(k));
+  const contradiction = isContradiction;
   const aggressive = AGGRESSIVE.some((k) => message.includes(k));
   const calm = CALM.some((k) => message.includes(k));
 
@@ -316,6 +330,7 @@ export function generateSuspectReply(ctx: ReplyContext): ReplyResult {
   if (asked === 1) delta += 2;
   else if (asked > 1) delta = Math.min(delta, 2);
   if (topic === "smalltalk" || topic === "default") delta = Math.min(delta, 1);
+  if (contradiction) delta = Math.max(delta, 5);
 
   // ---- answer depth: general → pressed → confronted ----
   const lines = script[topic] ?? script.default;
