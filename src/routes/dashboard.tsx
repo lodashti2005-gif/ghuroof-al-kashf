@@ -115,21 +115,20 @@ function Dashboard() {
                 <Eyebrow>لوحة الأدلة</Eyebrow>
                 <h2 className="mt-1 text-xl font-bold">الأدلة</h2>
               </div>
-              <CaseTag tone="evidence">
-                الأدلة المكتشفة: {unlocked.length}
-              </CaseTag>
+              <CaseTag tone="evidence">الأدلة المكتشفة: {unlocked.length}</CaseTag>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {evidence.map((item) => (
-                <EvidenceCard
-                  key={item.id}
-                  item={item}
-                  unlocked={unlocked.includes(item.id)}
-                  onSelect={() => unlocked.includes(item.id) && setOpenEvidence(item.id)}
-                />
-              ))}
-            </div>
+            <EvidenceBoard
+              unlockedIds={unlocked}
+              onConfront={(evidenceId, suspectId) =>
+                navigate({
+                  to: "/interrogation/$suspectId",
+                  params: { suspectId },
+                  search: { confront: evidenceId },
+                })
+              }
+            />
           </section>
+
         </div>
 
         <aside className="min-w-0 space-y-5">
