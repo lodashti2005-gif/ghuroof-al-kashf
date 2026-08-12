@@ -6,7 +6,7 @@ import { SceneCrop } from "@/components/game/scene-crop";
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
 import { CaseTag, EvidenceCard, Eyebrow, Panel } from "@/components/game/ui";
 import { caseFile, evidence, getEvidence } from "@/game/case-data";
-import { sceneHotspots, sceneImage } from "@/game/scene";
+import { sceneDecoys, sceneHotspots, sceneImage } from "@/game/scene";
 import { useRoom } from "@/game/use-room";
 
 export const Route = createFileRoute("/scene")({
