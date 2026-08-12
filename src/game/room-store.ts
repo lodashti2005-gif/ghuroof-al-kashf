@@ -165,7 +165,7 @@ function update(mutate: (s: RoomState) => void) {
         unlockedEvidence: next.unlockedEvidence,
         notes: next.notes,
         suspects: next.suspects,
-      },
+      } as unknown as never,
       updated_at: new Date().toISOString(),
     })
     .eq("code", next.code);
@@ -183,7 +183,7 @@ export async function createRoom(hostName: string): Promise<{ ok: boolean; code?
       case_id: caseFile.id,
       phase: "lobby",
       host_player_id: playerId,
-      state: freshShared() as unknown as Record<string, unknown>,
+      state: freshShared() as unknown as never,
     });
     if (error) {
       if (error.code === "23505") continue; // code collision, retry
