@@ -1,13 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Send, Timer, Unlock } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { ArrowLeft, FileSearch, Mic, MicOff, Send, Timer, Unlock, Volume2, VolumeX, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionButton, GameShell } from "@/components/game/shell";
+import { SuspectAvatar } from "@/components/game/suspect-avatar";
 import { CaseTag, Eyebrow, Panel, StressMeter } from "@/components/game/ui";
-import { INTERROGATION_SECONDS, getEvidence, getSuspect } from "@/game/case-data";
+import { INTERROGATION_SECONDS, evidence as allEvidence, getEvidence, getSuspect } from "@/game/case-data";
 import { generateSuspectReply, suggestedQuestions } from "@/game/dialogue";
 import * as store from "@/game/room-store";
 import { formatClock, useRoom } from "@/game/use-room";
+import { useVoice } from "@/game/use-voice";
+import { askSuspect } from "@/lib/interrogation.functions";
 
 export const Route = createFileRoute("/interrogation/$suspectId")({
   head: () => ({
@@ -15,7 +19,7 @@ export const Route = createFileRoute("/interrogation/$suspectId")({
       { title: "غرفة الاستجواب — غرفة التحقيق" },
       {
         name: "description",
-        content: "خمس دقائق، مؤشر توتر، وتناقضات. استجوب المشتبه واكشف اللي يخبيه.",
+        content: "خمس دقائق، مؤشر توتر، ومشتبه يتكلم بلهجته. استجوبه بحرية واكشف اللي يخبيه.",
       },
       { property: "og:title", content: "غرفة الاستجواب" },
       { property: "og:description", content: "خمس دقائق مع المشتبه. كل سؤال يرفع الضغط." },
@@ -28,14 +32,24 @@ function InterrogationRoom() {
   const { suspectId } = Route.useParams();
   const { room, me, actions } = useRoom();
   const navigate = useNavigate();
+  const ask = useServerFn(askSuspect);
   const suspect = getSuspect(suspectId);
   const runtime = room?.suspects[suspectId];
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
   const [unlockToast, setUnlockToast] = useState<string | null>(null);
+  const [confrontOpen, setConfrontOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const busyRef = useRef(false);
 
   const transcript = useMemo(() => runtime?.transcript ?? [], [runtime?.transcript]);
+  const unlocked = useMemo(
+    () => allEvidence.filter((e) => room?.unlockedEvidence.includes(e.id)),
+    [room?.unlockedEvidence],
+  );
+
+  const voice = useVoice({ onTranscript: (text) => sendRef.current?.(text) });
+  const sendRef = useRef<((text: string, evidenceId?: string) => void) | null>(null);
 
   // Countdown — each suspect has its own independent 5 minutes. The interval is
   // keyed on the suspect only, so sending a message never restarts or resets it.
@@ -47,7 +61,6 @@ function InterrogationRoom() {
     }, 1000);
     return () => clearInterval(id);
   }, [suspectId, actions]);
-
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -62,42 +75,77 @@ function InterrogationRoom() {
   }
 
   const locked = !runtime || runtime.finished || runtime.timeLeft <= 0;
+  const state = runtime?.state ?? "calm";
 
-  const send = (value: string) => {
+  const announceUnlock = (id: string) => {
+    if (room?.unlockedEvidence.includes(id)) return;
+    actions.unlockEvidence(id);
+    const item = getEvidence(id);
+    if (item) {
+      setUnlockToast(item.title);
+      setTimeout(() => setUnlockToast(null), 3600);
+    }
+  };
+
+  /**
+   * Free-form interrogation turn. The suspect's line comes from the AI model
+   * with the full session transcript as memory; the scripted engine is only a
+   * last-resort offline fallback if the model call fails.
+   */
+  const send = async (value: string, evidenceId?: string) => {
     const text = value.trim();
-    if (!text || locked || !me) return;
+    if (!text || locked || !me || busyRef.current) return;
+    busyRef.current = true;
     setDraft("");
+    setConfrontOpen(false);
     actions.pushMessage(suspectId, { role: "investigator", author: me.name, text });
     setTyping(true);
+    actions.setSuspectState(suspectId, "thinking");
 
-    const reply = generateSuspectReply({
-      suspectId,
-      message: text,
-      stress: runtime?.stress ?? 0,
-      transcript,
-      unlockedEvidence: room?.unlockedEvidence ?? [],
-    });
-
-    setTimeout(
-      () => {
-        actions.pushMessage(suspectId, {
-          role: "suspect",
-          author: suspect.name,
-          text: reply.text,
-        });
-        actions.bumpStress(suspectId, reply.stressDelta);
-        if (reply.unlock) {
-          actions.unlockEvidence(reply.unlock);
-          const item = getEvidence(reply.unlock);
-          if (item) {
-            setUnlockToast(item.title);
-            setTimeout(() => setUnlockToast(null), 3600);
-          }
-        }
-        setTyping(false);
-      },
-      700 + Math.random() * 700,
+    const history = [...transcript, { role: "investigator" as const, author: me.name, text }].map(
+      (m) => ({ role: m.role, author: m.author, text: m.text }),
     );
+
+    try {
+      const reply = await ask({
+        data: {
+          suspectId,
+          message: text,
+          stress: runtime?.stress ?? 0,
+          unlockedEvidence: room?.unlockedEvidence ?? [],
+          confrontEvidenceId: evidenceId ?? null,
+          transcript: history.slice(-40),
+        },
+      });
+      actions.pushMessage(suspectId, { role: "suspect", author: suspect.name, text: reply.text });
+      actions.bumpStress(suspectId, reply.stressDelta);
+      actions.setSuspectState(suspectId, reply.state, reply.level);
+      if (reply.unlock) announceUnlock(reply.unlock);
+      voice.speak(reply.text);
+    } catch (error) {
+      console.error(error);
+      const fallback = generateSuspectReply({
+        suspectId,
+        message: text,
+        stress: runtime?.stress ?? 0,
+        transcript,
+        unlockedEvidence: room?.unlockedEvidence ?? [],
+      });
+      actions.pushMessage(suspectId, { role: "suspect", author: suspect.name, text: fallback.text });
+      actions.bumpStress(suspectId, fallback.stressDelta);
+      actions.setSuspectState(suspectId, "nervous");
+      if (fallback.unlock) announceUnlock(fallback.unlock);
+    } finally {
+      setTyping(false);
+      busyRef.current = false;
+    }
+  };
+  sendRef.current = send;
+
+  const confront = (id: string) => {
+    const item = getEvidence(id);
+    if (!item) return;
+    void send(`أواجهك بدليل — ${item.title}: ${item.description} شنو ردك؟`, id);
   };
 
   return (
@@ -120,36 +168,22 @@ function InterrogationRoom() {
       <div className="grid gap-5 lg:grid-cols-[19rem_minmax(0,1fr)]">
         <aside className="min-w-0 space-y-5">
           <div className="surface-panel cine-in overflow-hidden p-0">
-            <div className="relative aspect-[4/5]">
-              <img
-                src={suspect.portrait}
-                alt={`صورة ${suspect.name}`}
-                width={912}
-                height={1104}
-                className="absolute inset-0 size-full object-cover object-top grayscale-[30%]"
-              />
-              <div
-                className="absolute inset-0"
-                style={{ background: "var(--gradient-portrait)" }}
-                aria-hidden="true"
-              />
-              <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 font-mono text-xs text-primary">
-                <span className="size-1.5 rounded-full bg-primary blink-record" /> REC
-              </span>
-              <div className="absolute inset-x-4 bottom-4">
-                <h2 className="text-xl font-bold">{suspect.name}</h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {suspect.role} · {suspect.age} سنة
-                </p>
-              </div>
-            </div>
+            <SuspectAvatar
+              suspect={suspect}
+              state={state}
+              stress={runtime?.stress ?? 0}
+              speaking={voice.speaking}
+            />
             <div className="border-t border-border p-4">
               <StressMeter value={runtime?.stress ?? 0} />
             </div>
           </div>
 
           <Panel className="cine-in">
-            <Eyebrow>معلومات مؤكدة</Eyebrow>
+            <Eyebrow>أقوال المشتبه فيه</Eyebrow>
+            <p className="mt-1.5 text-xs text-muted-foreground/80">
+              أقوال غير مؤكدة — ممكن تحتوي كذب.
+            </p>
             <ul className="mt-3 space-y-2.5">
               {suspect.known.map((k, i) => (
                 <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-muted-foreground">
@@ -180,15 +214,25 @@ function InterrogationRoom() {
                 الجلسة مسجلة · {room?.players.length ?? 1} محققين متصلين
               </p>
             </div>
-            <CaseTag tone={locked ? "muted" : "danger"}>
-              {locked ? "الجلسة مغلقة" : "جارية"}
-            </CaseTag>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={voice.toggleMute}
+                aria-label={voice.muted ? "تشغيل صوت المشتبه" : "كتم صوت المشتبه"}
+                className="grid size-9 place-items-center rounded-lg border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {voice.muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+              </button>
+              <CaseTag tone={locked ? "muted" : "danger"}>
+                {locked ? "الجلسة مغلقة" : "جارية"}
+              </CaseTag>
+            </div>
           </div>
 
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
             {(runtime?.transcript.length ?? 0) === 0 && (
               <div className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-                ابدأ بسؤال. لاحظ إن الأسلوب الهادي يفتحهم أكثر، والضغط يرفع التوتر.
+                اسأله أي شي بأسلوبك. يفهم أسئلتك المفتوحة ويتذكر كل كلمة قالها قبل.
               </div>
             )}
 
@@ -218,13 +262,59 @@ function InterrogationRoom() {
           </div>
 
           <div className="border-t border-border px-5 py-4">
+            {confrontOpen && (
+              <div className="cine-in mb-3 rounded-xl border border-evidence/35 bg-evidence/5 p-3">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <Eyebrow>اختر دليل للمواجهة</Eyebrow>
+                  <button
+                    type="button"
+                    onClick={() => setConfrontOpen(false)}
+                    aria-label="إلغاء"
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+                {unlocked.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    ما عندك أدلة مكتشفة بعد. اسأل أكثر عشان تفتح ملفات الأدلة.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {unlocked.map((e) => (
+                      <button
+                        key={e.id}
+                        type="button"
+                        disabled={locked}
+                        onClick={() => confront(e.id)}
+                        className="rounded-lg border border-evidence/40 bg-card px-3 py-2 text-right text-xs text-foreground transition-colors hover:border-evidence disabled:opacity-40"
+                      >
+                        <span className="font-mono text-[0.65rem] text-muted-foreground">
+                          {e.number}
+                        </span>
+                        <span className="mr-2">{e.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+              <button
+                type="button"
+                disabled={locked}
+                onClick={() => setConfrontOpen((v) => !v)}
+                className="shrink-0 rounded-full border border-evidence/45 bg-evidence/10 px-3 py-1.5 text-xs text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-40"
+              >
+                <FileSearch className="ml-1 inline size-3.5" /> واجهه بدليل
+              </button>
               {suggestedQuestions.map((q) => (
                 <button
                   key={q}
                   type="button"
                   disabled={locked}
-                  onClick={() => send(q)}
+                  onClick={() => void send(q)}
                   className="shrink-0 rounded-full border border-border bg-secondary px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground disabled:opacity-40"
                 >
                   {q}
@@ -235,26 +325,47 @@ function InterrogationRoom() {
               className="flex items-end gap-2"
               onSubmit={(e) => {
                 e.preventDefault();
-                send(draft);
+                void send(draft);
               }}
             >
+              {voice.micSupported && (
+                <button
+                  type="button"
+                  disabled={locked}
+                  onClick={voice.listening ? voice.stopListening : voice.startListening}
+                  aria-label={voice.listening ? "إيقاف التسجيل" : "تسجيل صوتي"}
+                  className={`grid size-12 shrink-0 place-items-center rounded-xl border transition-colors disabled:opacity-40 ${
+                    voice.listening
+                      ? "border-primary/60 bg-primary/15 text-primary"
+                      : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {voice.listening ? <MicOff className="size-4" /> : <Mic className="size-4" />}
+                </button>
+              )}
               <textarea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    send(draft);
+                    void send(draft);
                   }
                 }}
                 rows={1}
                 disabled={locked}
-                placeholder={locked ? "انتهى وقت الاستجواب" : "اكتب سؤالك..."}
+                placeholder={
+                  locked
+                    ? "انتهى وقت الاستجواب"
+                    : voice.listening
+                      ? "نسمعك..."
+                      : "اكتب سؤالك بأي صيغة..."
+                }
                 className="min-h-12 flex-1 resize-none rounded-xl border border-input bg-surface-2 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-primary/60 disabled:opacity-50"
               />
               <button
                 type="submit"
-                disabled={locked || !draft.trim()}
+                disabled={locked || !draft.trim() || typing}
                 aria-label="إرسال"
                 className="grid size-12 shrink-0 place-items-center rounded-xl file-tape disabled:opacity-40"
               >
@@ -274,7 +385,6 @@ function InterrogationRoom() {
               <p className="mt-0.5 truncate text-xs text-muted-foreground">{unlockToast}</p>
             </div>
           </div>
-
         </div>
       )}
     </GameShell>
