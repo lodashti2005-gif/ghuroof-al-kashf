@@ -299,13 +299,14 @@ export const removeNote = (id: string) =>
 
 export const pushMessage = (
   suspectId: string,
-  msg: { role: "investigator" | "suspect"; author: string; text: string },
+  msg: { role: "investigator" | "suspect"; author: string; text: string; evidenceId?: string },
 ) =>
   update((s) => {
     const rt = s.suspects[suspectId];
     if (!rt) return;
     rt.transcript.push({ ...msg, id: uid(), createdAt: Date.now() });
   });
+
 
 export const setSuspectState = (
   suspectId: string,
