@@ -10,6 +10,17 @@ import type { InterrogationInput } from "./interrogation.functions";
 const STATE_LIST =
   "calm, thinking, nervous, defensive, angry, shocked, scared, suspicious, silent";
 
+/** Evidence tied to this suspect: what they recognize, fear, or can unlock. */
+export function linkedEvidenceIds(profile: SuspectProfile) {
+  return Array.from(
+    new Set([
+      ...profile.evidenceRecognized,
+      ...profile.evidenceFeared,
+      ...profile.unlockTriggers.map((t) => t.evidenceId),
+    ]),
+  );
+}
+
 export function buildSuspectPrompt(profile: SuspectProfile, data: InterrogationInput) {
   const system = `أنت تلعب دور شخص حقيقي داخل غرفة استجواب بالكويت. اسمك ${profile.name}، عمرك ${profile.age}، ${profile.role}.
 أنت إنسان، مو مساعد ولا ذكاء اصطناعي. ممنوع تذكر إنك نموذج أو ذكاء اصطناعي أو تخرج من الدور بأي حال.
@@ -100,12 +111,21 @@ ${profile.unlockTriggers.map((t) => `- ${t.evidenceId}: ${t.when}`).join("\n")}
     ? evidence.find((e) => e.id === data.confrontEvidenceId)
     : undefined;
 
+  const linked = confront ? linkedEvidenceIds(profile).includes(confront.id) : false;
+  const feared = confront ? profile.evidenceFeared.includes(confront.id) : false;
+
   const confrontBlock = confront
     ? `\n## مواجهة بدليل
 المحقق حطّ قدامك هذا الدليل: ${confront.title} — ${confront.description} (${confront.detail}).
-لازم ردك يكون على هذا الدليل بالتحديد، مو رد عام. تعرف بالضبط شنو يثبت الدليل. تفاعل حسب قصتك المخفية${
-        profile.evidenceFeared.includes(confront.id) ? " — هذا دليل تخاف منه، وردة فعلك قوية." : ""
-      }\n`
+لازم ردك يكون على هذا الدليل بالتحديد، مو رد عام، وبجملتين قصار باللهجة الكويتية.
+لازم ردك يتماشى مع كل شي قلته قبل بالجلسة؛ ما تغيّر روايتك إلا إذا الدليل حصرك فعلاً.
+${
+  feared
+    ? "هذا الدليل يضغط عليك بشدة ويقرب من سرك: تتلخبط، تتقطع بالكلام، وتحاول تفسره بعذر — وارفع stressDelta بين 12 و20."
+    : linked
+      ? "هذا الدليل مرتبط فيك ويحرجك: تدافع عن نفسك وتفسره بطريقتك، وارفع stressDelta بين 8 و15."
+      : "هذا الدليل مو مرتبط فيك: ردك يكون هادي وواثق وتوضح إنه ما يثبت عليك شي (مثل «وهذا شنو يثبت علي؟»)، وارتفاع stressDelta بسيط بين 1 و4 فقط."
+}\n`
     : "";
 
   const user = `الأدلة المكتشفة عند المحققين حتى الآن:
