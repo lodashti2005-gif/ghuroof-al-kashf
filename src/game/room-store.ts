@@ -32,6 +32,13 @@ let channel: ReturnType<typeof supabase.channel> | null = null;
 
 const emit = () => listeners.forEach((l) => l());
 
+/** Postgrest builders are lazy — they only fire once awaited/then-ed. */
+function run(builder: PromiseLike<{ error: { message: string } | null }>, label: string) {
+  void Promise.resolve(builder).then(({ error }) => {
+    if (error) console.error(`[room] ${label} failed:`, error.message);
+  });
+}
+
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 const freshSuspects = (): Record<string, SuspectRuntime> =>
@@ -179,18 +186,21 @@ function update(mutate: (s: RoomState) => void) {
   mutate(next);
   state = next;
   emit();
-  void supabase
-    .from("rooms")
-    .update({
+  run(
+    supabase
+      .from("rooms")
+      .update({
       phase: next.phase,
       state: {
         unlockedEvidence: next.unlockedEvidence,
         notes: next.notes,
         suspects: next.suspects,
       } as unknown as never,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("code", next.code);
+        updated_at: new Date().toISOString(),
+      })
+      .eq("code", next.code),
+    "sync state",
+  );
 }
 
 export const generateRoomCode = () => String(Math.floor(Math.random() * 1000000)).padStart(6, "0");
@@ -256,11 +266,14 @@ export async function joinRoom(code: string, name: string): Promise<{ ok: boolea
 export function leaveRoom() {
   const current = session;
   if (current) {
-    void supabase
-      .from("room_players")
-      .delete()
-      .eq("room_code", current.code)
-      .eq("player_id", current.playerId);
+    run(
+      supabase
+        .from("room_players")
+        .delete()
+        .eq("room_code", current.code)
+        .eq("player_id", current.playerId),
+      "leave room",
+    );
   }
   state = null;
   session = null;
@@ -333,15 +346,21 @@ export function castVote(playerId: string, suspectId: string) {
   const code = state.code;
   state = { ...state, votes: { ...state.votes, [playerId]: suspectId } };
   emit();
-  void supabase
-    .from("room_votes")
-    .upsert({ room_code: code, player_id: playerId, suspect_id: suspectId }, { onConflict: "room_code,player_id" });
+  run(
+    supabase
+      .from("room_votes")
+      .upsert(
+        { room_code: code, player_id: playerId, suspect_id: suspectId },
+        { onConflict: "room_code,player_id" },
+      ),
+    "cast vote",
+  );
 }
 
 export function resetCase() {
   if (!state) return;
   const code = state.code;
-  void supabase.from("room_votes").delete().eq("room_code", code);
+  run(supabase.from("room_votes").delete().eq("room_code", code), "reset votes");
   update((s) => {
     s.phase = "lobby";
     s.unlockedEvidence = [];
