@@ -11,7 +11,7 @@ import {
   ProgressRing,
   SuspectCard,
 } from "@/components/game/ui";
-import { caseFile, evidence, suspects } from "@/game/case-data";
+import { INTERROGATION_SECONDS, caseFile, evidence, suspects } from "@/game/case-data";
 import { useRoom } from "@/game/use-room";
 
 export const Route = createFileRoute("/dashboard")({
