@@ -1,11 +1,21 @@
-import { Camera, Coffee, KeyRound, MessageSquare, Smartphone, Watch, X } from "lucide-react";
+import {
+  Camera,
+  Coffee,
+  KeyRound,
+  Link2,
+  Lightbulb,
+  MessageSquare,
+  Smartphone,
+  Watch,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 
 import { ActionButton } from "@/components/game/shell";
 import { SceneCrop } from "@/components/game/scene-crop";
 import { CaseTag, Eyebrow } from "@/components/game/ui";
-import { evidence as allEvidence, suspects } from "@/game/case-data";
-import type { EvidenceItem } from "@/game/types";
+import { evidence as allEvidence, findEvidenceLink, suspects } from "@/game/case-data";
+import type { Deduction, EvidenceItem } from "@/game/types";
 
 const ICONS = {
   watch: Watch,
@@ -24,14 +34,53 @@ export function EvidenceBoard({
   unlockedIds,
   onConfront,
   compact = false,
+  deductions = [],
+  onDeduction,
+  onUseDeduction,
 }: {
   unlockedIds: string[];
   onConfront: (evidenceId: string, suspectId: string) => void;
   compact?: boolean;
+  deductions?: Deduction[];
+  /** ينفّذ لمن ينجح ربط دليلين — يحفظ الاستنتاج بلوحة الأدلة. */
+  onDeduction?: (link: { id: string; title: string; insight: string; pair: string[] }) => void;
+  /** يستخدم استنتاج محفوظ بمواجهة مشتبه. */
+  onUseDeduction?: (text: string, suspectId: string) => void;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
+  const [linking, setLinking] = useState(false);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [linkResult, setLinkResult] = useState<
+    { ok: true; title: string; insight: string } | { ok: false } | null
+  >(null);
   const items = allEvidence.filter((e) => unlockedIds.includes(e.id));
   const open = items.find((e) => e.id === openId) ?? null;
+
+  const resetLinking = () => {
+    setLinking(false);
+    setPicked([]);
+    setLinkResult(null);
+  };
+
+  const tryLink = (ids: string[]) => {
+    const link = findEvidenceLink(ids[0]!, ids[1]!);
+    if (!link) {
+      setLinkResult({ ok: false });
+      return;
+    }
+    setLinkResult({ ok: true, title: link.title, insight: link.insight });
+    onDeduction?.({ id: link.id, title: link.title, insight: link.insight, pair: [...link.pair] });
+  };
+
+  const togglePick = (id: string) => {
+    setLinkResult(null);
+    setPicked((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      const next = [...prev, id].slice(-2);
+      if (next.length === 2) setTimeout(() => tryLink(next), 0);
+      return next;
+    });
+  };
 
   if (items.length === 0) {
     return (
@@ -45,13 +94,66 @@ export function EvidenceBoard({
 
   return (
     <>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <ActionButton
+          variant={linking ? "primary" : "outline"}
+          className="py-2.5"
+          onClick={() => (linking ? resetLinking() : setLinking(true))}
+          disabled={items.length < 2 && !linking}
+        >
+          <Link2 className="size-4" /> {linking ? "إلغاء الربط" : "ربط الأدلة"}
+        </ActionButton>
+        {linking && (
+          <p className="text-xs text-muted-foreground">
+            اختر دليلين مكتشفين وشوف إذا في رابط بينهم.
+          </p>
+        )}
+      </div>
+
+      {linking && linkResult && (
+        <div
+          className={`cine-in mb-4 rounded-xl border p-4 ${
+            linkResult.ok
+              ? "border-evidence/40 bg-evidence/8"
+              : "border-border bg-surface-2"
+          }`}
+        >
+          {linkResult.ok ? (
+            <>
+              <Eyebrow>استنتاج جديد</Eyebrow>
+              <h4 className="mt-1.5 flex items-center gap-2 text-base font-bold">
+                <Lightbulb className="size-4 shrink-0 text-evidence" /> {linkResult.title}
+              </h4>
+              <p className="mt-1.5 text-sm leading-relaxed">{linkResult.insight}</p>
+              <p className="mt-2 text-xs text-muted-foreground">انحفظ باللوحة تحت «الاستنتاجات».</p>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">ما في رابط واضح بين هالدليلين.</p>
+          )}
+        </div>
+      )}
+
       <div
         className={`grid gap-4 sm:grid-cols-2 ${compact ? "lg:grid-cols-3" : "xl:grid-cols-3"}`}
       >
         {items.map((item) => (
-          <BoardPin key={item.id} item={item} onOpen={() => setOpenId(item.id)} />
+          <BoardPin
+            key={item.id}
+            item={item}
+            selected={picked.includes(item.id)}
+            onOpen={() => (linking ? togglePick(item.id) : setOpenId(item.id))}
+          />
         ))}
       </div>
+
+      {deductions.length > 0 && (
+        <div className="mt-6 space-y-3">
+          <Eyebrow>الاستنتاجات</Eyebrow>
+          {deductions.map((d) => (
+            <DeductionCard key={d.id} deduction={d} onUse={onUseDeduction} />
+          ))}
+        </div>
+      )}
       {open && (
         <EvidenceDetail
           item={open}
@@ -66,14 +168,73 @@ export function EvidenceBoard({
   );
 }
 
-function BoardPin({ item, onOpen }: { item: EvidenceItem; onOpen: () => void }) {
+function DeductionCard({
+  deduction,
+  onUse,
+}: {
+  deduction: Deduction;
+  onUse?: (text: string, suspectId: string) => void;
+}) {
+  const [picking, setPicking] = useState(false);
+  return (
+    <div className="cine-in surface-panel border-evidence/35 p-4">
+      <h4 className="flex items-center gap-2 text-base font-bold">
+        <Lightbulb className="size-4 shrink-0 text-evidence" /> {deduction.title}
+      </h4>
+      <p className="mt-1.5 text-sm leading-relaxed">{deduction.insight}</p>
+      {onUse &&
+        (!picking ? (
+          <ActionButton variant="outline" className="mt-3 w-full py-2.5" onClick={() => setPicking(true)}>
+            استخدم في الاستجواب
+          </ActionButton>
+        ) : (
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {suspects.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => {
+                  setPicking(false);
+                  onUse(deduction.insight, s.id);
+                }}
+                className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 p-2.5 text-right transition-colors hover:border-primary/55"
+              >
+                <img
+                  src={s.portrait}
+                  alt={s.name}
+                  loading="lazy"
+                  className="size-10 shrink-0 rounded-lg border border-border object-cover object-top grayscale-[35%]"
+                />
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-bold">{s.name}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{s.role}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        ))}
+    </div>
+  );
+}
+
+function BoardPin({
+  item,
+  onOpen,
+  selected = false,
+}: {
+  item: EvidenceItem;
+  onOpen: () => void;
+  selected?: boolean;
+}) {
   const Icon = ICONS[item.icon];
   return (
     <button
       type="button"
       onClick={onOpen}
       aria-label={`افتح ${item.title}`}
-      className="group cine-in surface-panel relative flex w-full flex-col gap-3 p-3 text-right transition-all duration-300 hover:-translate-y-0.5 hover:border-evidence/55"
+      className={`group cine-in surface-panel relative flex w-full flex-col gap-3 p-3 text-right transition-all duration-300 hover:-translate-y-0.5 hover:border-evidence/55 ${
+        selected ? "border-primary/70 ring-1 ring-primary/40" : ""
+      }`}
     >
       {/* Evidence tape + pin details */}
       <span className="pointer-events-none absolute -top-2 right-6 z-10 h-5 w-16 rotate-[-6deg] rounded-[2px] bg-evidence/25 ring-1 ring-evidence/35" />
