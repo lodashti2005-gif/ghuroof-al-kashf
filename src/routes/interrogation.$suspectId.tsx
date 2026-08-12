@@ -46,9 +46,13 @@ import { askSuspect } from "@/lib/interrogation.functions";
 
 
 export const Route = createFileRoute("/interrogation/$suspectId")({
-  validateSearch: (search: Record<string, unknown>): { confront?: string } => {
+  validateSearch: (search: Record<string, unknown>): { confront?: string; ask?: string } => {
     const raw = search["confront"];
-    return typeof raw === "string" && raw ? { confront: raw } : {};
+    const ask = search["ask"];
+    return {
+      ...(typeof raw === "string" && raw ? { confront: raw } : {}),
+      ...(typeof ask === "string" && ask ? { ask } : {}),
+    };
   },
 
   head: () => ({
@@ -70,7 +74,7 @@ export const Route = createFileRoute("/interrogation/$suspectId")({
 
 function InterrogationRoom() {
   const { suspectId } = Route.useParams();
-  const { confront: confrontParam } = Route.useSearch();
+  const { confront: confrontParam, ask: askParam } = Route.useSearch();
   const { room, me, actions } = useRoom();
   const navigate = useNavigate();
   const ask = useServerFn(askSuspect);
@@ -142,6 +146,20 @@ function InterrogationRoom() {
     }, 350);
     return () => clearTimeout(id);
   }, [confrontParam, suspectId, me, navigate]);
+
+  // استنتاج جاي من لوحة الأدلة: يتحط بمربع الكتابة عشان اللاعب يصيغه بأسلوبه.
+  const askPrefillRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!askParam || askPrefillRef.current === askParam) return;
+    askPrefillRef.current = askParam;
+    setDraft(askParam);
+    navigate({
+      to: "/interrogation/$suspectId",
+      params: { suspectId },
+      search: {},
+      replace: true,
+    });
+  }, [askParam, suspectId, navigate]);
 
   if (!suspect) {
     return (
@@ -703,6 +721,29 @@ function InterrogationRoom() {
               <EvidenceBoard
                 unlockedIds={room?.unlockedEvidence ?? []}
                 compact
+                deductions={room?.deductions ?? []}
+                onDeduction={(link) =>
+                  actions.addDeduction({
+                    linkId: link.id,
+                    title: link.title,
+                    insight: link.insight,
+                    evidenceIds: link.pair,
+                    author: me?.name ?? "محقق",
+                  })
+                }
+                onUseDeduction={(text, targetId) => {
+                  setBoardOpen(false);
+                  if (targetId === suspectId) {
+                    setDraft(text);
+                    return;
+                  }
+                  voice.stopSpeaking();
+                  navigate({
+                    to: "/interrogation/$suspectId",
+                    params: { targetId ? { suspectId: targetId } : { suspectId } },
+                    search: { ask: text },
+                  });
+                }}
                 onConfront={(evidenceId, targetId) => {
                   setBoardOpen(false);
                   if (targetId === suspectId) {
