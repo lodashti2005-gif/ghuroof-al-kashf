@@ -119,6 +119,25 @@ function SceneRoute() {
                 }}
               />
             ))}
+            {/* Decoy props: clickable, but nothing useful. */}
+            {sceneDecoys.map((d) => (
+              <button
+                key={d.id}
+                type="button"
+                aria-label="فحص تفصيلة في مسرح الجريمة"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMiss(d.message);
+                }}
+                className="absolute cursor-crosshair bg-transparent focus:outline-none"
+                style={{
+                  left: `${d.x - d.w / 2}%`,
+                  top: `${d.y - d.h / 2}%`,
+                  width: `${d.w}%`,
+                  height: `${d.h}%`,
+                }}
+              />
+            ))}
             {miss && (
               <div className="pointer-events-none absolute bottom-3 right-1/2 translate-x-1/2 rounded-lg border border-border bg-card/90 px-3 py-1.5 text-xs text-muted-foreground">
                 {miss}
