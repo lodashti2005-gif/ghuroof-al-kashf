@@ -3,8 +3,8 @@
  *
  * Speech OUT goes through ElevenLabs (`/api/public/tts`): a different real human
  * voice per suspect, with delivery driven by the suspect's emotional state and
- * stress. Browser `speechSynthesis` is kept only as an emergency fallback if the
- * ElevenLabs request fails, so a broken audio call never blocks the session.
+ * stress. There is no browser-speech fallback: if ElevenLabs fails the exact
+ * provider error is surfaced instead.
  *
  * Speech IN still uses the browser recogniser (mic button).
  */
