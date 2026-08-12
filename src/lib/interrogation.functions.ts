@@ -67,8 +67,13 @@ export const askSuspect = createServerFn({ method: "POST" })
     if (!profile) throw new Error("unknown suspect");
     if (!apiKey) throw new Error("ai_unavailable");
 
-    const { buildSuspectPrompt } = await import("./interrogation-prompt.server");
+    const { buildSuspectPrompt, linkedEvidenceIds } = await import("./interrogation-prompt.server");
     const { system, user } = buildSuspectPrompt(profile, data);
+
+    // Confronting a suspect with evidence that has nothing to do with them must
+    // only nudge the meter, never spike it.
+    const unrelatedConfront =
+      !!data.confrontEvidenceId && !linkedEvidenceIds(profile).includes(data.confrontEvidenceId);
 
     // Two attempts: reasoning models occasionally finish with reasoning only and
     // no answer text. Never substitute a canned line — the caller retries or
@@ -77,7 +82,10 @@ export const askSuspect = createServerFn({ method: "POST" })
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const reply = await callModel({ system, user, profile });
-        if (reply) return reply;
+        if (reply)
+          return unrelatedConfront
+            ? { ...reply, stressDelta: clamp(reply.stressDelta, 1, 4) }
+            : reply;
       } catch (error) {
         lastError = error;
         console.error(`interrogation attempt ${attempt + 1} failed`, error);
