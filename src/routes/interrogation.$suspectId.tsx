@@ -322,14 +322,9 @@ function InterrogationRoom() {
             </div>
           </div>
 
-          {voice.voiceError && (
-            <p
-              dir="ltr"
-              className="border-b border-primary/30 bg-primary/10 px-5 py-2 font-mono text-[0.65rem] leading-relaxed text-primary break-all"
-            >
-              {voice.voiceError}
-            </p>
-          )}
+          {/* فشل الصوت يصير بصمت: ما نعرض أي رسالة خطأ للاعب */}
+
+
 
 
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
