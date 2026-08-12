@@ -71,6 +71,8 @@ export interface EvidenceItem {
   description: string;
   detail: string;
   icon: "watch" | "phone" | "cup" | "message" | "camera" | "key";
+  /** Photorealistic crime-scene photo, revealed only after discovery. */
+  photo: string;
   unlockHint: string;
 }
 

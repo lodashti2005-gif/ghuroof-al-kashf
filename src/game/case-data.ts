@@ -5,6 +5,12 @@ import suspectFahad from "@/assets/suspect-fahad.jpg";
 import suspectNoura from "@/assets/suspect-noura.jpg";
 import suspectYousef from "@/assets/suspect-yousef.jpg";
 import suspectDana from "@/assets/suspect-dana.jpg";
+import evidenceWatch from "@/assets/evidence-watch.jpg";
+import evidencePhone from "@/assets/evidence-phone.jpg";
+import evidenceCup from "@/assets/evidence-cup.jpg";
+import evidenceMessage from "@/assets/evidence-message.jpg";
+import evidenceCamera from "@/assets/evidence-camera.jpg";
+import evidenceKey from "@/assets/evidence-key.jpg";
 
 export const INTERROGATION_SECONDS = 5 * 60;
 
@@ -127,6 +133,7 @@ export const evidence: EvidenceItem[] = [
     description: "ساعة بدر واقفة على 01:47 والزجاج مكسور من الجهة اليمنى.",
     detail: "الكسر صاير من ضربة، مو من طيحة. الوقت 01:47 يخالف رواية إن كل الناس طلعوا قبل 01:30.",
     icon: "watch",
+    photo: evidenceWatch,
     unlockHint: "اسأل أي مشتبه عن وقت آخر مرة شاف بدر",
   },
   {
@@ -136,6 +143,7 @@ export const evidence: EvidenceItem[] = [
     description: "تلفون بدر مو موجود بالغرفة ولا بالشاليه، والشاحن باقي بمكانه.",
     detail: "آخر نشاط للتلفون كان فتح ملف تحويلات بنكية الساعة 01:29 فجراً.",
     icon: "phone",
+    photo: evidencePhone,
     unlockHint: "اسأل عن التلفون أو عن آخر شي كان يسويه بدر",
   },
   {
@@ -145,6 +153,7 @@ export const evidence: EvidenceItem[] = [
     description: "فنجالين قهوة بالمطبخ، وحدهم فيه بقايا مهدئ.",
     detail: "الفنجال الثاني عليه بصمة جزئية، ويطابق شخص جالس مقابل بدر بنفس الغرفة.",
     icon: "cup",
+    photo: evidenceCup,
     unlockHint: "اسأل عن القهوة أو عن آخر شي شربه بدر",
   },
   {
@@ -154,6 +163,7 @@ export const evidence: EvidenceItem[] = [
     description: "رسالة موصلة لبدر: «لا توصل الموضوع للمحامي، بتخسر أكثر مني».",
     detail: "الرسالة موصلة الساعة 11:48 مساءً من رقم مسجل باسم شركة المقاولات.",
     icon: "message",
+    photo: evidenceMessage,
     unlockHint: "اسأل عن الخلافات أو التهديدات",
   },
   {
@@ -163,6 +173,7 @@ export const evidence: EvidenceItem[] = [
     description: "الكاميرا تسجل سيارة داخلة 01:38 وطالعة 02:04.",
     detail: "نفس السيارة طلعت مرة قبل منتصف الليل، ورجعت مرة ثانية بعد الوفاة.",
     icon: "camera",
+    photo: evidenceCamera,
     unlockHint: "اسأل عن الكاميرا أو عن الحركة بالمدخل",
   },
   {
@@ -172,6 +183,7 @@ export const evidence: EvidenceItem[] = [
     description: "مفتاح احتياطي للشاليه ناقص من علاقة المفاتيح بالمطبخ.",
     detail: "المفتاح الاحتياطي يفتح باب الغرفة الخاصة، وهذا يفسر إن الباب ما كان مكسور.",
     icon: "key",
+    photo: evidenceKey,
     unlockHint: "اسأل عن الباب أو عن المفاتيح",
   },
 ];
