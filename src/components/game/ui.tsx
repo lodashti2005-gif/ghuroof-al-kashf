@@ -59,8 +59,9 @@ export function StressMeter({ value, compact = false }: { value: number; compact
     <div className="w-full">
       <div className="mb-1.5 flex items-center justify-between text-xs">
         <span className="text-muted-foreground">مؤشر التوتر</span>
-        <span className="font-mono text-foreground">
-          {value} <span className="text-muted-foreground">/ 100</span>
+        <span dir="ltr" className="font-mono text-foreground">
+          {value}
+          <span className="text-muted-foreground">%</span>
         </span>
       </div>
       <div

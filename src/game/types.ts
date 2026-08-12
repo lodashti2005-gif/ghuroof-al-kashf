@@ -23,8 +23,27 @@ export interface ChatMessage {
   createdAt: number;
 }
 
+export const SUSPECT_STATES = [
+  "calm",
+  "thinking",
+  "nervous",
+  "defensive",
+  "angry",
+  "shocked",
+  "scared",
+  "suspicious",
+  "silent",
+] as const;
+
+/** Simulated character state driving the portrait animation. */
+export type SuspectState = (typeof SUSPECT_STATES)[number];
+
 export interface SuspectRuntime {
   stress: number;
+  /** Latest simulated emotional state (defaults to calm). */
+  state?: SuspectState;
+  /** Deepest information level the suspect has revealed so far (1-4). */
+  level?: number;
   timeLeft: number;
   finished: boolean;
   transcript: ChatMessage[];

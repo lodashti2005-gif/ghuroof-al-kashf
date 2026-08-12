@@ -179,6 +179,18 @@ export const pushMessage = (
     rt.transcript.push({ ...msg, id: uid(), createdAt: Date.now() });
   });
 
+export const setSuspectState = (
+  suspectId: string,
+  next: NonNullable<SuspectRuntime["state"]>,
+  level?: number,
+) =>
+  update((s) => {
+    const rt = s.suspects[suspectId];
+    if (!rt) return;
+    rt.state = next;
+    if (typeof level === "number") rt.level = Math.max(rt.level ?? 1, level);
+  });
+
 export const bumpStress = (suspectId: string, delta: number) =>
   update((s) => {
     const rt = s.suspects[suspectId];
