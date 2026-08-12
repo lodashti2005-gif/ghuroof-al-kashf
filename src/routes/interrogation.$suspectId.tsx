@@ -20,6 +20,8 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { EvidenceBoard } from "@/components/game/evidence-board";
+import { SceneCrop } from "@/components/game/scene-crop";
+
 import { ActionButton, GameShell } from "@/components/game/shell";
 import { SuspectAvatar } from "@/components/game/suspect-avatar";
 import {
@@ -79,6 +81,12 @@ function InterrogationRoom() {
   const [typing, setTyping] = useState(false);
   const [unlockToast, setUnlockToast] = useState<string | null>(null);
   const [retry, setRetry] = useState<{ text: string; evidenceId?: string | undefined } | null>(null);
+  /** الدليل المطروح على الطاولة: يظهر كبطاقة بالمحادثة وينضم لأول سؤال يجي بعده. */
+  const [pendingEvidence, setPendingEvidence] = useState<string | null>(null);
+  const pendingRef = useRef<string | null>(null);
+  pendingRef.current = pendingEvidence;
+
+
 
   const [confrontOpen, setConfrontOpen] = useState(false);
   const [suspectsOpen, setSuspectsOpen] = useState(false);
@@ -173,11 +181,15 @@ function InterrogationRoom() {
   ) => {
     const text = value.trim();
     if (!text || locked || !me || busyRef.current) return;
+    // الدليل المطروح على الطاولة ينضم لهذا السؤال.
+    const confrontId = evidenceId ?? pendingRef.current ?? undefined;
     busyRef.current = true;
     setDraft("");
     setConfrontOpen(false);
     setBoardOpen(false);
     setRetry(null);
+    setPendingEvidence(null);
+    pendingRef.current = null;
     const timeAtStart = store.getSnapshot()?.suspects[suspectId]?.timeLeft ?? null;
     const baseTranscript = transcript;
     if (!options?.skipPush) {
@@ -185,7 +197,6 @@ function InterrogationRoom() {
         role: "investigator",
         author: me.name,
         text: options?.displayText ?? text,
-        ...(evidenceId ? { evidenceId } : {}),
       });
     }
 
@@ -202,8 +213,9 @@ function InterrogationRoom() {
           message: text,
           stress: runtime?.stress ?? 0,
           unlockedEvidence: room?.unlockedEvidence ?? [],
-          confrontEvidenceId: evidenceId ?? null,
-          transcript: history.slice(-40),
+          confrontEvidenceId: confrontId ?? null,
+          // ذاكرة كاملة: كل أقوال الجلسة من بدايتها.
+          transcript: history.slice(-60),
         },
       });
 
@@ -231,7 +243,7 @@ function InterrogationRoom() {
       // Technical failure: no fake reply, no time lost, and a retry control.
       if (timeAtStart !== null) actions.setTimeLeft(suspectId, timeAtStart);
       actions.setSuspectState(suspectId, "calm");
-      setRetry({ text, evidenceId });
+      setRetry({ text, ...(confrontId ? { evidenceId: confrontId } : {}) });
     } finally {
       setTyping(false);
       busyRef.current = false;
@@ -241,13 +253,27 @@ function InterrogationRoom() {
   sendRef.current = send;
 
 
+  /**
+   * طرح دليل على الطاولة: يظهر كبطاقة صغيرة داخل المحادثة، بدون أي سؤال جاهز،
+   * وينضم لأول سؤال يكتبه اللاعب بعده حتى يكون رد المشتبه مبنياً عليه.
+   */
   const confront = (id: string) => {
     const item = getEvidence(id);
-    if (!item) return;
-    void send(`أواجهك بدليل — ${item.title}: ${item.description} شنو ردك؟`, id, {
-      displayText: item.title,
-    });
+    if (!item || locked || !me) return;
+    setConfrontOpen(false);
+    setBoardOpen(false);
+    if (!runtime?.transcript.some((m) => m.evidenceId === id)) {
+      actions.pushMessage(suspectId, {
+        role: "investigator",
+        author: me.name,
+        text: item.title,
+        evidenceId: id,
+      });
+    }
+    setPendingEvidence(id);
+    pendingRef.current = id;
   };
+
 
   confrontRef.current = confront;
 
@@ -496,6 +522,33 @@ function InterrogationRoom() {
                 )}
               </div>
             )}
+
+            {pendingEvidence && !locked && (() => {
+              const item = getEvidence(pendingEvidence);
+              if (!item) return null;
+              return (
+                <div className="cine-in mb-3 flex items-center gap-3 rounded-xl border border-evidence/40 bg-evidence/8 px-3 py-2.5">
+                  <span className="relative size-10 shrink-0 overflow-hidden rounded-lg border border-evidence/35">
+                    <SceneCrop crop={item.crop} alt={item.title} className="absolute inset-0 size-full" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      الدليل على الطاولة — اسأله عنه بأسلوبك.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPendingEvidence(null)}
+                    aria-label="إزالة الدليل"
+                    className="shrink-0 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+              );
+            })()}
+
 
             {!locked && (
               <div className="mb-3 flex flex-wrap gap-2">
