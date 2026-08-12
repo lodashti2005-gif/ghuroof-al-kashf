@@ -264,9 +264,7 @@ function InterrogationRoom() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-            <div className="flex items-center gap-2">
+
               {(voice.speaking || voice.loadingVoice) && (
                 <button
                   type="button"
