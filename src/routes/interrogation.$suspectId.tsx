@@ -117,29 +117,49 @@ function InterrogationRoom() {
           transcript: history.slice(-40),
         },
       });
-      actions.pushMessage(suspectId, { role: "suspect", author: suspect.name, text: reply.text });
+      const line = reply.text?.trim();
+      if (!line) throw new Error("empty reply");
+      actions.pushMessage(suspectId, { role: "suspect", author: suspect.name, text: line });
       actions.bumpStress(suspectId, reply.stressDelta);
       actions.setSuspectState(suspectId, reply.state, reply.level);
       if (reply.unlock) announceUnlock(reply.unlock);
-      voice.speak(reply.text);
+      voice.speak(line);
     } catch (error) {
       console.error(error);
-      const fallback = generateSuspectReply({
-        suspectId,
-        message: text,
-        stress: runtime?.stress ?? 0,
-        transcript,
-        unlockedEvidence: room?.unlockedEvidence ?? [],
+      // Never leave a question unanswered: try the offline engine, and if even
+      // that fails, speak a generic in-character line.
+      let fallbackText = "";
+      let fallbackStress = 1;
+      let fallbackUnlock: string | null = null;
+      try {
+        const fallback = generateSuspectReply({
+          suspectId,
+          message: text,
+          stress: runtime?.stress ?? 0,
+          transcript,
+          unlockedEvidence: room?.unlockedEvidence ?? [],
+        });
+        fallbackText = fallback.text?.trim() ?? "";
+        fallbackStress = fallback.stressDelta;
+        fallbackUnlock = fallback.unlock ?? null;
+      } catch (engineError) {
+        console.error(engineError);
+      }
+      if (!fallbackText) fallbackText = "شنو تبي تعرف بالضبط؟ اسألني سؤال مباشر وأجاوبك.";
+      actions.pushMessage(suspectId, {
+        role: "suspect",
+        author: suspect.name,
+        text: fallbackText,
       });
-      actions.pushMessage(suspectId, { role: "suspect", author: suspect.name, text: fallback.text });
-      actions.bumpStress(suspectId, fallback.stressDelta);
+      actions.bumpStress(suspectId, fallbackStress);
       actions.setSuspectState(suspectId, "nervous");
-      if (fallback.unlock) announceUnlock(fallback.unlock);
+      if (fallbackUnlock) announceUnlock(fallbackUnlock);
     } finally {
       setTyping(false);
       busyRef.current = false;
     }
   };
+
   sendRef.current = send;
 
   const confront = (id: string) => {
