@@ -5,6 +5,7 @@ import {
   Link2,
   Lightbulb,
   MessageSquare,
+  Search,
   Smartphone,
   Watch,
   X,
@@ -76,9 +77,7 @@ export function EvidenceBoard({
     setLinkResult(null);
     setPicked((prev) => {
       if (prev.includes(id)) return prev.filter((x) => x !== id);
-      const next = [...prev, id].slice(-2);
-      if (next.length === 2) setTimeout(() => tryLink(next), 0);
-      return next;
+      return [...prev, id].slice(-2);
     });
   };
 
@@ -94,21 +93,44 @@ export function EvidenceBoard({
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <ActionButton
-          variant={linking ? "primary" : "outline"}
-          className="py-2.5"
-          onClick={() => (linking ? resetLinking() : setLinking(true))}
-          disabled={items.length < 2 && !linking}
-        >
-          <Link2 className="size-4" /> {linking ? "إلغاء الربط" : "ربط الأدلة"}
-        </ActionButton>
-        {linking && (
-          <p className="text-xs text-muted-foreground">
-            اختر دليلين مكتشفين وشوف إذا في رابط بينهم.
-          </p>
-        )}
-      </div>
+      {items.length >= 2 && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <ActionButton
+            variant={linking ? "outline" : "primary"}
+            className="py-2.5"
+            onClick={() => (linking ? resetLinking() : setLinking(true))}
+          >
+            <Link2 className="size-4" /> {linking ? "إلغاء الربط" : "ربط دليلين"}
+          </ActionButton>
+          {linking && (
+            <p className="text-xs text-muted-foreground">
+              اختر دليلين مكتشفين ثم اضغط «تحليل الرابط».
+            </p>
+          )}
+        </div>
+      )}
+
+      {linking && (
+        <div className="cine-in mb-4 rounded-xl border border-border bg-surface-2 p-3">
+          {picked.length < 2 ? (
+            <p className="text-sm text-muted-foreground">
+              اختر دليلين من الأدلة المعلّقة على اللوحة.
+            </p>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-foreground">
+                محدد: {items
+                  .filter((e) => picked.includes(e.id))
+                  .map((e) => e.title)
+                  .join(" + ")}
+              </p>
+              <ActionButton className="py-2" onClick={() => tryLink(picked)}>
+                <Search className="size-4" /> تحليل الرابط
+              </ActionButton>
+            </div>
+          )}
+        </div>
+      )}
 
       {linking && linkResult && (
         <div

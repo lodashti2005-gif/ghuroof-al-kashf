@@ -28,7 +28,7 @@ export const Route = createFileRoute("/scene")({
 });
 
 function SceneRoute() {
-  const { room, actions } = useRoom();
+  const { room, me, actions } = useRoom();
   const navigate = useNavigate();
   const unlockedIds = room?.unlockedEvidence ?? [];
 
@@ -215,17 +215,34 @@ function SceneRoute() {
               </button>
             </div>
             <div className="mt-4">
-              <EvidenceBoard
-                unlockedIds={unlockedIds}
-                compact
-                onConfront={(evidenceId, suspectId) =>
-                  navigate({
-                    to: "/interrogation/$suspectId",
-                    params: { suspectId },
-                    search: { confront: evidenceId },
-                  })
-                }
-              />
+            <EvidenceBoard
+              unlockedIds={unlockedIds}
+              compact
+              deductions={room?.deductions ?? []}
+              onDeduction={(link) =>
+                actions.addDeduction({
+                  linkId: link.id,
+                  title: link.title,
+                  insight: link.insight,
+                  evidenceIds: link.pair,
+                  author: me?.name ?? "محقق",
+                })
+              }
+              onUseDeduction={(text, suspectId) =>
+                navigate({
+                  to: "/interrogation/$suspectId",
+                  params: { suspectId },
+                  search: { ask: text },
+                })
+              }
+              onConfront={(evidenceId, suspectId) =>
+                navigate({
+                  to: "/interrogation/$suspectId",
+                  params: { suspectId },
+                  search: { confront: evidenceId },
+                })
+              }
+            />
             </div>
           </div>
         </div>
