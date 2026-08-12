@@ -5,11 +5,13 @@ import {
   Fingerprint,
   KeyRound,
   Lock,
+  Maximize2,
   MessageSquareWarning,
   Smartphone,
   Watch,
+  X,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import { evidence as allEvidence } from "@/game/case-data";
@@ -105,13 +107,22 @@ export function EvidenceConfrontCard({ item }: { item: EvidenceItem }) {
   const Icon = EVIDENCE_ICONS[item.icon];
   return (
     <div className="flex items-start gap-3 rounded-2xl rounded-tr-sm border border-evidence/45 bg-evidence/8 px-3.5 py-3">
-      <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-evidence/35 bg-evidence/10">
-        <Icon className="size-5 text-evidence" strokeWidth={1.5} />
+      <span className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-evidence/35">
+        <img
+          src={item.photo}
+          alt={item.title}
+          loading="lazy"
+          width={1024}
+          height={768}
+          className="absolute inset-0 size-full object-cover"
+        />
       </span>
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-mono text-[0.65rem] text-muted-foreground">{item.number}</span>
-          <CaseTag tone="evidence">مواجهة بدليل</CaseTag>
+          <CaseTag tone="evidence">
+            <Icon className="size-3" /> مواجهة بدليل
+          </CaseTag>
         </div>
         <p className="mt-1 text-sm font-bold leading-tight">{item.title}</p>
         <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
@@ -122,16 +133,60 @@ export function EvidenceConfrontCard({ item }: { item: EvidenceItem }) {
   );
 }
 
+function EvidenceLightbox({ item, onClose }: { item: EvidenceItem; onClose: () => void }) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={item.title}
+      onClick={onClose}
+      className="fixed inset-0 z-50 grid place-items-center bg-background/92 p-4 backdrop-blur-sm"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="cine-in surface-panel w-full max-w-3xl overflow-hidden p-0"
+      >
+        <img
+          src={item.photo}
+          alt={item.title}
+          width={1024}
+          height={768}
+          className="max-h-[70vh] w-full object-contain bg-black"
+        />
+        <div className="flex items-start justify-between gap-3 p-4">
+          <div className="min-w-0">
+            <span className="font-mono text-xs text-muted-foreground">{item.number}</span>
+            <h3 className="mt-1 text-lg font-bold">{item.title}</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{item.detail}</p>
+            <p className="mt-2 text-xs text-muted-foreground">مكان العثور: {item.foundAt}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="إغلاق"
+            className="shrink-0 rounded-lg border border-border bg-secondary p-2 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function EvidenceCard({
   item,
   unlocked,
   onSelect,
+  selectLabel = "عرض التفاصيل",
 }: {
   item: EvidenceItem;
   unlocked: boolean;
   onSelect?: () => void;
+  selectLabel?: string;
 }) {
+  const [zoom, setZoom] = useState(false);
+
   // Undiscovered evidence must leak nothing: no title, number, icon or hint.
   if (!unlocked) {
     return (
@@ -157,25 +212,52 @@ export function EvidenceCard({
 
   const Icon = EVIDENCE_ICONS[item.icon];
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className="group cine-in surface-panel flex w-full flex-col gap-3 p-4 text-right transition-all duration-300 hover:border-evidence/50"
-    >
-      <div className="relative flex h-28 items-center justify-center overflow-hidden rounded-xl border border-evidence/25 bg-evidence/8">
-        <Icon className="size-10 text-evidence" strokeWidth={1.4} />
-      </div>
-      <div className="min-w-0">
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-mono text-xs text-muted-foreground">{item.number}</span>
-          <CaseTag tone="evidence">مكتشف</CaseTag>
+    <>
+      <div className="group cine-in surface-panel flex w-full flex-col gap-3 p-4 text-right transition-all duration-300 hover:border-evidence/50">
+        <button
+          type="button"
+          onClick={() => setZoom(true)}
+          aria-label={`تكبير صورة ${item.title}`}
+          className="relative h-40 w-full overflow-hidden rounded-xl border border-evidence/25"
+        >
+          <img
+            src={item.photo}
+            alt={item.title}
+            loading="lazy"
+            width={1024}
+            height={768}
+            className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+          />
+          <span className="absolute inset-0 bg-gradient-to-t from-card/85 via-transparent to-transparent" />
+          <span className="absolute bottom-2 left-2 grid size-8 place-items-center rounded-lg border border-evidence/40 bg-card/80 text-evidence">
+            <Maximize2 className="size-4" strokeWidth={1.6} />
+          </span>
+        </button>
+        <div className="min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-mono text-xs text-muted-foreground">{item.number}</span>
+            <CaseTag tone="evidence">
+              <Icon className="size-3" /> مكتشف
+            </CaseTag>
+          </div>
+          <h3 className="mt-1.5 truncate text-base font-bold">{item.title}</h3>
+          <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+            {item.description}
+          </p>
+          <p className="mt-1.5 text-xs text-muted-foreground/85">مكان العثور: {item.foundAt}</p>
+          {onSelect && (
+            <button
+              type="button"
+              onClick={onSelect}
+              className="mt-3 w-full rounded-lg border border-evidence/45 bg-evidence/10 px-3 py-2 text-xs font-bold text-evidence transition-colors hover:bg-evidence/20"
+            >
+              {selectLabel}
+            </button>
+          )}
         </div>
-        <h3 className="mt-1.5 truncate text-base font-bold">{item.title}</h3>
-        <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-          {item.description}
-        </p>
       </div>
-    </button>
+      {zoom && <EvidenceLightbox item={item} onClose={() => setZoom(false)} />}
+    </>
   );
 }
 

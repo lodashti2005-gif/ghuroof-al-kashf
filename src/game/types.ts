@@ -71,6 +71,10 @@ export interface EvidenceItem {
   description: string;
   detail: string;
   icon: "watch" | "phone" | "cup" | "message" | "camera" | "key";
+  /** Photorealistic crime-scene photo, revealed only after discovery. */
+  photo: string;
+  /** Where the item was found in the chalet. */
+  foundAt: string;
   unlockHint: string;
 }
 

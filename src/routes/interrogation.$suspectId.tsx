@@ -7,6 +7,7 @@ import {
   Mic,
   MicOff,
   RotateCcw,
+  Search,
   Send,
   Square,
   Timer,
@@ -284,6 +285,13 @@ function InterrogationRoom() {
             </ActionButton>
             <ActionButton variant="outline" className="w-full" onClick={() => setBoardOpen(true)}>
               <FileSearch className="size-4" /> لوحة الأدلة
+            </ActionButton>
+            <ActionButton
+              variant="outline"
+              className="w-full sm:col-span-2"
+              onClick={() => navigate({ to: "/scene" })}
+            >
+              <Search className="size-4" /> مسرح الجريمة
             </ActionButton>
           </div>
 
@@ -664,6 +672,7 @@ function InterrogationRoom() {
                       key={item.id}
                       item={item}
                       unlocked
+                      selectLabel="واجهه بدليل"
                       onSelect={() => {
                         if (locked || busy) return;
                         confront(item.id);
