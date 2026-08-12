@@ -5,12 +5,6 @@ import suspectFahad from "@/assets/suspect-fahad.jpg";
 import suspectNoura from "@/assets/suspect-noura.jpg";
 import suspectYousef from "@/assets/suspect-yousef.jpg";
 import suspectDana from "@/assets/suspect-dana.jpg";
-import evidenceWatch from "@/assets/evidence-watch.jpg";
-import evidencePhone from "@/assets/evidence-phone.jpg";
-import evidenceCup from "@/assets/evidence-cup.jpg";
-import evidenceMessage from "@/assets/evidence-message.jpg";
-import evidenceCamera from "@/assets/evidence-camera.jpg";
-import evidenceKey from "@/assets/evidence-key.jpg";
 
 export const INTERROGATION_SECONDS = 5 * 60;
 
@@ -134,7 +128,7 @@ export const evidence: EvidenceItem[] = [
     detail: "الكسر صاير من ضربة، مو من طيحة. الوقت 01:47 يخالف رواية إن كل الناس طلعوا قبل 01:30.",
     icon: "watch",
     foundAt: "أرضية الغرفة الخاصة جنب السجادة",
-    photo: evidenceWatch,
+    crop: { x: 72, y: 75, zoom: 3.4 },
     unlockHint: "اسأل أي مشتبه عن وقت آخر مرة شاف بدر",
   },
   {
@@ -145,7 +139,7 @@ export const evidence: EvidenceItem[] = [
     detail: "آخر نشاط للتلفون كان فتح ملف تحويلات بنكية الساعة 01:29 فجراً.",
     icon: "phone",
     foundAt: "كومدينة السرير — الشاحن موصول والتلفون مفقود",
-    photo: evidencePhone,
+    crop: { x: 65, y: 84, zoom: 3.1 },
     unlockHint: "اسأل عن التلفون أو عن آخر شي كان يسويه بدر",
   },
   {
@@ -156,7 +150,7 @@ export const evidence: EvidenceItem[] = [
     detail: "الفنجال الثاني عليه بصمة جزئية، ويطابق شخص جالس مقابل بدر بنفس الغرفة.",
     icon: "cup",
     foundAt: "مطبخ الشاليه — على الطبلية",
-    photo: evidenceCup,
+    crop: { x: 74.5, y: 69, zoom: 3.6 },
     unlockHint: "اسأل عن القهوة أو عن آخر شي شربه بدر",
   },
   {
@@ -167,7 +161,7 @@ export const evidence: EvidenceItem[] = [
     detail: "الرسالة موصلة الساعة 11:48 مساءً من رقم مسجل باسم شركة المقاولات.",
     icon: "message",
     foundAt: "تلفون بدر (نسخة الرسائل من المشغل)",
-    photo: evidenceMessage,
+    crop: { x: 84.5, y: 78, zoom: 4.2 },
     unlockHint: "اسأل عن الخلافات أو التهديدات",
   },
   {
@@ -178,7 +172,7 @@ export const evidence: EvidenceItem[] = [
     detail: "نفس السيارة طلعت مرة قبل منتصف الليل، ورجعت مرة ثانية بعد الوفاة.",
     icon: "camera",
     foundAt: "كاميرا مدخل الشاليه",
-    photo: evidenceCamera,
+    crop: { x: 76, y: 33, zoom: 3 },
     unlockHint: "اسأل عن الكاميرا أو عن الحركة بالمدخل",
   },
   {
@@ -189,7 +183,7 @@ export const evidence: EvidenceItem[] = [
     detail: "المفتاح الاحتياطي يفتح باب الغرفة الخاصة، وهذا يفسر إن الباب ما كان مكسور.",
     icon: "key",
     foundAt: "علاقة المفاتيح بالمطبخ",
-    photo: evidenceKey,
+    crop: { x: 8, y: 52, zoom: 3.4 },
     unlockHint: "اسأل عن الباب أو عن المفاتيح",
   },
 ];
