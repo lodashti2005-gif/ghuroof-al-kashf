@@ -69,7 +69,7 @@ function Dashboard() {
             </div>
             <ProgressRing
               value={progress}
-              label={`${unlocked.length} من ${evidence.length} أدلة · ${interrogated} استجوابات مغلقة`}
+              label={`الأدلة المكتشفة: ${unlocked.length} · ${interrogated} استجوابات مغلقة`}
             />
           </Panel>
 
@@ -116,7 +116,7 @@ function Dashboard() {
                 <h2 className="mt-1 text-xl font-bold">الأدلة</h2>
               </div>
               <CaseTag tone="evidence">
-                {unlocked.length} / {evidence.length}
+                الأدلة المكتشفة: {unlocked.length}
               </CaseTag>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
