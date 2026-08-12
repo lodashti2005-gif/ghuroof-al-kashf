@@ -1,16 +1,18 @@
 /**
- * Room store — local realtime stand-in.
+ * Room store — real online multiplayer backed by Lovable Cloud.
  *
- * State lives in localStorage and syncs across browser tabs through the
- * `storage` event, so multiplayer can be demoed on one device today. The
- * exported API (subscribe/getSnapshot/actions) is the same shape a Supabase
- * realtime channel + `rooms` table would provide, so swapping the adapter later
- * touches only this file.
+ * `rooms` holds the shared game state (phase + evidence + notes + interrogation
+ * progress) as one row per 6-digit code, `room_players` holds the connected
+ * players and `room_votes` holds one final vote per player. All three tables are
+ * in the realtime publication, so every device in the room refreshes instantly.
+ *
+ * The exported API (subscribe/getSnapshot/actions) is unchanged apart from
+ * `createRoom`/`joinRoom`/`hydrate` now being async.
  */
+import { supabase } from "@/integrations/supabase/client";
 import { INTERROGATION_SECONDS, caseFile, suspects } from "./case-data";
 import type { Note, Player, RoomState, SuspectRuntime } from "./types";
 
-const ROOM_KEY = (code: string) => `ghurfa:room:${code}`;
 const SESSION_KEY = "ghurfa:session";
 
 export interface Session {
@@ -20,11 +22,22 @@ export interface Session {
 
 type Listener = () => void;
 
+/** Portion of RoomState persisted inside `rooms.state`. */
+type SharedState = Pick<RoomState, "unlockedEvidence" | "notes" | "suspects">;
+
 let state: RoomState | null = null;
 let session: Session | null = null;
 const listeners = new Set<Listener>();
+let channel: ReturnType<typeof supabase.channel> | null = null;
 
 const emit = () => listeners.forEach((l) => l());
+
+/** Postgrest builders are lazy — they only fire once awaited/then-ed. */
+function run(builder: PromiseLike<{ error: { message: string } | null }>, label: string) {
+  void Promise.resolve(builder).then(({ error }) => {
+    if (error) console.error(`[room] ${label} failed:`, error.message);
+  });
+}
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -36,18 +49,24 @@ const freshSuspects = (): Record<string, SuspectRuntime> =>
     ]),
   );
 
-function persist() {
-  if (typeof window === "undefined" || !state) return;
-  window.localStorage.setItem(ROOM_KEY(state.code), JSON.stringify(state));
+const freshShared = (): SharedState => ({
+  unlockedEvidence: [],
+  notes: [],
+  suspects: freshSuspects(),
+});
+
+function saveSession() {
+  if (typeof window === "undefined") return;
   if (session) window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  else window.localStorage.removeItem(SESSION_KEY);
 }
 
-function load(code: string): RoomState | null {
+function readSession(): Session | null {
   if (typeof window === "undefined") return null;
-  const raw = window.localStorage.getItem(ROOM_KEY(code));
+  const raw = window.localStorage.getItem(SESSION_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as RoomState;
+    return JSON.parse(raw) as Session;
   } catch {
     return null;
   }
@@ -62,95 +81,204 @@ export const getSnapshot = () => state;
 export const getServerSnapshot = () => null;
 export const getSession = () => session;
 
-/** Restore the player's room after a refresh / new page. */
-export function hydrate() {
-  if (typeof window === "undefined" || state) return;
-  const raw = window.localStorage.getItem(SESSION_KEY);
-  if (!raw) return;
-  try {
-    const parsed = JSON.parse(raw) as Session;
-    const room = load(parsed.code);
-    if (!room) return;
-    session = parsed;
-    state = room;
-    emit();
-  } catch {
-    /* ignore */
-  }
+/** Load a full room (row + players + votes) from the backend. */
+async function fetchRoom(code: string): Promise<RoomState | null> {
+  const [{ data: room }, { data: players }, { data: votes }] = await Promise.all([
+    supabase.from("rooms").select("*").eq("code", code).maybeSingle(),
+    supabase.from("room_players").select("*").eq("room_code", code).order("joined_at"),
+    supabase.from("room_votes").select("*").eq("room_code", code),
+  ]);
+  if (!room) return null;
+
+  const shared = { ...freshShared(), ...((room.state ?? {}) as Partial<SharedState>) };
+  return {
+    code: room.code,
+    caseId: room.case_id,
+    phase: room.phase as RoomState["phase"],
+    createdAt: new Date(room.created_at).getTime(),
+    players: (players ?? []).map<Player>((p) => ({
+      id: p.player_id,
+      name: p.name,
+      isHost: p.is_host,
+      joinedAt: new Date(p.joined_at).getTime(),
+    })),
+    unlockedEvidence: shared.unlockedEvidence ?? [],
+    notes: shared.notes ?? [],
+    suspects: { ...freshSuspects(), ...(shared.suspects ?? {}) },
+    votes: Object.fromEntries((votes ?? []).map((v) => [v.player_id, v.suspect_id])),
+  };
 }
 
-/** Cross-tab sync — the local stand-in for realtime subscriptions. */
+async function refresh() {
+  if (!session) return;
+  const next = await fetchRoom(session.code);
+  if (!next) {
+    // room disappeared / expired
+    state = null;
+    session = null;
+    saveSession();
+    emit();
+    return;
+  }
+  state = next;
+  emit();
+}
+
+/** Restore the player's room after a refresh / new device page load. */
+export async function hydrate() {
+  if (typeof window === "undefined" || state) return;
+  const parsed = readSession();
+  if (!parsed) return;
+  session = parsed;
+  await refresh();
+}
+
+/** Realtime subscriptions — players, votes and shared state. Ref-counted so
+ * multiple mounted components share one channel per room. */
+let rtCode: string | null = null;
+let rtCount = 0;
+let rtPoll: number | null = null;
+
 export function startRealtime() {
   if (typeof window === "undefined") return () => {};
-  const onStorage = (e: StorageEvent) => {
-    if (!state || e.key !== ROOM_KEY(state.code) || !e.newValue) return;
-    try {
-      state = JSON.parse(e.newValue) as RoomState;
-      emit();
-    } catch {
-      /* ignore */
-    }
+  const code = session?.code ?? readSession()?.code;
+  if (!code) return () => {};
+
+  if (rtCode === code && channel) {
+    rtCount++;
+  } else {
+    teardownRealtime();
+    rtCode = code;
+    rtCount = 1;
+    channel = supabase
+      .channel(`room-${code}-${Math.random().toString(36).slice(2, 8)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "rooms", filter: `code=eq.${code}` }, () => void refresh())
+      .on("postgres_changes", { event: "*", schema: "public", table: "room_players", filter: `room_code=eq.${code}` }, () => void refresh())
+      .on("postgres_changes", { event: "*", schema: "public", table: "room_votes", filter: `room_code=eq.${code}` }, () => void refresh())
+      .subscribe();
+    // Safety net for flaky mobile connections.
+    rtPoll = window.setInterval(() => void refresh(), 5000);
+  }
+
+  return () => {
+    rtCount = Math.max(0, rtCount - 1);
+    if (rtCount === 0) teardownRealtime();
   };
-  window.addEventListener("storage", onStorage);
-  return () => window.removeEventListener("storage", onStorage);
 }
 
+function teardownRealtime() {
+  if (rtPoll !== null) {
+    window.clearInterval(rtPoll);
+    rtPoll = null;
+  }
+  if (channel) {
+    supabase.removeChannel(channel);
+    channel = null;
+  }
+  rtCode = null;
+  rtCount = 0;
+}
+
+/** Optimistically mutate local state, then persist the shared part. */
 function update(mutate: (s: RoomState) => void) {
   if (!state) return;
   const next: RoomState = JSON.parse(JSON.stringify(state));
   mutate(next);
   state = next;
-  persist();
   emit();
+  run(
+    supabase
+      .from("rooms")
+      .update({
+        phase: next.phase,
+        state: {
+          unlockedEvidence: next.unlockedEvidence,
+          notes: next.notes,
+          suspects: next.suspects,
+        } as unknown as never,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("code", next.code),
+    "sync state",
+  );
 }
 
-export const generateRoomCode = () => String(Math.floor(100000 + Math.random() * 900000));
+export const generateRoomCode = () => String(Math.floor(Math.random() * 1000000)).padStart(6, "0");
 
-export function createRoom(hostName: string): { code: string } {
-  const code = generateRoomCode();
+export async function createRoom(hostName: string): Promise<{ ok: boolean; code?: string; error?: string }> {
   const playerId = uid();
-  state = {
-    code,
-    caseId: caseFile.id,
-    phase: "lobby",
-    createdAt: Date.now(),
-    players: [{ id: playerId, name: hostName, isHost: true, joinedAt: Date.now() }],
-    unlockedEvidence: [],
-    notes: [],
-    suspects: freshSuspects(),
-    votes: {},
-  };
-  session = { code, playerId };
-  persist();
-  emit();
-  return { code };
+
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const code = generateRoomCode();
+    const { error } = await supabase.from("rooms").insert({
+      code,
+      case_id: caseFile.id,
+      phase: "lobby",
+      host_player_id: playerId,
+      state: freshShared() as unknown as never,
+    });
+    if (error) {
+      if (error.code === "23505") continue; // code collision, retry
+      return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
+    }
+    const { error: pErr } = await supabase
+      .from("room_players")
+      .insert({ room_code: code, player_id: playerId, name: hostName, is_host: true });
+    if (pErr) return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
+
+    session = { code, playerId };
+    saveSession();
+    await refresh();
+    return { ok: true, code };
+  }
+  return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
 }
 
-export function joinRoom(code: string, name: string): { ok: boolean; error?: string } {
-  const room = load(code);
+export async function joinRoom(code: string, name: string): Promise<{ ok: boolean; error?: string }> {
+  const clean = code.trim();
+  const { data: room, error } = await supabase
+    .from("rooms")
+    .select("code")
+    .eq("code", clean)
+    .maybeSingle();
+  if (error) return { ok: false, error: "ما قدرنا نتصل بالسيرفر، تحقق من النت" };
   if (!room) return { ok: false, error: "ما لقينا غرفة بهذا الرمز" };
-  if (room.players.some((p) => p.name.trim() === name.trim()))
+
+  const { data: existing } = await supabase
+    .from("room_players")
+    .select("name")
+    .eq("room_code", clean);
+  if ((existing ?? []).some((p) => p.name.trim() === name.trim()))
     return { ok: false, error: "الاسم مستخدم بالغرفة، جرب اسم ثاني" };
+
   const playerId = uid();
-  room.players.push({ id: playerId, name, isHost: false, joinedAt: Date.now() });
-  state = room;
-  session = { code, playerId };
-  persist();
-  emit();
+  const { error: pErr } = await supabase
+    .from("room_players")
+    .insert({ room_code: clean, player_id: playerId, name: name.trim(), is_host: false });
+  if (pErr) return { ok: false, error: "ما قدرنا ندخلك الغرفة، جرب مرة ثانية" };
+
+  session = { code: clean, playerId };
+  saveSession();
+  await refresh();
   return { ok: true };
 }
 
 export function leaveRoom() {
-  if (state && session) {
-    const id = session.playerId;
-    update((s) => {
-      s.players = s.players.filter((p) => p.id !== id);
-      if (s.players.length && !s.players.some((p) => p.isHost)) s.players[0]!.isHost = true;
-    });
+  const current = session;
+  if (current) {
+    run(
+      supabase
+        .from("room_players")
+        .delete()
+        .eq("room_code", current.code)
+        .eq("player_id", current.playerId),
+      "leave room",
+    );
   }
   state = null;
   session = null;
-  if (typeof window !== "undefined") window.localStorage.removeItem(SESSION_KEY);
+  saveSession();
+  teardownRealtime();
   emit();
 }
 
@@ -212,10 +340,27 @@ export const endInterrogation = (suspectId: string) =>
     if (rt) rt.finished = true;
   });
 
-export const castVote = (playerId: string, suspectId: string) =>
-  update((s) => void (s.votes[playerId] = suspectId));
+/** One vote per player, stored server-side so no device can fake others. */
+export function castVote(playerId: string, suspectId: string) {
+  if (!state) return;
+  const code = state.code;
+  state = { ...state, votes: { ...state.votes, [playerId]: suspectId } };
+  emit();
+  run(
+    supabase
+      .from("room_votes")
+      .upsert(
+        { room_code: code, player_id: playerId, suspect_id: suspectId },
+        { onConflict: "room_code,player_id" },
+      ),
+    "cast vote",
+  );
+}
 
-export const resetCase = () =>
+export function resetCase() {
+  if (!state) return;
+  const code = state.code;
+  run(supabase.from("room_votes").delete().eq("room_code", code), "reset votes");
   update((s) => {
     s.phase = "lobby";
     s.unlockedEvidence = [];
@@ -223,6 +368,7 @@ export const resetCase = () =>
     s.suspects = freshSuspects();
     s.votes = {};
   });
+}
 
 export function findPlayer(room: RoomState | null, playerId?: string): Player | undefined {
   return room?.players.find((p) => p.id === playerId);
