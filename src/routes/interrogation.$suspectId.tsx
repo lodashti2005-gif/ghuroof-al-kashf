@@ -740,7 +740,7 @@ function InterrogationRoom() {
                   voice.stopSpeaking();
                   navigate({
                     to: "/interrogation/$suspectId",
-                    params: { targetId ? { suspectId: targetId } : { suspectId } },
+                    params: { suspectId: targetId },
                     search: { ask: text },
                   });
                 }}
