@@ -321,7 +321,7 @@ export function generateSuspectReply(ctx: ReplyContext): ReplyResult {
   const lines = script[topic] ?? script.default;
   let level = Math.min(asked, lines.length - 1);
   if (pressure === "evidence" || pressure === "contradiction") level = lines.length - 1;
-  // никогда not reveal the deepest line in the very first exchange
+  // never reveal the deepest line in the very first exchange
   const totalAsked = ctx.transcript.filter((m) => m.role === "investigator").length;
   if (totalAsked < 1) level = 0;
   if (level === lines.length - 1 && lines.length > 1 && ctx.stress < 28 && pressure !== "evidence") {
