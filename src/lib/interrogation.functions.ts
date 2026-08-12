@@ -35,7 +35,7 @@ export const askSuspect = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => inputSchema.parse(data))
   .handler(async ({ data }): Promise<AiReply> => {
     const apiKey = process.env["LOVABLE_API_KEY"];
-    const { profiles } = await import("@/game/profiles.server");
+    const { profiles, canUnlockEvidence } = await import("@/game/profiles.server");
     const profile = profiles[data.suspectId];
     if (!profile) throw new Error("unknown suspect");
     if (!apiKey) throw new Error("ai_unavailable");
