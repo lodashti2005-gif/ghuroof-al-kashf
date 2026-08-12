@@ -535,31 +535,8 @@ function InterrogationRoom() {
               </div>
             )}
 
-            {pendingEvidence && !locked && (() => {
-              const item = getEvidence(pendingEvidence);
-              if (!item) return null;
-              return (
-                <div className="cine-in mb-3 flex items-center gap-3 rounded-xl border border-evidence/40 bg-evidence/8 px-3 py-2.5">
-                  <span className="relative size-10 shrink-0 overflow-hidden rounded-lg border border-evidence/35">
-                    <SceneCrop crop={item.crop} alt={item.title} className="absolute inset-0 size-full" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold">{item.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      الدليل على الطاولة — اسأله عنه بأسلوبك.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPendingEvidence(null)}
-                    aria-label="إزالة الدليل"
-                    className="shrink-0 text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
-              );
-            })()}
+
+
 
 
             {!locked && (
