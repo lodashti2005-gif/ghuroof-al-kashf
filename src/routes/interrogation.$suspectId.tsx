@@ -148,7 +148,11 @@ function InterrogationRoom() {
       actions.bumpStress(suspectId, reply.stressDelta);
       actions.setSuspectState(suspectId, reply.state, reply.level);
       if (reply.unlock) announceUnlock(reply.unlock);
-      voice.speak(line);
+      voice.speak(line, {
+        state: reply.state,
+        stress: Math.min(100, (runtime?.stress ?? 0) + reply.stressDelta),
+      });
+
     } catch (error) {
       console.error(error);
       // Never leave a question unanswered: try the offline engine, and if even
