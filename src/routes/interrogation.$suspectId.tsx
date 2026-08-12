@@ -266,6 +266,20 @@ function InterrogationRoom() {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              {/* مؤقت: اختبار صوت ElevenLabs الحقيقي لهذا المشتبه */}
+              <button
+                type="button"
+                onClick={() =>
+                  voice.speak(
+                    "والله ما أدري شقاعد تقول، أنا طلعت من المكان تقريباً الساعة تسع، وبعدها رحت البيت.",
+                    { state: "calm", stress: 15 },
+                  )
+                }
+                className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.65rem] text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+              >
+                Test ElevenLabs Voice
+              </button>
+
 
               {(voice.speaking || voice.loadingVoice) && (
                 <button
@@ -306,8 +320,17 @@ function InterrogationRoom() {
                 {locked ? "الجلسة مغلقة" : "جارية"}
               </CaseTag>
             </div>
-
           </div>
+
+          {voice.voiceError && (
+            <p
+              dir="ltr"
+              className="border-b border-primary/30 bg-primary/10 px-5 py-2 font-mono text-[0.65rem] leading-relaxed text-primary break-all"
+            >
+              {voice.voiceError}
+            </p>
+          )}
+
 
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
             {(runtime?.transcript.length ?? 0) === 0 && (
