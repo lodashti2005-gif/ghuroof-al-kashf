@@ -6,6 +6,7 @@ import { ActionButton, GameShell } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel, StressMeter } from "@/components/game/ui";
 import { INTERROGATION_SECONDS, getEvidence, getSuspect } from "@/game/case-data";
 import { generateSuspectReply, suggestedQuestions } from "@/game/dialogue";
+import * as store from "@/game/room-store";
 import { formatClock, useRoom } from "@/game/use-room";
 
 export const Route = createFileRoute("/interrogation/$suspectId")({
@@ -73,7 +74,7 @@ function InterrogationRoom() {
       suspectId,
       message: text,
       stress: runtime?.stress ?? 0,
-      askedTopics,
+      transcript,
       unlockedEvidence: room?.unlockedEvidence ?? [],
     });
 
