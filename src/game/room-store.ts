@@ -126,28 +126,50 @@ export async function hydrate() {
   await refresh();
 }
 
-/** Realtime subscriptions — players, votes and shared state. */
+/** Realtime subscriptions — players, votes and shared state. Ref-counted so
+ * multiple mounted components share one channel per room. */
+let rtCode: string | null = null;
+let rtCount = 0;
+let rtPoll: number | null = null;
+
 export function startRealtime() {
   if (typeof window === "undefined") return () => {};
   const code = session?.code ?? readSession()?.code;
   if (!code) return () => {};
 
-  const ch = supabase
-    .channel(`room:${code}`)
-    .on("postgres_changes", { event: "*", schema: "public", table: "rooms", filter: `code=eq.${code}` }, () => void refresh())
-    .on("postgres_changes", { event: "*", schema: "public", table: "room_players", filter: `room_code=eq.${code}` }, () => void refresh())
-    .on("postgres_changes", { event: "*", schema: "public", table: "room_votes", filter: `room_code=eq.${code}` }, () => void refresh())
-    .subscribe();
-  channel = ch;
-
-  // Safety net for flaky mobile connections.
-  const poll = window.setInterval(() => void refresh(), 5000);
+  if (rtCode === code && channel) {
+    rtCount++;
+  } else {
+    teardownRealtime();
+    rtCode = code;
+    rtCount = 1;
+    channel = supabase
+      .channel(`room-${code}-${Math.random().toString(36).slice(2, 8)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "rooms", filter: `code=eq.${code}` }, () => void refresh())
+      .on("postgres_changes", { event: "*", schema: "public", table: "room_players", filter: `room_code=eq.${code}` }, () => void refresh())
+      .on("postgres_changes", { event: "*", schema: "public", table: "room_votes", filter: `room_code=eq.${code}` }, () => void refresh())
+      .subscribe();
+    // Safety net for flaky mobile connections.
+    rtPoll = window.setInterval(() => void refresh(), 5000);
+  }
 
   return () => {
-    window.clearInterval(poll);
-    supabase.removeChannel(ch);
-    if (channel === ch) channel = null;
+    rtCount = Math.max(0, rtCount - 1);
+    if (rtCount === 0) teardownRealtime();
   };
+}
+
+function teardownRealtime() {
+  if (rtPoll !== null) {
+    window.clearInterval(rtPoll);
+    rtPoll = null;
+  }
+  if (channel) {
+    supabase.removeChannel(channel);
+    channel = null;
+  }
+  rtCode = null;
+  rtCount = 0;
 }
 
 /** Optimistically mutate local state, then persist the shared part. */
@@ -243,10 +265,7 @@ export function leaveRoom() {
   state = null;
   session = null;
   saveSession();
-  if (channel) {
-    supabase.removeChannel(channel);
-    channel = null;
-  }
+  teardownRealtime();
   emit();
 }
 
