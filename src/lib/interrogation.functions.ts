@@ -103,7 +103,7 @@ async function callModel({
       "X-Lovable-AIG-SDK": "fetch",
     },
     body: JSON.stringify({
-      model: "openai/gpt-5.6-terra",
+      model: "openai/gpt-5.6-sol",
       stream: true,
       instructions: system,
       input: [{ role: "user", content: [{ type: "input_text", text: user }] }],
