@@ -132,40 +132,47 @@ export function EvidenceCard({
   unlocked: boolean;
   onSelect?: () => void;
 }) {
+  // Undiscovered evidence must leak nothing: no title, number, icon or hint.
+  if (!unlocked) {
+    return (
+      <div
+        aria-label="دليل غير مكتشف"
+        className="cine-in surface-panel flex w-full flex-col gap-3 p-4 text-right opacity-70"
+      >
+        <div className="flex h-28 items-center justify-center rounded-xl border border-dashed border-border bg-surface-2">
+          <Lock className="size-8 text-muted-foreground/60" strokeWidth={1.4} />
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-mono text-xs text-muted-foreground">🔒</span>
+            <CaseTag tone="muted">مقفل</CaseTag>
+          </div>
+          <h3 className="mt-1.5 truncate text-base font-bold text-muted-foreground">
+            دليل غير مكتشف
+          </h3>
+        </div>
+      </div>
+    );
+  }
+
   const Icon = EVIDENCE_ICONS[item.icon];
   return (
     <button
       type="button"
       onClick={onSelect}
-      className={cn(
-        "group cine-in surface-panel flex w-full flex-col gap-3 p-4 text-right transition-all duration-300",
-        unlocked ? "hover:border-evidence/50" : "opacity-70",
-      )}
+      className="group cine-in surface-panel flex w-full flex-col gap-3 p-4 text-right transition-all duration-300 hover:border-evidence/50"
     >
-      <div
-        className={cn(
-          "relative flex h-28 items-center justify-center overflow-hidden rounded-xl border",
-          unlocked ? "border-evidence/25 bg-evidence/8" : "border-border bg-surface-2",
-        )}
-      >
-        <Icon
-          className={cn("size-10", unlocked ? "text-evidence" : "text-muted-foreground/50")}
-          strokeWidth={1.4}
-        />
-        {!unlocked && (
-          <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1.5 bg-background/70 py-1.5 text-xs text-muted-foreground">
-            <Lock className="size-3.5" /> مقفل
-          </span>
-        )}
+      <div className="relative flex h-28 items-center justify-center overflow-hidden rounded-xl border border-evidence/25 bg-evidence/8">
+        <Icon className="size-10 text-evidence" strokeWidth={1.4} />
       </div>
       <div className="min-w-0">
         <div className="flex items-center justify-between gap-2">
           <span className="font-mono text-xs text-muted-foreground">{item.number}</span>
-          <CaseTag tone={unlocked ? "evidence" : "muted"}>{unlocked ? "مكتشف" : "مقفل"}</CaseTag>
+          <CaseTag tone="evidence">مكتشف</CaseTag>
         </div>
         <h3 className="mt-1.5 truncate text-base font-bold">{item.title}</h3>
         <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-          {unlocked ? item.description : item.unlockHint}
+          {item.description}
         </p>
       </div>
     </button>
