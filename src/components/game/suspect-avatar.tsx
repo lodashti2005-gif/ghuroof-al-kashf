@@ -88,6 +88,18 @@ export function SuspectAvatar({
           height={1104}
           className="absolute inset-0 size-full object-cover object-top grayscale-[30%]"
         />
+        {/* jaw/mouth region gets a subtle talking motion while the voice plays */}
+        {speaking && (
+          <div className="sim-mouth" aria-hidden="true">
+            <img
+              src={suspect.portrait}
+              alt=""
+              width={912}
+              height={1104}
+              className="absolute inset-0 size-full object-cover object-top grayscale-[30%]"
+            />
+          </div>
+        )}
       </div>
 
       {/* lighting shift */}
@@ -120,6 +132,17 @@ export function SuspectAvatar({
       >
         الحالة: {STATE_LABEL[state]}
       </span>
+
+      {speaking && (
+        <span className="absolute right-3 bottom-20 inline-flex items-end gap-[3px] rounded-md border border-border/70 bg-background/70 px-2 py-1.5 backdrop-blur-sm">
+          <span className="voice-bar" />
+          <span className="voice-bar" />
+          <span className="voice-bar" />
+          <span className="voice-bar" />
+          <span className="mr-1.5 font-mono text-[0.6rem] text-muted-foreground">يتكلم</span>
+        </span>
+      )}
+
 
       <div className="absolute inset-x-4 bottom-4">
         <h2 className="text-xl font-bold">{suspect.name}</h2>
