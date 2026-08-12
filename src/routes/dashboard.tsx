@@ -88,8 +88,10 @@ function Dashboard() {
                   suspect={s}
                   stress={room?.suspects[s.id]?.stress ?? 0}
                   finished={room?.suspects[s.id]?.finished ?? false}
+                  timeLeft={room?.suspects[s.id]?.timeLeft ?? INTERROGATION_SECONDS}
                   href={{ to: "/interrogation/$suspectId", params: { suspectId: s.id } }}
                 />
+
               ))}
             </div>
           </section>
