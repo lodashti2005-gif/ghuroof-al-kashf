@@ -183,6 +183,8 @@ function InterrogationRoom() {
       actions.bumpStress(suspectId, fallbackStress);
       actions.setSuspectState(suspectId, "nervous");
       if (fallbackUnlock) announceUnlock(fallbackUnlock);
+      voice.speak(fallbackText, { state: "nervous", stress: runtime?.stress ?? 0 });
+
     } finally {
       setTyping(false);
       busyRef.current = false;
