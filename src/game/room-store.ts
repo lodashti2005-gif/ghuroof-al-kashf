@@ -179,7 +179,11 @@ export const pushMessage = (
     rt.transcript.push({ ...msg, id: uid(), createdAt: Date.now() });
   });
 
-export const setSuspectState = (suspectId: string, next: SuspectRuntime["state"], level?: number) =>
+export const setSuspectState = (
+  suspectId: string,
+  next: NonNullable<SuspectRuntime["state"]>,
+  level?: number,
+) =>
   update((s) => {
     const rt = s.suspects[suspectId];
     if (!rt) return;
