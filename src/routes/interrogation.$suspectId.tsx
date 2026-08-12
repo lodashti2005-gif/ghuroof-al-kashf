@@ -75,6 +75,9 @@ function InterrogationRoom() {
   }
 
   const locked = !runtime || runtime.finished || runtime.timeLeft <= 0;
+  // While a reply is generating, the session stays open but input is blocked so
+  // the same question can't be sent twice.
+  const busy = typing;
   const state = runtime?.state ?? "calm";
 
   const announceUnlock = (id: string) => {
@@ -277,7 +280,14 @@ function InterrogationRoom() {
             ))}
 
             {typing && (
-              <p className="font-mono text-xs text-muted-foreground">{suspect.name} يفكر...</p>
+              <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
+                <span className="flex gap-1">
+                  <span className="size-1.5 animate-pulse rounded-full bg-primary" />
+                  <span className="size-1.5 animate-pulse rounded-full bg-primary [animation-delay:150ms]" />
+                  <span className="size-1.5 animate-pulse rounded-full bg-primary [animation-delay:300ms]" />
+                </span>
+                {suspect.name} يفكر...
+              </div>
             )}
           </div>
 
@@ -305,7 +315,7 @@ function InterrogationRoom() {
                       <button
                         key={e.id}
                         type="button"
-                        disabled={locked}
+                        disabled={locked || busy}
                         onClick={() => confront(e.id)}
                         className="rounded-lg border border-evidence/40 bg-card px-3 py-2 text-right text-xs text-foreground transition-colors hover:border-evidence disabled:opacity-40"
                       >
@@ -323,7 +333,7 @@ function InterrogationRoom() {
             <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
               <button
                 type="button"
-                disabled={locked}
+                disabled={locked || busy}
                 onClick={() => setConfrontOpen((v) => !v)}
                 className="shrink-0 rounded-full border border-evidence/45 bg-evidence/10 px-3 py-1.5 text-xs text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-40"
               >
@@ -333,7 +343,7 @@ function InterrogationRoom() {
                 <button
                   key={q}
                   type="button"
-                  disabled={locked}
+                  disabled={locked || busy}
                   onClick={() => void send(q)}
                   className="shrink-0 rounded-full border border-border bg-secondary px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground disabled:opacity-40"
                 >
@@ -351,7 +361,7 @@ function InterrogationRoom() {
               {voice.micSupported && (
                 <button
                   type="button"
-                  disabled={locked}
+                  disabled={locked || busy}
                   onClick={voice.listening ? voice.stopListening : voice.startListening}
                   aria-label={voice.listening ? "إيقاف التسجيل" : "تسجيل صوتي"}
                   className={`grid size-12 shrink-0 place-items-center rounded-xl border transition-colors disabled:opacity-40 ${
@@ -373,11 +383,13 @@ function InterrogationRoom() {
                   }
                 }}
                 rows={1}
-                disabled={locked}
+                disabled={locked || busy}
                 placeholder={
                   locked
                     ? "انتهى وقت الاستجواب"
-                    : voice.listening
+                    : busy
+                      ? "ينتظر رده..."
+                      : voice.listening
                       ? "نسمعك..."
                       : "اكتب سؤالك بأي صيغة..."
                 }
