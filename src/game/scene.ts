@@ -33,30 +33,32 @@ export interface SceneDecoy {
 export const sceneImage = crimeScene;
 
 export const sceneHotspots: SceneHotspot[] = [
-  // Broken watch on the floor beside the rug — small, blends with the dark floor.
-  { evidenceId: "watch", x: 72.4, y: 76.2, w: 3.6, h: 4.6, hard: true },
-  // Charger cable with no phone attached, half in shadow.
-  { evidenceId: "phone", x: 66, y: 82.5, w: 4.2, h: 4.4, hard: true },
-  // Coffee cup on the floor near the rug edge.
-  { evidenceId: "cup", x: 74.2, y: 69.5, w: 3.4, h: 5, hard: true },
-  // Second phone lost in the dark on the far right.
-  { evidenceId: "message", x: 84.4, y: 78.2, w: 3.2, h: 3.6, hard: true },
+  // Dark wristwatch half tucked under the right edge of the rug.
+  { evidenceId: "watch", x: 72.8, y: 79, w: 3.4, h: 3.6, hard: true },
+  // Face-down phone in the shadow under the bed, lower left.
+  { evidenceId: "phone", x: 15.6, y: 72, w: 3.6, h: 3.4, hard: true },
+  // Coffee cup on the far right side table, in shadow.
+  { evidenceId: "cup", x: 91.9, y: 49.5, w: 3.2, h: 4, hard: true },
+  // Small items on the dresser beside the lamp.
+  { evidenceId: "message", x: 56.7, y: 45.5, w: 3.2, h: 3.4, hard: true },
   // Window line of sight toward the gate camera.
-  { evidenceId: "camera", x: 76.2, y: 33, w: 4, h: 6, hard: true },
-  // Nightstand clutter on the far left.
-  { evidenceId: "key", x: 8, y: 51.5, w: 4.2, h: 5, hard: true },
+  { evidenceId: "camera", x: 76.7, y: 32.5, w: 4, h: 5.5, hard: true },
+  // Key on the floor near the balcony threshold, faint moon reflection.
+  { evidenceId: "key", x: 83.2, y: 67, w: 3.2, h: 3.4, hard: true },
 ];
 
 export const sceneDecoys: SceneDecoy[] = [
-  { id: "lamp", x: 53.5, y: 42.5, w: 5, h: 8, message: "أباجورة مضوية… ما لقيت شي مهم" },
-  { id: "rug", x: 58, y: 71.5, w: 10, h: 6, message: "سجادة نظيفة، ما لقيت شي مهم" },
-  { id: "bed", x: 33, y: 56, w: 20, h: 8, message: "شرشف مرتب نص ترتيب… ما لقيت شي مهم" },
-  { id: "curtain", x: 26, y: 27, w: 16, h: 22, message: "بردة مسدودة، ما لقيت شي مهم" },
-  { id: "chair", x: 79.5, y: 54, w: 5, h: 9, message: "كرسي فاضي بالبلكونة… ما لقيت شي مهم" },
-  { id: "dresser", x: 56, y: 54, w: 10, h: 7, message: "كومدينة فاضية من فوق، ما لقيت شي مهم" },
+  { id: "lamp", x: 53.4, y: 41, w: 5, h: 9, message: "أباجورة مضوية… ما لقيت شي مهم" },
+  { id: "rug", x: 62.5, y: 69.5, w: 14, h: 8, message: "سجادة نظيفة، ما لقيت شي مهم" },
+  { id: "bed", x: 30.5, y: 55, w: 18, h: 8, message: "شرشف مرتب نص ترتيب… ما لقيت شي مهم" },
+  { id: "towel", x: 44, y: 50, w: 6, h: 5, message: "منشفة مرمية على طرف السرير، ما لقيت شي مهم" },
+  { id: "slippers", x: 31, y: 69, w: 6, h: 5, message: "نعال، ما لقيت شي مهم" },
+  { id: "curtain", x: 27, y: 30, w: 15, h: 22, message: "بردة مسدودة، ما لقيت شي مهم" },
+  { id: "chair", x: 78.5, y: 53.5, w: 5, h: 9, message: "كرسي فاضي بالبلكونة… ما لقيت شي مهم" },
+  { id: "nightstand", x: 8.7, y: 49.5, w: 8, h: 7, message: "كتاب وكاس ماي… ما لقيت شي مهم" },
   { id: "wall-light", x: 3, y: 22, w: 5, h: 18, message: "إضاءة جدارية بس، ما لقيت شي مهم" },
-  { id: "cable", x: 40, y: 88, w: 12, h: 6, message: "أسلاك وشاحن مرمّي… ما لقيت شي مهم" },
-  { id: "side-table", x: 90.5, y: 57, w: 7, h: 8, message: "طاولة جانبية، ما لقيت شي مهم" },
-  { id: "ceiling", x: 47, y: 4, w: 18, h: 7, message: "السقف والمكيّف، ما لقيت شي مهم" },
+  { id: "floor", x: 45, y: 88, w: 22, h: 10, message: "أرضية فاضية، ما لقيت شي مهم" },
+  { id: "ceiling", x: 51, y: 4, w: 20, h: 7, message: "السقف والمكيّف، ما لقيت شي مهم" },
 ];
+
 
