@@ -141,19 +141,26 @@ function InterrogationRoom() {
   const send = async (
     value: string,
     evidenceId?: string,
-    options?: { skipPush?: boolean },
+    options?: { skipPush?: boolean; displayText?: string },
   ) => {
     const text = value.trim();
     if (!text || locked || !me || busyRef.current) return;
     busyRef.current = true;
     setDraft("");
     setConfrontOpen(false);
+    setBoardOpen(false);
     setRetry(null);
     const timeAtStart = store.getSnapshot()?.suspects[suspectId]?.timeLeft ?? null;
     const baseTranscript = transcript;
     if (!options?.skipPush) {
-      actions.pushMessage(suspectId, { role: "investigator", author: me.name, text });
+      actions.pushMessage(suspectId, {
+        role: "investigator",
+        author: me.name,
+        text: options?.displayText ?? text,
+        ...(evidenceId ? { evidenceId } : {}),
+      });
     }
+
     setTyping(true);
     actions.setSuspectState(suspectId, "thinking");
 
