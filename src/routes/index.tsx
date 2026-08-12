@@ -121,28 +121,32 @@ function EntryModal({ mode, onClose }: { mode: "create" | "join"; onClose: () =>
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const submit = () => {
+  const [busy, setBusy] = useState(false);
+
+  const submit = async () => {
     const nickname = name.trim();
     if (nickname.length < 2) {
       setError("اكتب اسم من حرفين على الأقل");
       return;
     }
-    if (mode === "create") {
-      actions.createRoom(nickname);
-      navigate({ to: "/lobby" });
-      return;
-    }
-    if (!/^\d{6}$/.test(code.trim())) {
+    if (mode === "join" && !/^\d{6}$/.test(code.trim())) {
       setError("رمز الغرفة لازم يكون 6 أرقام");
       return;
     }
-    const res = actions.joinRoom(code.trim(), nickname);
+    setError(null);
+    setBusy(true);
+    const res =
+      mode === "create"
+        ? await actions.createRoom(nickname)
+        : await actions.joinRoom(code.trim(), nickname);
+    setBusy(false);
     if (!res.ok) {
       setError(res.error ?? "ما قدرنا ندخلك الغرفة");
       return;
     }
     navigate({ to: "/lobby" });
   };
+
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-background/85 p-4 backdrop-blur-sm">
