@@ -177,7 +177,7 @@ function InterrogationRoom() {
   const send = async (
     value: string,
     evidenceId?: string,
-    options?: { skipPush?: boolean; displayText?: string },
+    options?: { skipPush?: boolean; displayText?: string; maxStress?: number },
   ) => {
     const text = value.trim();
     if (!text || locked || !me || busyRef.current) return;
@@ -231,12 +231,17 @@ function InterrogationRoom() {
       if (!line) throw new Error("empty reply");
       // Exactly one suspect message per successful question.
       actions.pushMessage(suspectId, { role: "suspect", author: suspect.name, text: line });
-      actions.bumpStress(suspectId, reply.stressDelta);
+      // إعادة استخدام نفس الدليل على نفس المشتبه فيه ما تعطي نفس الأثر.
+      const delta =
+        options?.maxStress !== undefined
+          ? Math.min(reply.stressDelta, options.maxStress)
+          : reply.stressDelta;
+      actions.bumpStress(suspectId, delta);
       actions.setSuspectState(suspectId, reply.state, reply.level);
       if (reply.unlock) announceUnlock(reply.unlock);
       voice.speak(line, {
         state: reply.state,
-        stress: Math.min(100, (runtime?.stress ?? 0) + reply.stressDelta),
+        stress: Math.min(100, (runtime?.stress ?? 0) + delta),
       });
     } catch (error) {
       console.error(error);
@@ -254,25 +259,32 @@ function InterrogationRoom() {
 
 
   /**
-   * طرح دليل على الطاولة: يظهر كبطاقة صغيرة داخل المحادثة، بدون أي سؤال جاهز،
-   * وينضم لأول سؤال يكتبه اللاعب بعده حتى يكون رد المشتبه مبنياً عليه.
+   * مواجهة بدليل: تظهر بطاقة الدليل داخل سجل المحادثة (صورة + اسم + وصف مختصر)،
+   * وبعدها المشتبه فيه يرد مباشرة على هذا الدليل حسب شخصيته وأقواله السابقة.
+   * تكرار نفس الدليل على نفس المشتبه فيه يقل أثره على التوتر ولا يعطي جديد.
    */
   const confront = (id: string) => {
     const item = getEvidence(id);
-    if (!item || locked || !me) return;
+    if (!item || locked || !me || busyRef.current) return;
     setConfrontOpen(false);
     setBoardOpen(false);
-    if (!runtime?.transcript.some((m) => m.evidenceId === id)) {
-      actions.pushMessage(suspectId, {
-        role: "investigator",
-        author: me.name,
-        text: item.title,
-        evidenceId: id,
-      });
-    }
-    setPendingEvidence(id);
-    pendingRef.current = id;
+    const times = (runtime?.transcript ?? []).filter((m) => m.evidenceId === id).length;
+    actions.pushMessage(suspectId, {
+      role: "investigator",
+      author: me.name,
+      text: item.title,
+      evidenceId: id,
+    });
+    const repeatNote =
+      times > 0
+        ? " (سبق عرضت عليك نفس الدليل بهذي الجلسة — ردك يكون مثل إنسان يتضايق من التكرار، نفس معلوماتك بدون أي معلومة جديدة، وبدون انهيار)"
+        : "";
+    void send(`أواجهك بهذا الدليل: ${item.title} — ${item.description}. شنو ردك عليه؟${repeatNote}`, id, {
+      skipPush: true,
+      ...(times > 0 ? { maxStress: times >= 2 ? 1 : 3 } : {}),
+    });
   };
+
 
 
   confrontRef.current = confront;
