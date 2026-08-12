@@ -177,7 +177,7 @@ function SceneRoute() {
                 {foundItem.description}
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
-                مكان العثور: <span className="text-foreground">{foundItem.foundAt}</span>
+                انضاف للوحة الأدلة. علاقته بالقضية تتوضح من الاستجواب.
               </p>
               <ActionButton variant="outline" className="mt-5 w-full" onClick={() => setFound(null)}>
                 رجوع لمسرح الجريمة
