@@ -348,6 +348,24 @@ function InterrogationRoom() {
                 {suspect.name} يفكر...
               </div>
             )}
+
+            {retry && !typing && (
+              <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface-2 px-4 py-3 text-sm text-muted-foreground">
+                <span>ما وصل رده — خلل تقني مؤقت، وقتك ما نقص.</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const pending = retry;
+                    setRetry(null);
+                    void send(pending.text, pending.evidenceId, { skipPush: true });
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/50 bg-primary/12 px-3 py-1.5 text-xs text-primary transition-colors hover:bg-primary/20"
+                >
+                  <RotateCcw className="size-3.5" /> إعادة المحاولة
+                </button>
+              </div>
+            )}
+
           </div>
 
           <div className="border-t border-border px-5 py-4">
