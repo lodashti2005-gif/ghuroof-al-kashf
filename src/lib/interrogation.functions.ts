@@ -65,68 +65,104 @@ export const askSuspect = createServerFn({ method: "POST" })
     const { profiles } = await import("@/game/profiles.server");
     const profile = profiles[data.suspectId];
     if (!profile) throw new Error("unknown suspect");
-    if (!apiKey) throw new Error("missing LOVABLE_API_KEY");
+
+    const { fallbackReply } = await import("./interrogation-fallback.server");
+    if (!apiKey) return fallbackReply(profile, data);
 
     const { buildSuspectPrompt } = await import("./interrogation-prompt.server");
     const { system, user } = buildSuspectPrompt(profile, data);
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Lovable-API-Key": apiKey,
-        "X-Lovable-AIG-SDK": "fetch",
-      },
-      body: JSON.stringify({
-        model: "openai/gpt-5.6-terra",
-        stream: true,
-        instructions: system,
-        input: [{ role: "user", content: [{ type: "input_text", text: user }] }],
-        text: {
-          format: {
-            type: "json_schema",
-            name: "suspect_reply",
-            strict: true,
-            schema: RESPONSE_SCHEMA,
-          },
-        },
-      }),
-    });
-
-    if (!res.ok || !res.body) {
-      const body = await res.text().catch(() => "");
-      console.error(`AI gateway failed [${res.status}]: ${body}`);
-      throw new Error(`ai_failed_${res.status}`);
+    // Two attempts: reasoning models occasionally finish with reasoning only and
+    // no answer text. A turn must never end without a spoken reply.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const reply = await callModel({ system, user, profile });
+        if (reply) return reply;
+      } catch (error) {
+        console.error(`interrogation attempt ${attempt + 1} failed`, error);
+      }
     }
-
-    const raw = await readSseText(res.body);
-    let parsed: Partial<AiReply>;
-    try {
-      parsed = JSON.parse(raw) as Partial<AiReply>;
-    } catch {
-      console.error(`unparseable model output: ${raw.slice(0, 400)}`);
-      throw new Error("ai_bad_output");
-    }
-
-    const text = String(parsed.text ?? "").trim();
-    if (!text) throw new Error("ai_empty_output");
-
-    const unlock =
-      typeof parsed.unlock === "string" &&
-      profile.unlockTriggers.some((t) => t.evidenceId === parsed.unlock)
-        ? parsed.unlock
-        : null;
-
-    return {
-      text,
-      stressDelta: clamp(Number(parsed.stressDelta ?? 0), -6, 22),
-      state: (SUSPECT_STATES as readonly string[]).includes(String(parsed.state))
-        ? (parsed.state as SuspectState)
-        : "calm",
-      unlock,
-      level: clamp(Math.round(Number(parsed.level ?? 1)), 1, 4),
-    };
+    return fallbackReply(profile, data);
   });
+
+async function callModel({
+  system,
+  user,
+  profile,
+}: {
+  system: string;
+  user: string;
+  profile: { unlockTriggers: { evidenceId: string }[] };
+}): Promise<AiReply | null> {
+  const apiKey = process.env["LOVABLE_API_KEY"]!;
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Lovable-API-Key": apiKey,
+      "X-Lovable-AIG-SDK": "fetch",
+    },
+    body: JSON.stringify({
+      model: "openai/gpt-5.6-terra",
+      stream: true,
+      instructions: system,
+      input: [{ role: "user", content: [{ type: "input_text", text: user }] }],
+      text: {
+        format: {
+          type: "json_schema",
+          name: "suspect_reply",
+          strict: true,
+          schema: RESPONSE_SCHEMA,
+        },
+      },
+    }),
+  });
+
+  if (!res.ok || !res.body) {
+    const body = await res.text().catch(() => "");
+    console.error(`AI gateway failed [${res.status}]: ${body}`);
+    return null;
+  }
+
+  const raw = await readSseText(res.body);
+  let parsed: Partial<AiReply>;
+  try {
+    parsed = JSON.parse(raw) as Partial<AiReply>;
+  } catch {
+    // Sometimes the JSON is wrapped in prose; salvage the object if we can.
+    const start = raw.indexOf("{");
+    const end = raw.lastIndexOf("}");
+    if (start === -1 || end <= start) {
+      console.error(`unparseable model output: ${raw.slice(0, 400)}`);
+      return null;
+    }
+    try {
+      parsed = JSON.parse(raw.slice(start, end + 1)) as Partial<AiReply>;
+    } catch {
+      return null;
+    }
+  }
+
+  const text = String(parsed.text ?? "").trim();
+  if (!text) return null;
+
+  const unlock =
+    typeof parsed.unlock === "string" &&
+    profile.unlockTriggers.some((t) => t.evidenceId === parsed.unlock)
+      ? parsed.unlock
+      : null;
+
+  return {
+    text,
+    stressDelta: clamp(Number(parsed.stressDelta ?? 0), -6, 22),
+    state: (SUSPECT_STATES as readonly string[]).includes(String(parsed.state))
+      ? (parsed.state as SuspectState)
+      : "calm",
+    unlock,
+    level: clamp(Math.round(Number(parsed.level ?? 1)), 1, 4),
+  };
+}
+
 
 function clamp(n: number, min: number, max: number) {
   return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : 0;
