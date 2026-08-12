@@ -59,7 +59,7 @@ export function useVoice({
   const [muted, setMuted] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [loadingVoice, setLoadingVoice] = useState(false);
-  const [voiceError, setVoiceError] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const [micSupported, setMicSupported] = useState(false);
   const recRef = useRef<RecognitionLike | null>(null);
   const onTranscriptRef = useRef(onTranscript);
@@ -119,19 +119,6 @@ export function useVoice({
     setLoadingVoice(false);
   }, []);
 
-  /** Emergency-only fallback so a failed ElevenLabs call still gives audio. */
-  const fallbackSpeak = useCallback((text: string) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text.replace(/[«»"”“…]/g, " ").trim());
-    utter.lang = "ar-SA";
-    utter.rate = 0.95;
-    utter.onstart = () => setSpeaking(true);
-    utter.onend = () => setSpeaking(false);
-    utter.onerror = () => setSpeaking(false);
-    window.speechSynthesis.speak(utter);
-  }, []);
-
   const play = useCallback(
     async (line: LastLine) => {
       const text = line.text.trim();
@@ -141,7 +128,7 @@ export function useVoice({
 
       // One suspect voice at a time — never let two replies overlap.
       stopSpeaking();
-      setVoiceError(false);
+      setVoiceError(null);
       setLoadingVoice(true);
 
       const controller = new AbortController();
@@ -159,11 +146,9 @@ export function useVoice({
           }),
           signal: controller.signal,
         });
-        if (!res.ok) throw new Error(`tts ${res.status}`);
-        // The endpoint answers with JSON (not audio) when the voice provider
-        // is unavailable — treat that as a fallback signal, not a crash.
-        if (!(res.headers.get("Content-Type") ?? "").startsWith("audio/")) {
-          throw new Error("tts_fallback");
+        if (!res.ok || !(res.headers.get("Content-Type") ?? "").startsWith("audio/")) {
+          const detail = await res.text().catch(() => "");
+          throw new Error(`ElevenLabs [${res.status}] ${detail}`.trim());
         }
         const blob = await res.blob();
 
@@ -183,11 +168,11 @@ export function useVoice({
         if (controller.signal.aborted) return;
         console.error("elevenlabs playback failed", error);
         setLoadingVoice(false);
-        setVoiceError(true);
-        fallbackSpeak(text);
+        setSpeaking(false);
+        setVoiceError(error instanceof Error ? error.message : String(error));
       }
     },
-    [fallbackSpeak, stopSpeaking, suspectId],
+    [stopSpeaking, suspectId],
   );
 
   /** Speak a suspect line with its emotional delivery. */
