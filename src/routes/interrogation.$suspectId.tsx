@@ -278,6 +278,16 @@ function InterrogationRoom() {
             </ul>
           </Panel>
 
+          <div className="grid gap-2 sm:grid-cols-2">
+            <ActionButton variant="outline" className="w-full" onClick={() => setSuspectsOpen(true)}>
+              <Users className="size-4" /> المشتبه فيهم
+            </ActionButton>
+            <ActionButton variant="outline" className="w-full" onClick={() => setBoardOpen(true)}>
+              <FileSearch className="size-4" /> لوحة الأدلة
+            </ActionButton>
+          </div>
+
+
           <ActionButton
             variant="danger"
             className="w-full"
