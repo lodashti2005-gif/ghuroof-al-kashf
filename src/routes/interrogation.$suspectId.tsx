@@ -113,26 +113,35 @@ function InterrogationRoom() {
   };
 
   /**
-   * Free-form interrogation turn. The suspect's line comes from the AI model
-   * with the full session transcript as memory; the scripted engine is only a
-   * last-resort offline fallback if the model call fails.
+   * Free-form interrogation turn. The suspect's line always comes from the AI
+   * model with the full session transcript as memory — never a canned line.
+   * One automatic retry, then a manual "إعادة المحاولة" button, and the clock is
+   * restored so a technical failure never costs the player time.
    */
-  const send = async (value: string, evidenceId?: string) => {
+  const send = async (
+    value: string,
+    evidenceId?: string,
+    options?: { skipPush?: boolean },
+  ) => {
     const text = value.trim();
     if (!text || locked || !me || busyRef.current) return;
     busyRef.current = true;
     setDraft("");
     setConfrontOpen(false);
-    actions.pushMessage(suspectId, { role: "investigator", author: me.name, text });
+    setRetry(null);
+    const timeAtStart = store.getSnapshot()?.suspects[suspectId]?.timeLeft ?? null;
+    const baseTranscript = transcript;
+    if (!options?.skipPush) {
+      actions.pushMessage(suspectId, { role: "investigator", author: me.name, text });
+    }
     setTyping(true);
     actions.setSuspectState(suspectId, "thinking");
 
-    const history = [...transcript, { role: "investigator" as const, author: me.name, text }].map(
-      (m) => ({ role: m.role, author: m.author, text: m.text }),
-    );
+    const history = [...baseTranscript, { role: "investigator" as const, author: me.name, text }]
+      .map((m) => ({ role: m.role, author: m.author, text: m.text }));
 
-    try {
-      const reply = await ask({
+    const requestReply = () =>
+      ask({
         data: {
           suspectId,
           message: text,
@@ -142,8 +151,18 @@ function InterrogationRoom() {
           transcript: history.slice(-40),
         },
       });
+
+    try {
+      let reply: Awaited<ReturnType<typeof requestReply>>;
+      try {
+        reply = await requestReply();
+      } catch (firstError) {
+        console.error("interrogation request failed, retrying once", firstError);
+        reply = await requestReply();
+      }
       const line = reply.text?.trim();
       if (!line) throw new Error("empty reply");
+      // Exactly one suspect message per successful question.
       actions.pushMessage(suspectId, { role: "suspect", author: suspect.name, text: line });
       actions.bumpStress(suspectId, reply.stressDelta);
       actions.setSuspectState(suspectId, reply.state, reply.level);
@@ -152,39 +171,12 @@ function InterrogationRoom() {
         state: reply.state,
         stress: Math.min(100, (runtime?.stress ?? 0) + reply.stressDelta),
       });
-
     } catch (error) {
       console.error(error);
-      // Never leave a question unanswered: try the offline engine, and if even
-      // that fails, speak a generic in-character line.
-      let fallbackText = "";
-      let fallbackStress = 1;
-      let fallbackUnlock: string | null = null;
-      try {
-        const fallback = generateSuspectReply({
-          suspectId,
-          message: text,
-          stress: runtime?.stress ?? 0,
-          transcript,
-          unlockedEvidence: room?.unlockedEvidence ?? [],
-        });
-        fallbackText = fallback.text?.trim() ?? "";
-        fallbackStress = fallback.stressDelta;
-        fallbackUnlock = fallback.unlock ?? null;
-      } catch (engineError) {
-        console.error(engineError);
-      }
-      if (!fallbackText) fallbackText = "شنو تبي تعرف بالضبط؟ اسألني سؤال مباشر وأجاوبك.";
-      actions.pushMessage(suspectId, {
-        role: "suspect",
-        author: suspect.name,
-        text: fallbackText,
-      });
-      actions.bumpStress(suspectId, fallbackStress);
-      actions.setSuspectState(suspectId, "nervous");
-      if (fallbackUnlock) announceUnlock(fallbackUnlock);
-      voice.speak(fallbackText, { state: "nervous", stress: runtime?.stress ?? 0 });
-
+      // Technical failure: no fake reply, no time lost, and a retry control.
+      if (timeAtStart !== null) actions.setTimeLeft(suspectId, timeAtStart);
+      actions.setSuspectState(suspectId, "calm");
+      setRetry({ text, evidenceId });
     } finally {
       setTyping(false);
       busyRef.current = false;
@@ -192,6 +184,7 @@ function InterrogationRoom() {
   };
 
   sendRef.current = send;
+
 
   const confront = (id: string) => {
     const item = getEvidence(id);
