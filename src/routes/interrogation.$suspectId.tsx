@@ -24,7 +24,6 @@ import { ActionButton, GameShell } from "@/components/game/shell";
 import { SuspectAvatar } from "@/components/game/suspect-avatar";
 import {
   CaseTag,
-  EvidenceCard,
   EvidenceConfrontCard,
   Eyebrow,
   Panel,
@@ -113,6 +112,27 @@ function InterrogationRoom() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [runtime?.transcript.length, typing]);
+
+  // Confrontation launched from the evidence board (possibly from another screen):
+  // fire it once the room state is ready, then drop the param from the URL.
+  const confrontRef = useRef<((id: string) => void) | null>(null);
+  const autoConfrontRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!confrontParam || !me) return;
+    const key = `${suspectId}:${confrontParam}`;
+    if (autoConfrontRef.current === key) return;
+    autoConfrontRef.current = key;
+    const id = setTimeout(() => {
+      confrontRef.current?.(confrontParam);
+      navigate({
+        to: "/interrogation/$suspectId",
+        params: { suspectId },
+        search: {},
+        replace: true,
+      });
+    }, 350);
+    return () => clearTimeout(id);
+  }, [confrontParam, suspectId, me, navigate]);
 
   if (!suspect) {
     return (
@@ -226,6 +246,8 @@ function InterrogationRoom() {
       displayText: item.title,
     });
   };
+
+  confrontRef.current = confront;
 
   /** Switching suspects only navigates — the timer interval unmounts here and the
    * session (transcript, stress, evidence confrontations, remaining time) stays
