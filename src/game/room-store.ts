@@ -190,12 +190,12 @@ function update(mutate: (s: RoomState) => void) {
     supabase
       .from("rooms")
       .update({
-      phase: next.phase,
-      state: {
-        unlockedEvidence: next.unlockedEvidence,
-        notes: next.notes,
-        suspects: next.suspects,
-      } as unknown as never,
+        phase: next.phase,
+        state: {
+          unlockedEvidence: next.unlockedEvidence,
+          notes: next.notes,
+          suspects: next.suspects,
+        } as unknown as never,
         updated_at: new Date().toISOString(),
       })
       .eq("code", next.code),
