@@ -173,7 +173,7 @@ function DeductionCard({
   onUse,
 }: {
   deduction: Deduction;
-  onUse?: (text: string, suspectId: string) => void;
+  onUse?: ((text: string, suspectId: string) => void) | undefined;
 }) {
   const [picking, setPicking] = useState(false);
   return (
