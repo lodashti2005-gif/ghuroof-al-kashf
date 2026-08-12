@@ -177,10 +177,12 @@ export function EvidenceCard({
   item,
   unlocked,
   onSelect,
+  selectLabel = "عرض التفاصيل",
 }: {
   item: EvidenceItem;
   unlocked: boolean;
   onSelect?: () => void;
+  selectLabel?: string;
 }) {
   const [zoom, setZoom] = useState(false);
 
@@ -247,7 +249,7 @@ export function EvidenceCard({
               onClick={onSelect}
               className="mt-3 w-full rounded-lg border border-evidence/45 bg-evidence/10 px-3 py-2 text-xs font-bold text-evidence transition-colors hover:bg-evidence/20"
             >
-              واجهه بدليل
+              {selectLabel}
             </button>
           )}
         </div>

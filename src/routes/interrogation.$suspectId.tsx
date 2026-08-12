@@ -664,6 +664,7 @@ function InterrogationRoom() {
                       key={item.id}
                       item={item}
                       unlocked
+                      selectLabel="واجهه بدليل"
                       onSelect={() => {
                         if (locked || busy) return;
                         confront(item.id);
