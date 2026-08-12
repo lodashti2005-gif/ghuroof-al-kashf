@@ -274,3 +274,23 @@ export const profiles: Record<string, SuspectProfile> = {
     ],
   },
 };
+
+/**
+ * Server-only unlock prerequisites. An evidence file can only open once its
+ * prerequisite files are already discovered, so the board fills in gradually.
+ * Never expose this map (or the conditions) to the client.
+ */
+export const evidencePrerequisites: Record<string, string[]> = {
+  watch: [],
+  phone: [],
+  message: ["phone"],
+  cup: ["watch"],
+  camera: ["watch"],
+  key: ["camera"],
+};
+
+export function canUnlockEvidence(evidenceId: string, unlocked: string[]) {
+  if (unlocked.includes(evidenceId)) return false;
+  const prereqs = evidencePrerequisites[evidenceId] ?? [];
+  return prereqs.every((id) => unlocked.includes(id));
+}
