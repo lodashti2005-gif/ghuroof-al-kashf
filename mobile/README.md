@@ -26,6 +26,12 @@ Then submit with:
 npx eas-cli@latest submit --platform ios --profile production
 ```
 
+## Build image
+
+`eas.json` uses `"image": "latest"` for iOS, so EAS always picks the newest
+available macOS image (currently Xcode 26.x), which satisfies the current
+App Store submission requirements without further edits.
+
 ## Notes
 
 - Change the loaded URL in `App.js` (`GAME_URL`) if you use a custom domain.
