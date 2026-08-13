@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "غرفة التحقيق",
+    "slug": "ghuroof-al-kashf",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "ghuroofalkashf",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0b0c0f",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "bundleIdentifier": "app.lovable.ghuroofalkashf",
+      "buildNumber": "1",
+      "supportsTablet": true,
+      "requireFullScreen": false,
+      "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true,
+        "CFBundleDevelopmentRegion": "ar",
+        "NSMicrophoneUsageDescription": "يُستخدم الميكروفون لتسجيل أسئلتك الصوتية للمشتبه فيهم داخل غرفة التحقيق.",
+        "NSSpeechRecognitionUsageDescription": "يُستخدم التعرف على الكلام لتحويل أسئلتك الصوتية إلى نص داخل الاستجواب.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIViewControllerBasedStatusBarAppearance": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false
+        }
+      }
+    },
+    "plugins": ["expo-status-bar"],
+    "extra": {
+      "gameUrl": "https://ghuroof-al-kashf.lovable.app"
+    }
+  }
+}
