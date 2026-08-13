@@ -26,6 +26,9 @@
       }
     },
     "extra": {
+      "eas": {
+        "projectId": "ba44bdc5-142a-4f69-ba6d-2e83649a983d"
+      },
       "gameUrl": "https://ghuroof-al-kashf.lovable.app"
     }
   }
