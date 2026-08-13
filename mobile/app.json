@@ -25,7 +25,6 @@
         }
       }
     },
-    "plugins": ["expo-status-bar"],
     "extra": {
       "gameUrl": "https://ghuroof-al-kashf.lovable.app"
     }
