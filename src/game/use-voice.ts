@@ -156,69 +156,60 @@ export function useVoice({
       const controller = new AbortController();
       abortRef.current = controller;
 
-      try {
-        const res = await fetch("/api/public/tts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            suspectId,
-            text,
-            state: line.state ?? "calm",
-            stress: Math.round(line.stress ?? 0),
-          }),
-          signal: controller.signal,
-        });
-        if (!res.ok || !(res.headers.get("Content-Type") ?? "").startsWith("audio/")) {
-          const detail = await res.text().catch(() => "");
-          throw new Error(`ElevenLabs [${res.status}] ${detail}`.trim());
-        }
-        const blob = await res.blob();
+      // نستخدم GET مباشرة كمصدر لعنصر <audio> حتى يبدأ التشغيل من أول
+      // بايتات البث (streaming) بدون انتظار تنزيل الملف كامل.
+      const params = new URLSearchParams({
+        suspectId,
+        text,
+        state: line.state ?? "calm",
+        stress: String(Math.round(line.stress ?? 0)),
+      });
+      const url = `/api/public/tts?${params.toString()}`;
 
-        if (controller.signal.aborted) return;
-
-        const url = URL.createObjectURL(blob);
-        urlRef.current = url;
-        const audio = audioRef.current ?? new Audio();
-        audioRef.current = audio;
-        audio.src = url;
-        audio.onended = () => setSpeaking(false);
-        audio.onerror = () => {
-          const mediaError = audio.error;
-          console.error("ElevenLabs audio element failed", {
-            code: mediaError?.code,
-            message: mediaError?.message,
-          });
-          setSpeaking(false);
-          setVoiceError(mediaError?.message || "تعذر تشغيل ملف الصوت");
-        };
+      const audio = audioRef.current ?? new Audio();
+      audioRef.current = audio;
+      audio.preload = "auto";
+      audio.src = url;
+      audio.onended = () => setSpeaking(false);
+      audio.onplaying = () => {
         setLoadingVoice(false);
         setSpeaking(true);
-        try {
-          await audio.play();
-          unlockedRef.current = true;
-        } catch (error) {
-          const blocked =
-            error instanceof DOMException && error.name === "NotAllowedError";
-          setSpeaking(false);
-          if (blocked && !unlockedRef.current) {
-            // ننتظر أول تفاعل ثم نشغّل نفس الملف مرة واحدة — بدون رسالة خطأ.
-            console.warn("autoplay blocked; waiting for first user gesture");
-            pendingAudioRef.current = audio;
-            return;
-          }
-          console.error("ElevenLabs automatic playback failed", error);
-          setVoiceError(error instanceof Error ? error.message : String(error));
-        }
-      } catch (error) {
+      };
+      audio.onerror = () => {
         if (controller.signal.aborted) return;
-        console.error("elevenlabs playback failed", error);
         setLoadingVoice(false);
         setSpeaking(false);
+        // نجيب الخطأ الحقيقي من السيرفر حتى يظهر بالـ console بدل رسالة عامة.
+        void fetch(url)
+          .then((r) => r.text())
+          .then((detail) => {
+            console.error("ElevenLabs stream failed", detail);
+            setVoiceError(detail.slice(0, 200) || "تعذر تشغيل ملف الصوت");
+          })
+          .catch(() => setVoiceError("تعذر تشغيل ملف الصوت"));
+      };
+
+      try {
+        await audio.play();
+        unlockedRef.current = true;
+      } catch (error) {
+        const blocked = error instanceof DOMException && error.name === "NotAllowedError";
+        setLoadingVoice(false);
+        setSpeaking(false);
+        if (blocked && !unlockedRef.current) {
+          // ننتظر أول تفاعل ثم نشغّل نفس الملف مرة واحدة — بدون رسالة خطأ.
+          console.warn("autoplay blocked; waiting for first user gesture");
+          pendingAudioRef.current = audio;
+          return;
+        }
+        if (controller.signal.aborted) return;
+        console.error("ElevenLabs automatic playback failed", error);
         setVoiceError(error instanceof Error ? error.message : String(error));
       }
     },
     [stopSpeaking, suspectId],
   );
+
 
   /** Speak a suspect line with its emotional delivery. */
   const speak = useCallback(
