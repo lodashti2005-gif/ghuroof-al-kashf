@@ -195,9 +195,18 @@ export function useVoice({
         setSpeaking(true);
         try {
           await audio.play();
+          unlockedRef.current = true;
         } catch (error) {
-          console.error("ElevenLabs automatic playback failed", error);
+          const blocked =
+            error instanceof DOMException && error.name === "NotAllowedError";
           setSpeaking(false);
+          if (blocked && !unlockedRef.current) {
+            // ننتظر أول تفاعل ثم نشغّل نفس الملف مرة واحدة — بدون رسالة خطأ.
+            console.warn("autoplay blocked; waiting for first user gesture");
+            pendingAudioRef.current = audio;
+            return;
+          }
+          console.error("ElevenLabs automatic playback failed", error);
           setVoiceError(error instanceof Error ? error.message : String(error));
         }
       } catch (error) {
