@@ -71,7 +71,7 @@ function CaseIntro() {
         </div>
       </section>
 
-      <section className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+      <section className="mt-5">
         <Panel className="cine-in">
           <Eyebrow>مقطع الاكتشاف</Eyebrow>
           <h2 className="mt-1.5 text-xl font-bold">كيف انلقى بدر</h2>
@@ -99,19 +99,6 @@ function CaseIntro() {
               <span className="size-1.5 rounded-full bg-primary blink-record" /> REC
             </span>
           </div>
-        </Panel>
-
-        <Panel className="cine-in">
-          <Eyebrow>ملاحظات أولية</Eyebrow>
-          <h2 className="mt-1.5 text-xl font-bold">وقائع مثبتة</h2>
-          <ul className="mt-4 space-y-3">
-            {caseFile.brief.map((line, i) => (
-              <li key={i} className="flex gap-3 text-sm leading-relaxed text-muted-foreground">
-                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
-                <span>{line}</span>
-              </li>
-            ))}
-          </ul>
         </Panel>
       </section>
 
