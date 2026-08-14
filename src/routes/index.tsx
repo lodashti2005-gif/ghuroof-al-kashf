@@ -5,7 +5,9 @@ import { useState } from "react";
 import heroScene from "@/assets/scene-hero.jpg";
 import { ActionButton } from "@/components/game/shell";
 import { Eyebrow } from "@/components/game/ui";
+import { GAME_NAME, GAME_TAGLINE, activeCase } from "@/game/game-meta";
 import { useRoom } from "@/game/use-room";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
