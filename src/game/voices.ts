@@ -98,7 +98,14 @@ export function shapeForSpeech(text: string, state: SuspectState): string {
   const alreadyHesitant = /^(إي|اي|لحظة|والله|يعني|ها|هاه|أه|ااه|…)/.test(out);
   if (hesitant && !alreadyHesitant) out = `… ${out}`;
 
+  // وقفة قصيرة بعد كلمات التردد والربط الكويتية = إيقاع محادثة طبيعي.
+  out = out.replace(
+    /(^|\s)(والله|يعني|بس|أصلاً|اصلا|صدق|ها|طيب|شوف|إي|اي)(\s)/g,
+    (_m, a: string, w: string) => `${a}${w}، `,
+  );
+  // نبرة سؤال/استغراب أوضح.
+  out = out.replace(/\s*\?\s*/g, "؟ ");
   // Longer beat between sentences so it sounds like talking, not reading.
-  out = out.replace(/([.!؟?])\s+/g, "$1 … ");
-  return out;
+  out = out.replace(/([.!؟])\s+/g, "$1 … ");
+  return out.replace(/\s+/g, " ").replace(/،\s*،/g, "،").trim();
 }
