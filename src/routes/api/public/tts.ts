@@ -31,7 +31,9 @@ export const Route = createFileRoute("/api/public/tts")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env["ELEVENLABS_API_KEY"];
+        // Prefer the newly linked ElevenLabs connection. The original key is
+        // retained as a fallback so existing deployments keep working.
+        const apiKey = process.env["ELEVENLABS_API_KEY_1"] ?? process.env["ELEVENLABS_API_KEY"];
         if (!apiKey) {
           return Response.json(
             { error: "voice_not_configured", message: "ELEVENLABS_API_KEY غير موجود على السيرفر" },
