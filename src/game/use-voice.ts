@@ -160,10 +160,24 @@ export function useVoice({
         audioRef.current = audio;
         audio.src = url;
         audio.onended = () => setSpeaking(false);
-        audio.onerror = () => setSpeaking(false);
+        audio.onerror = () => {
+          const mediaError = audio.error;
+          console.error("ElevenLabs audio element failed", {
+            code: mediaError?.code,
+            message: mediaError?.message,
+          });
+          setSpeaking(false);
+          setVoiceError(mediaError?.message || "تعذر تشغيل ملف الصوت");
+        };
         setLoadingVoice(false);
         setSpeaking(true);
-        await audio.play().catch(() => setSpeaking(false));
+        try {
+          await audio.play();
+        } catch (error) {
+          console.error("ElevenLabs automatic playback failed", error);
+          setSpeaking(false);
+          setVoiceError(error instanceof Error ? error.message : String(error));
+        }
       } catch (error) {
         if (controller.signal.aborted) return;
         console.error("elevenlabs playback failed", error);

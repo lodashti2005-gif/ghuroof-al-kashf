@@ -446,7 +446,7 @@ function InterrogationRoom() {
             </div>
           </div>
 
-          {/* فشل الصوت يصير بصمت: ما نعرض أي رسالة خطأ للاعب */}
+          {/* فشل الصوت لا يوقف المحادثة؛ تفاصيله تُسجّل في console والسيرفر. */}
 
 
 
@@ -474,10 +474,26 @@ function InterrogationRoom() {
                         className={
                           m.role === "investigator"
                             ? "rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground"
-                            : "rounded-2xl rounded-tl-sm border border-border bg-surface-2 px-4 py-2.5 text-sm leading-relaxed"
+                            : "flex items-start gap-2 rounded-2xl rounded-tl-sm border border-border bg-surface-2 px-4 py-2.5 text-sm leading-relaxed"
                         }
                       >
-                        {m.text}
+                        <span className="min-w-0 flex-1">{m.text}</span>
+                        {m.role === "suspect" && (
+                          <button
+                            type="button"
+                            onClick={() => voice.speak(m.text, { state, stress: runtime?.stress ?? 0 })}
+                            disabled={voice.loadingVoice}
+                            aria-label={`تشغيل رد ${m.author}`}
+                            title="تشغيل الرد"
+                            className="grid size-7 shrink-0 place-items-center rounded-md border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+                          >
+                            {voice.loadingVoice ? (
+                              <Loader2 className="size-3.5 animate-spin" />
+                            ) : (
+                              <Volume2 className="size-3.5" />
+                            )}
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
