@@ -6,6 +6,9 @@
  * delivery settings (stability / style / speed) so the same actor sounds calm,
  * defensive or scared without becoming cartoonish.
  *
+ * Delivery is tuned Conversational (منخفض الثبات، أسلوب أعلى) مو Narration،
+ * وكل شخصية لها نبرة وسرعة وتردد مختلف عن الثانية.
+ *
  * Client-safe: voice ids are public identifiers, the API key never lives here.
  */
 import type { SuspectState } from "@/game/types";
@@ -15,6 +18,10 @@ export interface SuspectVoice {
   voiceId: string;
   /** Base delivery for this character. */
   base: { stability: number; similarity: number; style: number; speed: number };
+  /** كم يتردد هذا الشخص (0 = ما يتردد، 1 = وايد). */
+  hesitation: number;
+  /** كلمات تعبئة كويتية خاصة بهذي الشخصية. */
+  fillers: string[];
 }
 
 /**
@@ -24,41 +31,51 @@ export interface SuspectVoice {
  */
 export const HASAN_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb";
 
+/** صوت رجالي ثاني (Brian) حتى لا يتشابه فهد ويوسف. */
+const BRIAN_VOICE_ID = "nPczCjzI2devNBz1zQrb";
+
 export const SUSPECT_VOICES: Record<string, SuspectVoice> = {
-  // فهد المطيري — رجل ٣٤، صوت متوسط/عميق، هادي بالبداية.
-  // ثبات أقل + style أعلى = نبرة محادثة بشرية مو قراءة نص.
+  // فهد المطيري — رجل ٣٤، هادي بالبداية بس يتلخبط بسرعة: تردد أعلى، سرعة أقل.
   fahad: {
-    voiceId: HASAN_VOICE_ID, // Hasan
-    base: { stability: 0.32, similarity: 0.9, style: 0.5, speed: 0.95 },
+    voiceId: HASAN_VOICE_ID,
+    base: { stability: 0.26, similarity: 0.9, style: 0.55, speed: 0.94 },
+    hesitation: 0.8,
+    fillers: ["يعني", "والله", "لحظة"],
   },
-  // نورة الشمري — امرأة ٢٩، صوت طبيعي، عاطفية ومترددة.
+  // نورة الشمري — امرأة ٢٩، عاطفية ومترددة: أقل ثبات، كلام متقطع.
   noura: {
     voiceId: "EXAVITQu4vr4xnSDxMaL", // Sarah
-    base: { stability: 0.24, similarity: 0.9, style: 0.58, speed: 0.93 },
+    base: { stability: 0.2, similarity: 0.9, style: 0.62, speed: 0.9 },
+    hesitation: 1,
+    fillers: ["إي", "مادري", "يعني"],
   },
-  // يوسف العازمي — رجل ٣١، صوت واثق أعمق، مسيطر.
+  // يوسف العازمي — رجل ٣١، واثق ومسيطر: أسرع، أثبت، تردد قليل.
   yousef: {
-    voiceId: HASAN_VOICE_ID, // Hasan
-    base: { stability: 0.38, similarity: 0.92, style: 0.45, speed: 0.97 },
+    voiceId: BRIAN_VOICE_ID,
+    base: { stability: 0.4, similarity: 0.92, style: 0.42, speed: 1.02 },
+    hesitation: 0.25,
+    fillers: ["ترى", "عاد"],
   },
-  // دانة الهاجري — امرأة ٢٧، هادية ومتحفظة، صوت ناعم وواضح.
+  // دانة الهاجري — امرأة ٢٧، هادية ومتحفظة: بطيئة وواضحة، تردد متوسط.
   dana: {
     voiceId: "Xb7hH8MSUJpSbSDYk0k2", // Alice
-    base: { stability: 0.34, similarity: 0.9, style: 0.4, speed: 0.9 },
+    base: { stability: 0.32, similarity: 0.9, style: 0.45, speed: 0.88 },
+    hesitation: 0.55,
+    fillers: ["يعني", "لحظة"],
   },
 };
 
 /** Per-emotion delivery offsets — أوضح شوي حتى يبان الانفعال بالصوت. */
 const STATE_DELTA: Record<SuspectState, { stability: number; style: number; speed: number }> = {
-  calm: { stability: 0.08, style: -0.04, speed: 0 },
-  thinking: { stability: -0.04, style: 0.04, speed: -0.07 },
-  nervous: { stability: -0.16, style: 0.12, speed: -0.03 },
-  defensive: { stability: -0.1, style: 0.14, speed: 0.07 },
-  angry: { stability: -0.22, style: 0.24, speed: 0.12 },
-  shocked: { stability: -0.2, style: 0.16, speed: -0.05 },
-  scared: { stability: -0.24, style: 0.14, speed: -0.1 },
-  suspicious: { stability: -0.02, style: 0.1, speed: -0.03 },
-  silent: { stability: 0.1, style: -0.02, speed: -0.08 },
+  calm: { stability: 0.06, style: -0.04, speed: 0 },
+  thinking: { stability: -0.06, style: 0.05, speed: -0.08 },
+  nervous: { stability: -0.18, style: 0.14, speed: -0.03 },
+  defensive: { stability: -0.12, style: 0.16, speed: 0.08 },
+  angry: { stability: -0.24, style: 0.26, speed: 0.13 },
+  shocked: { stability: -0.22, style: 0.18, speed: -0.05 },
+  scared: { stability: -0.26, style: 0.16, speed: -0.1 },
+  suspicious: { stability: -0.04, style: 0.12, speed: -0.03 },
+  silent: { stability: 0.08, style: -0.02, speed: -0.08 },
 };
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
@@ -72,9 +89,9 @@ export function resolveVoiceSettings(suspectId: string, state: SuspectState, str
   return {
     voiceId: voice.voiceId,
     settings: {
-      stability: clamp(voice.base.stability + delta.stability - tension * 0.1, 0.1, 0.9),
+      stability: clamp(voice.base.stability + delta.stability - tension * 0.1, 0.1, 0.75),
       similarity_boost: voice.base.similarity,
-      style: clamp(voice.base.style + delta.style + tension * 0.08, 0, 0.8),
+      style: clamp(voice.base.style + delta.style + tension * 0.08, 0, 0.85),
       use_speaker_boost: true,
       speed: clamp(voice.base.speed + delta.speed + tension * 0.04, 0.7, 1.2),
     },
@@ -82,11 +99,59 @@ export function resolveVoiceSettings(suspectId: string, state: SuspectState, str
 }
 
 /**
- * Shape written text into spoken delivery: natural pauses, a breath before a
- * sensitive answer, and a light hesitation when the suspect is rattled.
- * Never rewrites the words themselves.
+ * تحويل صياغة فصحى/خليجية عامة إلى نطق كويتي يومي — بدون تغيير المعنى
+ * ولا الأرقام ولا أسماء الأدلة.
  */
-export function shapeForSpeech(text: string, state: SuspectState): string {
+const KUWAITI_LEXICON: Array<[RegExp, string]> = [
+  [/\bماذا\b/g, "شنو"],
+  [/\bما هو\b/g, "شنو"],
+  [/\bلماذا\b/g, "ليش"],
+  [/\bكيف\b/g, "شلون"],
+  [/\bأين\b/g, "وين"],
+  [/\bمتى\b/g, "يمتى"],
+  [/\bنعم\b/g, "إي"],
+  [/\bأجل\b/g, "إي"],
+  [/\bليس\b/g, "مو"],
+  [/\bلست\b/g, "مو"],
+  [/\bهكذا\b/g, "جذي"],
+  [/\bالآن\b/g, "الحين"],
+  [/\bحالياً?\b/g, "الحين"],
+  [/\bلا أعرف\b/g, "مادري"],
+  [/\bلا اعرف\b/g, "مادري"],
+  [/\bلا أدري\b/g, "مادري"],
+  [/\bأعرف\b/g, "أدري"],
+  [/\bلا يوجد\b/g, "ماكو"],
+  [/\bليس هناك\b/g, "ماكو"],
+  [/\bأريد\b/g, "أبي"],
+  [/\bأحتاج\b/g, "أبي"],
+  [/\bلكن\b/g, "بس"],
+  [/\bولكن\b/g, "بس"],
+  [/\bفقط\b/g, "بس"],
+  [/\bأيضاً?\b/g, "بعد"],
+  [/\bجداً?\b/g, "وايد"],
+  [/\bكثيراً?\b/g, "وايد"],
+  [/\bقليلاً?\b/g, "شوي"],
+  [/\bذهبت\b/g, "رحت"],
+  [/\bأذهب\b/g, "أروح"],
+  [/\bرأيت\b/g, "شفت"],
+  [/\bلم أر\b/g, "ما شفت"],
+  [/\bأخبرتك\b/g, "قلت لك"],
+  [/\bقلت لكم\b/g, "قلت لك"],
+  [/\bهاتف\b/g, "تلفون"],
+  [/\bالسيارة\b/g, "السيارة"],
+  [/\bحقاً?\b/g, "صدق"],
+  [/\bبالتأكيد\b/g, "أكيد"],
+  [/\bربما\b/g, "يمكن"],
+  [/\bلحظة واحدة\b/g, "لحظة"],
+];
+
+/**
+ * Shape written text into spoken Kuwaiti delivery: natural pauses, a light
+ * hesitation when the suspect is rattled, and per-character rhythm.
+ * Never changes facts, numbers or evidence names.
+ */
+export function shapeForSpeech(text: string, state: SuspectState, suspectId?: string): string {
+  const voice = (suspectId && SUSPECT_VOICES[suspectId]) || SUSPECT_VOICES["fahad"]!;
   let out = text
     .replace(/[«»"”“*_]/g, " ")
     .replace(/\s+/g, " ")
@@ -94,18 +159,30 @@ export function shapeForSpeech(text: string, state: SuspectState): string {
     .trim();
   if (!out) return out;
 
-  const hesitant = state === "thinking" || state === "nervous" || state === "scared";
-  const alreadyHesitant = /^(إي|اي|لحظة|والله|يعني|ها|هاه|أه|ااه|…)/.test(out);
-  if (hesitant && !alreadyHesitant) out = `… ${out}`;
+  for (const [pattern, replacement] of KUWAITI_LEXICON) out = out.replace(pattern, replacement);
+
+  // جمل قصيرة: نقسم الجمل الطويلة عند حروف الربط حتى تشبه الكلام مو القراءة.
+  out = out.replace(/\s+(و)(?=[^\s]{4,})/g, " … $1");
+
+  const tense = state === "thinking" || state === "nervous" || state === "scared";
+  const alreadyHesitant = /^(إي|اي|لحظة|والله|يعني|ترى|عاد|ها|هاه|أه|ااه|مادري|…)/.test(out);
+  if (tense && voice.hesitation >= 0.5 && !alreadyHesitant) {
+    const filler = voice.fillers[0] ?? "يعني";
+    out = voice.hesitation >= 0.8 ? `${filler}… ${out}` : `… ${out}`;
+  }
 
   // وقفة قصيرة بعد كلمات التردد والربط الكويتية = إيقاع محادثة طبيعي.
   out = out.replace(
-    /(^|\s)(والله|يعني|بس|أصلاً|اصلا|صدق|ها|طيب|شوف|إي|اي)(\s)/g,
+    /(^|\s)(والله|يعني|بس|أصلاً|اصلا|صدق|ترى|عاد|مادري|ماكو|جذي|الحين|ها|طيب|شوف|إي|اي)(\s)/g,
     (_m, a: string, w: string) => `${a}${w}، `,
   );
   // نبرة سؤال/استغراب أوضح.
   out = out.replace(/\s*\?\s*/g, "؟ ");
   // Longer beat between sentences so it sounds like talking, not reading.
   out = out.replace(/([.!؟])\s+/g, "$1 … ");
-  return out.replace(/\s+/g, " ").replace(/،\s*،/g, "،").trim();
+  return out
+    .replace(/\s+/g, " ")
+    .replace(/،\s*،/g, "،")
+    .replace(/…\s*…/g, "…")
+    .trim();
 }
