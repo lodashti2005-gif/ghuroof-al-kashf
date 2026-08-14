@@ -101,10 +101,13 @@ export const Route = createFileRoute("/api/public/tts")({
           if (lastStatus === 401 || lastStatus === 403) break;
         }
 
+        // نرجع 200 مع تفاصيل الخطأ الحقيقية: الصوت اختياري، والمحادثة النصية
+        // ما يجب أن تُسقطها حدود الأخطاء أو تظهر كخطأ 502 في الواجهة.
         return Response.json(
           { error: "elevenlabs_failed", status: lastStatus, detail: lastDetail },
-          { status: 502, headers: { "Cache-Control": "no-store" } },
+          { status: 200, headers: { "Cache-Control": "no-store" } },
         );
+
       },
     },
   },
