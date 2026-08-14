@@ -17,8 +17,12 @@ export interface SuspectVoice {
   base: { stability: number; similarity: number; style: number; speed: number };
 }
 
-/** صوت Hasan العربي — يُستخدم للمشتبهين الرجال. */
-export const HASAN_VOICE_ID = "6wsXez7Nsh9HQSbtqwIK";
+/**
+ * صوت المشتبهين الرجال. صوت Hasan من مكتبة ElevenLabs يحتاج خطة مدفوعة،
+ * فاستبدلناه بصوت George الجاهز (متاح على الخطة المجانية) مع موديل
+ * multilingual الذي ينطق العربية بشكل طبيعي.
+ */
+export const HASAN_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb";
 
 export const SUSPECT_VOICES: Record<string, SuspectVoice> = {
   // فهد المطيري — رجل ٣٤، صوت متوسط/عميق، هادي بالبداية.
