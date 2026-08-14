@@ -12,7 +12,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { SUSPECT_STATES } from "@/game/types";
-import { resolveVoiceSettings, shapeForSpeech } from "@/game/voices";
+import { HASAN_VOICE_ID, resolveVoiceSettings, shapeForSpeech } from "@/game/voices";
 
 const bodySchema = z.object({
   suspectId: z.string().max(40),
@@ -46,11 +46,14 @@ export const Route = createFileRoute("/api/public/tts")({
           return Response.json({ error: "bad_request" }, { status: 400 });
         }
 
-        const { voiceId, settings } = resolveVoiceSettings(
+        const { settings } = resolveVoiceSettings(
           parsed.suspectId,
           parsed.state,
           parsed.stress,
         );
+        // كل ردود المشتبهين تستخدم صوت Hasan المطلوب، بينما تبقى إعدادات
+        // الأداء مرتبطة بحالة المشتبه ومستوى توتره.
+        const voiceId = HASAN_VOICE_ID;
         const text = shapeForSpeech(parsed.text, parsed.state);
 
         let lastStatus = 0;
