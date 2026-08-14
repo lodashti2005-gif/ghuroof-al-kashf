@@ -126,6 +126,7 @@ export function useVoice({
   const stopSpeaking = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
+    pendingAudioRef.current = null;
     const audio = audioRef.current;
     if (audio) {
       audio.pause();
