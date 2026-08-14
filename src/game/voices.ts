@@ -17,10 +17,13 @@ export interface SuspectVoice {
   base: { stability: number; similarity: number; style: number; speed: number };
 }
 
+/** صوت Hasan العربي — يُستخدم للمشتبهين الرجال. */
+export const HASAN_VOICE_ID = "6wsXez7Nsh9HQSbtqwIK";
+
 export const SUSPECT_VOICES: Record<string, SuspectVoice> = {
   // فهد المطيري — رجل ٣٤، صوت متوسط/عميق، هادي بالبداية.
   fahad: {
-    voiceId: "JBFqnCBsd6RMkjVDRZzb", // George
+    voiceId: HASAN_VOICE_ID, // Hasan
     base: { stability: 0.45, similarity: 0.8, style: 0.32, speed: 0.97 },
   },
   // نورة الشمري — امرأة ٢٩، صوت طبيعي، عاطفية ومترددة.
@@ -30,7 +33,7 @@ export const SUSPECT_VOICES: Record<string, SuspectVoice> = {
   },
   // يوسف العازمي — رجل ٣١، صوت واثق أعمق، مسيطر.
   yousef: {
-    voiceId: "N2lVS1w4EtoT3dr4eOWO", // Callum
+    voiceId: HASAN_VOICE_ID, // Hasan
     base: { stability: 0.52, similarity: 0.82, style: 0.3, speed: 1.0 },
   },
   // دانة الهاجري — امرأة ٢٧، هادية ومتحفظة، صوت ناعم وواضح.
