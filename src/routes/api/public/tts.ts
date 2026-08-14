@@ -51,15 +51,14 @@ export const Route = createFileRoute("/api/public/tts")({
           return Response.json({ error: "bad_request" }, { status: 400 });
         }
 
-        const { settings } = resolveVoiceSettings(
+        const { settings, voiceId: suspectVoiceId } = resolveVoiceSettings(
           parsed.suspectId,
           parsed.state,
           parsed.stress,
         );
-        // صوت Hasan هو الأساس. صوت George مضمّن كاحتياط فقط إذا رفض
-        // ElevenLabs صوت المكتبة (خطة مجانية) حتى لا يبقى التحقيق بلا صوت.
-        const FALLBACK_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb";
-        const voiceIds = [HASAN_VOICE_ID, FALLBACK_VOICE_ID];
+        // صوت المشتبه نفسه أولاً، ثم صوت رجالي جاهز كاحتياط حتى لا يبقى
+        // التحقيق بدون صوت لو رفض ElevenLabs الصوت المطلوب.
+        const voiceIds = [...new Set([suspectVoiceId, HASAN_VOICE_ID])];
         const text = shapeForSpeech(parsed.text, parsed.state);
 
         let lastStatus = 0;
