@@ -13,13 +13,13 @@ import { useRoom } from "@/game/use-room";
 export const Route = createFileRoute("/scene")({
   head: () => ({
     meta: [
-      { title: "مسرح الجريمة — غرفة التحقيق" },
+      { title: "مسرح الجريمة — ورا السالفة" },
       {
         name: "description",
         content: "افحص مسرح الجريمة بنفسك، دقّق بالتفاصيل واكتشف الأدلة قبل استجواب المشتبهين.",
       },
       { property: "og:title", content: "مسرح الجريمة" },
-      { property: "og:description", content: "معاينة بصرية لمسرح جريمة قضية الليلة الأخيرة." },
+      { property: "og:description", content: "معاينة بصرية لمسرح جريمة قضية الشاليه." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

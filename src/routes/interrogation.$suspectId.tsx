@@ -57,7 +57,7 @@ export const Route = createFileRoute("/interrogation/$suspectId")({
 
   head: () => ({
     meta: [
-      { title: "غرفة الاستجواب — غرفة التحقيق" },
+      { title: "غرفة الاستجواب — ورا السالفة" },
       {
         name: "description",
         content: "خمس دقائق، مؤشر توتر، ومشتبه يتكلم بلهجته. استجوبه بحرية واكشف اللي يخبيه.",

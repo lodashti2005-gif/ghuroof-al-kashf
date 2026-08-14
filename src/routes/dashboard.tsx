@@ -17,7 +17,7 @@ import { useRoom } from "@/game/use-room";
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
-      { title: "لوحة التحقيق — غرفة التحقيق" },
+      { title: "لوحة التحقيق — ورا السالفة" },
       {
         name: "description",
         content:
