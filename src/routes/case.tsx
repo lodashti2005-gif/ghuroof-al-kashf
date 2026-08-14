@@ -9,12 +9,12 @@ import { useRoom } from "@/game/use-room";
 export const Route = createFileRoute("/case")({
   head: () => ({
     meta: [
-      { title: "قضية الليلة الأخيرة — غرفة التحقيق" },
+      { title: "قضية الشاليه — ورا السالفة" },
       {
         name: "description",
         content: "ملف القضية: بدر العتيبي، 32 سنة، انلقى ميت داخل غرفة مقفلة بشاليه خاص.",
       },
-      { property: "og:title", content: "قضية الليلة الأخيرة" },
+      { property: "og:title", content: "قضية الشاليه" },
       { property: "og:description", content: "الباب ما كان مكسور، والتلفون اختفى. منو يكذب؟" },
     ],
   }),

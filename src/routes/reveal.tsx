@@ -10,7 +10,7 @@ import { useRoom } from "@/game/use-room";
 export const Route = createFileRoute("/reveal")({
   head: () => ({
     meta: [
-      { title: "كشف الحقيقة — غرفة التحقيق" },
+      { title: "كشف الحقيقة — ورا السالفة" },
       { name: "description", content: "القاتل، الدافع، الخط الزمني، والأدلة اللي أثبتت الجريمة." },
       { property: "og:title", content: "كشف الحقيقة" },
       { property: "og:description", content: "الحقيقة ما تنقال... تنكشف." },

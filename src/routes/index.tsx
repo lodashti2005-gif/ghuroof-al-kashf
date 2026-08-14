@@ -5,18 +5,21 @@ import { useState } from "react";
 import heroScene from "@/assets/scene-hero.jpg";
 import { ActionButton } from "@/components/game/shell";
 import { Eyebrow } from "@/components/game/ui";
+import { GAME_NAME, GAME_TAGLINE, activeCase } from "@/game/game-meta";
 import { useRoom } from "@/game/use-room";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "غرفة التحقيق — الحقيقة ما تنقال... تنكشف" },
+      { title: "ورا السالفة — الحقيقة ما تنقال... تنكشف" },
       {
         name: "description",
         content:
-          "لعبة تحقيق جماعية بالعربي. اجمعوا أصحابكم بغرفة واحدة، حققوا مع المشتبهين، واكشفوا قاتل بدر العتيبي.",
+          "لعبة تحقيق جماعية بالعربي. اجمعوا أصحابكم بغرفة واحدة، حققوا مع المشتبهين، واكشفوا قاتل بدر العتيبي في قضية الشاليه.",
       },
-      { property: "og:title", content: "غرفة التحقيق" },
+      { property: "og:title", content: "ورا السالفة — قضية الشاليه" },
+
       { property: "og:description", content: "الحقيقة ما تنقال... تنكشف. لعبة تحقيق جماعية." },
     ],
   }),
@@ -72,10 +75,14 @@ function Landing() {
             </span>
           </div>
 
-          <h1 className="text-5xl font-extrabold leading-[1.15] sm:text-7xl">غرفة التحقيق</h1>
-          <p className="mt-4 font-display text-lg text-muted-foreground sm:text-2xl">
-            الحقيقة ما تنقال... تنكشف
+          <h1 className="text-5xl font-extrabold leading-[1.15] sm:text-7xl">{GAME_NAME}</h1>
+          <p className="mt-3 font-display text-xl font-bold text-primary sm:text-3xl">
+            {activeCase.title}
           </p>
+          <p className="mt-3 font-display text-base text-muted-foreground sm:text-xl">
+            {GAME_TAGLINE}
+          </p>
+
           <p className="mt-6 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
             جمعة أصحاب، غرفة واحدة، وقضية قتل ما تنحل إلا بالتناقضات. حققوا مع المشتبهين، اجمعوا
             الأدلة، وصوتوا على القاتل قبل ما ينتهي الوقت.

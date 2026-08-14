@@ -10,7 +10,7 @@ export const INTERROGATION_SECONDS = 5 * 60;
 
 export const caseFile = {
   id: "last-night",
-  title: "قضية الليلة الأخيرة",
+  title: "قضية الشاليه",
   code: "K-2291",
   victim: {
     name: "بدر العتيبي",

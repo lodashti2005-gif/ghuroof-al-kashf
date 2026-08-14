@@ -77,7 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "غرفة التحقيق — لعبة جرائم غامضة" },
+      { title: "ورا السالفة — لعبة جرائم غامضة" },
       {
         name: "description",
         content: "لعبة تحقيق جماعية بالعربي: حلوا قضية غامضة مع أصحابكم واكشفوا القاتل.",

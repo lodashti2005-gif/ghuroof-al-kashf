@@ -10,9 +10,9 @@ import { useRoom } from "@/game/use-room";
 export const Route = createFileRoute("/lobby")({
   head: () => ({
     meta: [
-      { title: "غرفة الانتظار — غرفة التحقيق" },
-      { name: "description", content: "شارك رمز الغرفة مع أصحابك وابدأوا قضية الليلة الأخيرة." },
-      { property: "og:title", content: "غرفة الانتظار — غرفة التحقيق" },
+      { title: "غرفة الانتظار — ورا السالفة" },
+      { name: "description", content: "شارك رمز الغرفة مع أصحابك وابدأوا قضية الشاليه." },
+      { property: "og:title", content: "غرفة الانتظار — ورا السالفة" },
       { property: "og:description", content: "شارك رمز الغرفة وابدأوا التحقيق مع فريقك." },
     ],
   }),

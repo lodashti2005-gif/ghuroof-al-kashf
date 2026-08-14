@@ -10,7 +10,7 @@ import { useRoom } from "@/game/use-room";
 export const Route = createFileRoute("/accusation")({
   head: () => ({
     meta: [
-      { title: "الاتهام النهائي — غرفة التحقيق" },
+      { title: "الاتهام النهائي — ورا السالفة" },
       { name: "description", content: "كل محقق يصوت مرة واحدة على اللي يشك إنه قتل بدر العتيبي." },
       { property: "og:title", content: "الاتهام النهائي" },
       { property: "og:description", content: "صوت واحد لكل محقق. منو القاتل؟" },
