@@ -70,10 +70,31 @@ export function useVoice({
   const lastRef = useRef<LastLine | null>(null);
   const mutedRef = useRef(muted);
   mutedRef.current = muted;
+  // إذا منع المتصفح التشغيل التلقائي، نحفظ الصوت الجاهز ونشغّله لحظة أول
+  // تفاعل من اللاعب مع الصفحة، وبعدها تشتغل كل الردود تلقائيًا.
+  const pendingAudioRef = useRef<HTMLAudioElement | null>(null);
+  const unlockedRef = useRef(false);
 
   useEffect(() => {
     setMicSupported(!!getRecognition());
+
+    const unlock = () => {
+      unlockedRef.current = true;
+      const pending = pendingAudioRef.current;
+      pendingAudioRef.current = null;
+      if (pending && !mutedRef.current) {
+        setSpeaking(true);
+        void pending.play().catch((error: unknown) => {
+          console.error("ElevenLabs playback failed after user gesture", error);
+          setSpeaking(false);
+        });
+      }
+    };
+    const events = ["pointerdown", "keydown", "touchstart"] as const;
+    events.forEach((e) => window.addEventListener(e, unlock, { passive: true }));
+
     return () => {
+      events.forEach((e) => window.removeEventListener(e, unlock));
       recRef.current?.stop();
       abortRef.current?.abort();
       audioRef.current?.pause();
@@ -105,6 +126,7 @@ export function useVoice({
   const stopSpeaking = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
+    pendingAudioRef.current = null;
     const audio = audioRef.current;
     if (audio) {
       audio.pause();
@@ -173,9 +195,18 @@ export function useVoice({
         setSpeaking(true);
         try {
           await audio.play();
+          unlockedRef.current = true;
         } catch (error) {
-          console.error("ElevenLabs automatic playback failed", error);
+          const blocked =
+            error instanceof DOMException && error.name === "NotAllowedError";
           setSpeaking(false);
+          if (blocked && !unlockedRef.current) {
+            // ننتظر أول تفاعل ثم نشغّل نفس الملف مرة واحدة — بدون رسالة خطأ.
+            console.warn("autoplay blocked; waiting for first user gesture");
+            pendingAudioRef.current = audio;
+            return;
+          }
+          console.error("ElevenLabs automatic playback failed", error);
           setVoiceError(error instanceof Error ? error.message : String(error));
         }
       } catch (error) {

@@ -26,38 +26,39 @@ export const HASAN_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb";
 
 export const SUSPECT_VOICES: Record<string, SuspectVoice> = {
   // فهد المطيري — رجل ٣٤، صوت متوسط/عميق، هادي بالبداية.
+  // ثبات أقل + style أعلى = نبرة محادثة بشرية مو قراءة نص.
   fahad: {
     voiceId: HASAN_VOICE_ID, // Hasan
-    base: { stability: 0.45, similarity: 0.8, style: 0.32, speed: 0.97 },
+    base: { stability: 0.32, similarity: 0.9, style: 0.5, speed: 0.95 },
   },
   // نورة الشمري — امرأة ٢٩، صوت طبيعي، عاطفية ومترددة.
   noura: {
     voiceId: "EXAVITQu4vr4xnSDxMaL", // Sarah
-    base: { stability: 0.35, similarity: 0.8, style: 0.42, speed: 0.95 },
+    base: { stability: 0.24, similarity: 0.9, style: 0.58, speed: 0.93 },
   },
   // يوسف العازمي — رجل ٣١، صوت واثق أعمق، مسيطر.
   yousef: {
     voiceId: HASAN_VOICE_ID, // Hasan
-    base: { stability: 0.52, similarity: 0.82, style: 0.3, speed: 1.0 },
+    base: { stability: 0.38, similarity: 0.92, style: 0.45, speed: 0.97 },
   },
   // دانة الهاجري — امرأة ٢٧، هادية ومتحفظة، صوت ناعم وواضح.
   dana: {
     voiceId: "Xb7hH8MSUJpSbSDYk0k2", // Alice
-    base: { stability: 0.5, similarity: 0.8, style: 0.22, speed: 0.92 },
+    base: { stability: 0.34, similarity: 0.9, style: 0.4, speed: 0.9 },
   },
 };
 
-/** Per-emotion delivery offsets — subtle on purpose. */
+/** Per-emotion delivery offsets — أوضح شوي حتى يبان الانفعال بالصوت. */
 const STATE_DELTA: Record<SuspectState, { stability: number; style: number; speed: number }> = {
-  calm: { stability: 0.05, style: 0, speed: 0 },
-  thinking: { stability: 0, style: 0.02, speed: -0.05 },
-  nervous: { stability: -0.14, style: 0.08, speed: -0.02 },
-  defensive: { stability: -0.06, style: 0.1, speed: 0.06 },
-  angry: { stability: -0.18, style: 0.2, speed: 0.1 },
-  shocked: { stability: -0.16, style: 0.12, speed: -0.04 },
-  scared: { stability: -0.2, style: 0.1, speed: -0.08 },
-  suspicious: { stability: 0.02, style: 0.06, speed: -0.02 },
-  silent: { stability: 0.08, style: 0, speed: -0.06 },
+  calm: { stability: 0.08, style: -0.04, speed: 0 },
+  thinking: { stability: -0.04, style: 0.04, speed: -0.07 },
+  nervous: { stability: -0.16, style: 0.12, speed: -0.03 },
+  defensive: { stability: -0.1, style: 0.14, speed: 0.07 },
+  angry: { stability: -0.22, style: 0.24, speed: 0.12 },
+  shocked: { stability: -0.2, style: 0.16, speed: -0.05 },
+  scared: { stability: -0.24, style: 0.14, speed: -0.1 },
+  suspicious: { stability: -0.02, style: 0.1, speed: -0.03 },
+  silent: { stability: 0.1, style: -0.02, speed: -0.08 },
 };
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
@@ -97,7 +98,14 @@ export function shapeForSpeech(text: string, state: SuspectState): string {
   const alreadyHesitant = /^(إي|اي|لحظة|والله|يعني|ها|هاه|أه|ااه|…)/.test(out);
   if (hesitant && !alreadyHesitant) out = `… ${out}`;
 
+  // وقفة قصيرة بعد كلمات التردد والربط الكويتية = إيقاع محادثة طبيعي.
+  out = out.replace(
+    /(^|\s)(والله|يعني|بس|أصلاً|اصلا|صدق|ها|طيب|شوف|إي|اي)(\s)/g,
+    (_m, a: string, w: string) => `${a}${w}، `,
+  );
+  // نبرة سؤال/استغراب أوضح.
+  out = out.replace(/\s*\?\s*/g, "؟ ");
   // Longer beat between sentences so it sounds like talking, not reading.
-  out = out.replace(/([.!؟?])\s+/g, "$1 … ");
-  return out;
+  out = out.replace(/([.!؟])\s+/g, "$1 … ");
+  return out.replace(/\s+/g, " ").replace(/،\s*،/g, "،").trim();
 }
