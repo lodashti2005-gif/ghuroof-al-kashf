@@ -31,9 +31,12 @@ export const Route = createFileRoute("/api/public/tts")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        // Prefer the newly linked ElevenLabs connection. The original key is
-        // retained as a fallback so existing deployments keep working.
-        const apiKey = process.env["ELEVENLABS_API_KEY_1"] ?? process.env["ELEVENLABS_API_KEY"];
+        // نستخدم الاتصال الأحدث (Wara Al Salfa 2) أولاً، والمفاتيح الأقدم
+        // تبقى كاحتياط فقط في حال عدم توفر الجديد.
+        const apiKey =
+          process.env["ELEVENLABS_API_KEY_2"] ??
+          process.env["ELEVENLABS_API_KEY_1"] ??
+          process.env["ELEVENLABS_API_KEY"];
         if (!apiKey) {
           return Response.json(
             { error: "voice_not_configured", message: "ELEVENLABS_API_KEY غير موجود على السيرفر" },
