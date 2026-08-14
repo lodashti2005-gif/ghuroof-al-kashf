@@ -56,52 +56,60 @@ export const Route = createFileRoute("/api/public/tts")({
           parsed.state,
           parsed.stress,
         );
-        // كل ردود المشتبهين تستخدم صوت Hasan المطلوب، بينما تبقى إعدادات
-        // الأداء مرتبطة بحالة المشتبه ومستوى توتره.
-        const voiceId = HASAN_VOICE_ID;
+        // صوت Hasan هو الأساس. صوت George مضمّن كاحتياط فقط إذا رفض
+        // ElevenLabs صوت المكتبة (خطة مجانية) حتى لا يبقى التحقيق بلا صوت.
+        const FALLBACK_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb";
+        const voiceIds = [HASAN_VOICE_ID, FALLBACK_VOICE_ID];
         const text = shapeForSpeech(parsed.text, parsed.state);
 
         let lastStatus = 0;
         let lastDetail = "network_error";
 
-        for (const model of MODELS) {
-          const voice_settings =
-            model === "eleven_v3"
-              ? {
-                  stability: quantize(settings.stability),
-                  similarity_boost: settings.similarity_boost,
-                  style: settings.style,
-                  use_speaker_boost: true,
-                }
-              : settings;
+        outer: for (const voiceId of voiceIds) {
+          for (const model of MODELS) {
+            const voice_settings =
+              model === "eleven_v3"
+                ? {
+                    stability: quantize(settings.stability),
+                    similarity_boost: settings.similarity_boost,
+                    style: settings.style,
+                    use_speaker_boost: true,
+                  }
+                : settings;
 
-          const res = await fetch(
-            `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_44100_128`,
-            {
-              method: "POST",
-              headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
-              body: JSON.stringify({ text, model_id: model, voice_settings }),
-            },
-          ).catch((error: unknown) => {
-            console.error("ElevenLabs TTS request failed", error);
-            return null;
-          });
-
-          if (res?.ok && res.body) {
-            return new Response(res.body, {
-              headers: {
-                "Content-Type": "audio/mpeg",
-                "Cache-Control": "no-store",
-                "X-Voice-Model": model,
+            const res = await fetch(
+              `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_44100_128`,
+              {
+                method: "POST",
+                headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
+                body: JSON.stringify({ text, model_id: model, voice_settings }),
               },
+            ).catch((error: unknown) => {
+              console.error("ElevenLabs TTS request failed", error);
+              return null;
             });
-          }
 
-          lastStatus = res?.status ?? 0;
-          lastDetail = res ? await res.text().catch(() => "") : "network_error";
-          console.error(`ElevenLabs TTS failed [${lastStatus}] on ${model}: ${lastDetail}`);
-          // Auth/permission problems will not improve with another model.
-          if (lastStatus === 401 || lastStatus === 403) break;
+            if (res?.ok && res.body) {
+              return new Response(res.body, {
+                headers: {
+                  "Content-Type": "audio/mpeg",
+                  "Cache-Control": "no-store",
+                  "X-Voice-Model": model,
+                  "X-Voice-Id": voiceId,
+                },
+              });
+            }
+
+            lastStatus = res?.status ?? 0;
+            lastDetail = res ? await res.text().catch(() => "") : "network_error";
+            console.error(
+              `ElevenLabs TTS failed [${lastStatus}] voice=${voiceId} model=${model}: ${lastDetail}`,
+            );
+            // مشاكل المفتاح أو الصلاحيات لا تتحسن بتغيير الموديل أو الصوت.
+            if (lastStatus === 401 || lastStatus === 403) break outer;
+            // الصوت غير متاح للخطة: جرّب الصوت الاحتياطي مباشرة.
+            if (lastStatus === 402) continue outer;
+          }
         }
 
         // نرجع 200 مع تفاصيل الخطأ الحقيقية: الصوت اختياري، والمحادثة النصية
