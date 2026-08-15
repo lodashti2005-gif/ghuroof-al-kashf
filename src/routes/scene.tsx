@@ -117,33 +117,12 @@ function SceneRoute() {
               <img
                 src={sceneImage}
                 alt="صورة مسرح الجريمة داخل الشاليه"
-                width={1920}
-                height={1080}
+                width={sceneImageSize.width}
+                height={sceneImageSize.height}
                 className="block w-full cursor-crosshair"
-                style={{ filter: "brightness(1.22) contrast(1.05) saturate(1.04)" }}
+                style={{ filter: "brightness(1.12) contrast(1.03) saturate(1.04)" }}
               />
-              {/* Hidden hotspots: no rings, no markers, nothing that hints location. */}
-              {sceneHotspots.map((h) => (
-                <button
-                  key={h.evidenceId}
-                  type="button"
-                  aria-label="فحص تفصيلة في مسرح الجريمة"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    inspect(h.evidenceId, { x: h.x, y: h.y });
-                  }}
-                  className="absolute -translate-x-1/2 -translate-y-1/2 cursor-crosshair rounded-full bg-transparent focus:outline-none"
-                  style={{
-                    left: `${h.x}%`,
-                    top: `${h.y}%`,
-                    width: `${h.w}%`,
-                    height: `${h.h}%`,
-                    minWidth: "44px",
-                    minHeight: "44px",
-                  }}
-                />
-              ))}
-              {/* Decoy props: clickable, but nothing useful. */}
+              {/* Decoy props: clickable, but nothing useful. Rendered under the hotspots. */}
               {sceneDecoys.map((d) => (
                 <button
                   key={d.id}
@@ -153,7 +132,7 @@ function SceneRoute() {
                     e.stopPropagation();
                     setMiss(d.message);
                   }}
-                  className="absolute -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none"
+                  className="absolute z-10 -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none"
                   style={{
                     left: `${d.x}%`,
                     top: `${d.y}%`,
@@ -162,6 +141,29 @@ function SceneRoute() {
                   }}
                 />
               ))}
+              {/* Hidden hotspots: no rings, no markers, nothing that hints location. */}
+              {sceneHotspots.map((h) => (
+                <button
+                  key={h.evidenceId}
+                  type="button"
+                  aria-label="فحص تفصيلة في مسرح الجريمة"
+                  data-evidence-hotspot={h.evidenceId}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    inspect(h.evidenceId, { x: h.x, y: h.y });
+                  }}
+                  className="absolute z-20 -translate-x-1/2 -translate-y-1/2 cursor-crosshair rounded-full bg-transparent focus:outline-none"
+                  style={{
+                    left: `${h.x}%`,
+                    top: `${h.y}%`,
+                    width: `${h.w}%`,
+                    height: `${h.h}%`,
+                    minWidth: "40px",
+                    minHeight: "40px",
+                  }}
+                />
+              ))}
+
               {spark && (
                 <span
                   key={spark.k}
