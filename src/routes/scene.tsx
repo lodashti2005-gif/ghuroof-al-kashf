@@ -56,17 +56,19 @@ function SceneRoute() {
     return () => clearTimeout(t);
   }, [spark]);
 
+  const addToBoard = (evidenceId: string) => {
+    if (unlockedIds.includes(evidenceId)) return;
+    actions.unlockEvidence(evidenceId);
+    setToast("🔎 انضاف الدليل للوحة الأدلة");
+  };
+
   const inspect = (evidenceId: string, at: { x: number; y: number }) => {
     const item = getEvidence(evidenceId);
     if (!item) return;
     setSpark({ x: at.x, y: at.y, k: Date.now() });
     setFound(evidenceId);
-  };
-
-  const addToBoard = (evidenceId: string) => {
-    if (unlockedIds.includes(evidenceId)) return;
-    actions.unlockEvidence(evidenceId);
-    setToast("🔎 انضاف الدليل للوحة الأدلة");
+    // Discovery adds the item to the shared board once, automatically.
+    addToBoard(evidenceId);
   };
 
   const foundItem = found ? getEvidence(found) : undefined;
