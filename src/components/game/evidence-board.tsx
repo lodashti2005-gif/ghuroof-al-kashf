@@ -1,6 +1,7 @@
 import {
   Camera,
   Coffee,
+  Footprints,
   KeyRound,
   Link2,
   Lightbulb,
@@ -25,6 +26,7 @@ const ICONS = {
   message: MessageSquare,
   camera: Camera,
   key: KeyRound,
+  shoe: Footprints,
 } as const;
 
 /**

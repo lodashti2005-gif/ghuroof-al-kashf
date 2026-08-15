@@ -7,7 +7,7 @@ import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shel
 import { EvidenceBoard } from "@/components/game/evidence-board";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { caseFile, evidence, getEvidence } from "@/game/case-data";
-import { sceneDecoys, sceneHotspots, sceneImage } from "@/game/scene";
+import { SCENE_EVIDENCE_IDS, sceneDecoys, sceneHotspots, sceneImage } from "@/game/scene";
 import { useRoom } from "@/game/use-room";
 
 export const Route = createFileRoute("/scene")({
@@ -56,23 +56,27 @@ function SceneRoute() {
     return () => clearTimeout(t);
   }, [spark]);
 
-  const inspect = (evidenceId: string, at: { x: number; y: number }) => {
-    const item = getEvidence(evidenceId);
-    if (!item) return;
-    setSpark({ x: at.x, y: at.y, k: Date.now() });
-    setFound(evidenceId);
-  };
-
   const addToBoard = (evidenceId: string) => {
     if (unlockedIds.includes(evidenceId)) return;
     actions.unlockEvidence(evidenceId);
     setToast("🔎 انضاف الدليل للوحة الأدلة");
   };
 
+  const inspect = (evidenceId: string, at: { x: number; y: number }) => {
+    const item = getEvidence(evidenceId);
+    if (!item) return;
+    setSpark({ x: at.x, y: at.y, k: Date.now() });
+    setFound(evidenceId);
+    // Discovery adds the item to the shared board once, automatically.
+    addToBoard(evidenceId);
+  };
+
   const foundItem = found ? getEvidence(found) : undefined;
   const foundAdded = !!found && unlockedIds.includes(found);
   const unlockedItems = evidence.filter((e) => unlockedIds.includes(e.id));
-
+  const sceneFound = SCENE_EVIDENCE_IDS.filter((id) => unlockedIds.includes(id));
+  const sceneTotal = SCENE_EVIDENCE_IDS.length;
+  const sceneComplete = sceneFound.length >= sceneTotal;
 
   return (
     <GameShell title="مسرح الجريمة" right={<LeaveRoomButton />}>
@@ -89,90 +93,160 @@ function SceneRoute() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <CaseTag tone="evidence">
-              الأدلة المكتشفة: {unlockedIds.length}
+              الأدلة المكتشفة: {sceneFound.length}/{sceneTotal}
             </CaseTag>
             <ActionButton variant="outline" onClick={() => setBoard(true)}>
               <Fingerprint className="size-4" /> لوحة الأدلة
             </ActionButton>
-            <ActionButton variant="outline" onClick={() => navigate({ to: "/dashboard" })}>
-              <Users className="size-4" /> المشتبه فيهم
+            <ActionButton
+              variant={sceneComplete ? "primary" : "outline"}
+              onClick={() => navigate({ to: "/dashboard" })}
+            >
+              <Users className="size-4" />
+              {sceneComplete ? "ابدأ الاستجواب" : "المشتبه فيهم"}
             </ActionButton>
           </div>
         </Panel>
 
-        <div className="surface-panel cine-in overflow-hidden p-0">
-          <div
-            className="relative w-full select-none"
-            onClick={() => setMiss("ما في شي مهم بهذا المكان")}
-          >
-            <img
-              src={sceneImage}
-              alt="صورة مسرح الجريمة داخل الشاليه"
-              width={1920}
-              height={1080}
-              className="block w-full cursor-crosshair"
-            />
-            {/* Hidden hotspots: no rings, no markers, nothing that hints location. */}
-            {sceneHotspots.map((h) => (
-              <button
-                key={h.evidenceId}
-                type="button"
-                aria-label="فحص تفصيلة في مسرح الجريمة"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  inspect(h.evidenceId, { x: h.x, y: h.y });
-                }}
-                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-crosshair rounded-full bg-transparent focus:outline-none"
-                style={{
-                  left: `${h.x}%`,
-                  top: `${h.y}%`,
-                  width: `${h.w}%`,
-                  height: `${h.h}%`,
-                  minWidth: "40px",
-                  minHeight: "40px",
-                }}
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="surface-panel cine-in overflow-hidden p-0">
+            <div
+              className="relative w-full select-none"
+              onClick={() => setMiss("ما في شي مهم بهذا المكان")}
+            >
+              <img
+                src={sceneImage}
+                alt="صورة مسرح الجريمة داخل الشاليه"
+                width={1920}
+                height={1080}
+                className="block w-full cursor-crosshair"
+                style={{ filter: "brightness(1.22) contrast(1.05) saturate(1.04)" }}
               />
-            ))}
-            {/* Decoy props: clickable, but nothing useful. */}
-            {sceneDecoys.map((d) => (
-              <button
-                key={d.id}
-                type="button"
-                aria-label="فحص تفصيلة في مسرح الجريمة"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setMiss(d.message);
-                }}
-                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none"
-                style={{
-                  left: `${d.x}%`,
-                  top: `${d.y}%`,
-                  width: `${d.w}%`,
-                  height: `${d.h}%`,
-                }}
-              />
-            ))}
-            {spark && (
-              <span
-                key={spark.k}
-                aria-hidden="true"
-                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
-                style={{ left: `${spark.x}%`, top: `${spark.y}%` }}
-              >
-                <span className="block size-12 animate-ping rounded-full border-2 border-evidence/80 bg-evidence/10" />
-              </span>
-            )}
-            {miss && (
-              <div className="pointer-events-none absolute bottom-3 right-1/2 translate-x-1/2 rounded-lg border border-border bg-card/90 px-3 py-1.5 text-xs text-muted-foreground">
-                {miss}
-              </div>
-            )}
+              {/* Hidden hotspots: no rings, no markers, nothing that hints location. */}
+              {sceneHotspots.map((h) => (
+                <button
+                  key={h.evidenceId}
+                  type="button"
+                  aria-label="فحص تفصيلة في مسرح الجريمة"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    inspect(h.evidenceId, { x: h.x, y: h.y });
+                  }}
+                  className="absolute -translate-x-1/2 -translate-y-1/2 cursor-crosshair rounded-full bg-transparent focus:outline-none"
+                  style={{
+                    left: `${h.x}%`,
+                    top: `${h.y}%`,
+                    width: `${h.w}%`,
+                    height: `${h.h}%`,
+                    minWidth: "44px",
+                    minHeight: "44px",
+                  }}
+                />
+              ))}
+              {/* Decoy props: clickable, but nothing useful. */}
+              {sceneDecoys.map((d) => (
+                <button
+                  key={d.id}
+                  type="button"
+                  aria-label="فحص تفصيلة في مسرح الجريمة"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMiss(d.message);
+                  }}
+                  className="absolute -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none"
+                  style={{
+                    left: `${d.x}%`,
+                    top: `${d.y}%`,
+                    width: `${d.w}%`,
+                    height: `${d.h}%`,
+                  }}
+                />
+              ))}
+              {spark && (
+                <span
+                  key={spark.k}
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+                  style={{ left: `${spark.x}%`, top: `${spark.y}%` }}
+                >
+                  <span className="block size-12 animate-ping rounded-full border-2 border-evidence/80 bg-evidence/10" />
+                </span>
+              )}
+              {miss && (
+                <div className="pointer-events-none absolute bottom-3 right-1/2 translate-x-1/2 rounded-lg border border-border bg-card/90 px-3 py-1.5 text-xs text-muted-foreground">
+                  {miss}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2 border-t border-border/70 px-4 py-3 text-xs text-muted-foreground">
+              <Search className="size-3.5 shrink-0" />
+              كل واحد فيكم يفحص زاوية، والملاحظات تتشارك بين الفريق.
+            </div>
+          </div>
 
-          </div>
-          <div className="flex items-center gap-2 border-t border-border/70 px-4 py-3 text-xs text-muted-foreground">
-            <Search className="size-3.5 shrink-0" />
-            كل واحد فيكم يفحص زاوية، والملاحظات تتشارك بين الفريق.
-          </div>
+          {/* Side board: only what the team already discovered. */}
+          <aside className="surface-panel cine-in h-fit p-4">
+            <Eyebrow>الأدلة المكتشفة</Eyebrow>
+            <p className="mt-1 text-lg font-bold">
+              {sceneFound.length}/{sceneTotal}
+            </p>
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+              <div
+                className="h-full rounded-full bg-evidence transition-all duration-500"
+                style={{ width: `${(sceneFound.length / sceneTotal) * 100}%` }}
+              />
+            </div>
+            <ul className="mt-4 space-y-2">
+              {SCENE_EVIDENCE_IDS.map((id, i) => {
+                const item = sceneFound.includes(id) ? getEvidence(id) : null;
+                return (
+                  <li key={id}>
+                    {item ? (
+                      <button
+                        type="button"
+                        onClick={() => setFound(item.id)}
+                        className="flex w-full items-center gap-3 rounded-lg border border-evidence/40 bg-card p-2 text-right transition-colors hover:border-evidence"
+                      >
+                        <SceneCrop
+                          crop={item.crop}
+                          alt={item.title}
+                          className="size-12 shrink-0 rounded-md"
+                        />
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-bold">{item.title}</span>
+                          <span className="block font-mono text-[11px] text-muted-foreground">
+                            {item.number}
+                          </span>
+                        </span>
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-3 rounded-lg border border-dashed border-border/70 p-2">
+                        <span className="grid size-12 shrink-0 place-items-center rounded-md bg-secondary text-muted-foreground">
+                          <Search className="size-4" />
+                        </span>
+                        <span className="text-sm text-muted-foreground">دليل رقم {i + 1} — بعده مو مكتشف</span>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            {sceneComplete ? (
+              <div className="mt-4 space-y-3 rounded-lg border border-evidence/40 bg-evidence/5 p-3">
+                <p className="text-sm font-bold text-evidence">
+                  خلصت معاينة مسرح الجريمة — كل الأدلة بيدكم
+                </p>
+                <ActionButton className="w-full" onClick={() => navigate({ to: "/dashboard" })}>
+                  <Users className="size-4" /> انتقل للمرحلة التالية
+                </ActionButton>
+              </div>
+            ) : (
+              <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+                باقي {sceneTotal - sceneFound.length} أدلة بالصورة. المرحلة التالية تفتح بعد ما
+                تكملون {sceneTotal}/{sceneTotal}.
+              </p>
+            )}
+          </aside>
         </div>
       </div>
 

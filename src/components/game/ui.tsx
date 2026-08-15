@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import {
   Camera,
   Coffee,
+  Footprints,
   Fingerprint,
   KeyRound,
   Lock,
@@ -96,6 +97,7 @@ const EVIDENCE_ICONS = {
   message: MessageSquareWarning,
   camera: Camera,
   key: KeyRound,
+  shoe: Footprints,
 } as const;
 
 function formatClock(seconds: number) {
