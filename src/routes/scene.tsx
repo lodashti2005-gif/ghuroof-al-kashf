@@ -195,19 +195,35 @@ function SceneRoute() {
             <div className="p-5">
               <div className="flex items-center justify-between gap-3">
                 <span className="font-mono text-xs text-muted-foreground">{foundItem.number}</span>
-                <CaseTag tone="evidence">مكتشف</CaseTag>
+                <CaseTag tone="evidence">{foundAdded ? "تم الاكتشاف" : "شي مشبوه"}</CaseTag>
               </div>
               <h2 className="mt-2 text-xl font-bold">{foundItem.title}</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {foundItem.description}
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
-                انضاف للوحة الأدلة. علاقته بالقضية تتوضح من الاستجواب.
+                علاقته بالقضية ما تتوضح إلا من استجواب المشتبه المناسب.
               </p>
-              <ActionButton variant="outline" className="mt-5 w-full" onClick={() => setFound(null)}>
-                رجوع لمسرح الجريمة
-              </ActionButton>
+              <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+                {foundAdded ? (
+                  <ActionButton variant="outline" className="w-full" disabled>
+                    <Check className="size-4" /> موجود بلوحة الأدلة
+                  </ActionButton>
+                ) : (
+                  <ActionButton className="w-full" onClick={() => addToBoard(foundItem.id)}>
+                    <Fingerprint className="size-4" /> إضافة إلى لوحة الأدلة
+                  </ActionButton>
+                )}
+                <ActionButton
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setFound(null)}
+                >
+                  رجوع لمسرح الجريمة
+                </ActionButton>
+              </div>
             </div>
+
           </div>
         </div>
       )}
