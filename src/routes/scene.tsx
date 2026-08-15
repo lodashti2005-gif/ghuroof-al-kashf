@@ -36,6 +36,7 @@ function SceneRoute() {
   const [miss, setMiss] = useState<string | null>(null);
   const [board, setBoard] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [spark, setSpark] = useState<{ x: number; y: number; k: number } | null>(null);
 
   useEffect(() => {
     if (!toast) return;
@@ -49,19 +50,29 @@ function SceneRoute() {
     return () => clearTimeout(t);
   }, [miss]);
 
-  const inspect = (evidenceId: string) => {
+  useEffect(() => {
+    if (!spark) return;
+    const t = setTimeout(() => setSpark(null), 1200);
+    return () => clearTimeout(t);
+  }, [spark]);
+
+  const inspect = (evidenceId: string, at: { x: number; y: number }) => {
     const item = getEvidence(evidenceId);
     if (!item) return;
-    const isNew = !unlockedIds.includes(evidenceId);
-    if (isNew) {
-      actions.unlockEvidence(evidenceId);
-      setToast("🔎 تم اكتشاف دليل جديد");
-    }
+    setSpark({ x: at.x, y: at.y, k: Date.now() });
     setFound(evidenceId);
   };
 
+  const addToBoard = (evidenceId: string) => {
+    if (unlockedIds.includes(evidenceId)) return;
+    actions.unlockEvidence(evidenceId);
+    setToast("🔎 انضاف الدليل للوحة الأدلة");
+  };
+
   const foundItem = found ? getEvidence(found) : undefined;
+  const foundAdded = !!found && unlockedIds.includes(found);
   const unlockedItems = evidence.filter((e) => unlockedIds.includes(e.id));
+
 
   return (
     <GameShell title="مسرح الجريمة" right={<LeaveRoomButton />}>
