@@ -1,6 +1,7 @@
 import {
   Camera,
   Coffee,
+  Footprints,
   KeyRound,
   Link2,
   Lightbulb,

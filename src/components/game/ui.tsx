@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import {
   Camera,
   Coffee,
+  Footprints,
   Fingerprint,
   KeyRound,
   Lock,
