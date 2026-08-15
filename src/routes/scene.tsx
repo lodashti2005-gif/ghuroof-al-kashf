@@ -7,7 +7,7 @@ import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shel
 import { EvidenceBoard } from "@/components/game/evidence-board";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { caseFile, evidence, getEvidence } from "@/game/case-data";
-import { sceneDecoys, sceneHotspots, sceneImage } from "@/game/scene";
+import { SCENE_EVIDENCE_IDS, sceneDecoys, sceneHotspots, sceneImage } from "@/game/scene";
 import { useRoom } from "@/game/use-room";
 
 export const Route = createFileRoute("/scene")({
@@ -97,7 +97,7 @@ function SceneRoute() {
               <Fingerprint className="size-4" /> لوحة الأدلة
             </ActionButton>
             <ActionButton
-              variant={sceneComplete ? "default" : "outline"}
+              variant={sceneComplete ? "primary" : "outline"}
               onClick={() => navigate({ to: "/dashboard" })}
             >
               <Users className="size-4" />
