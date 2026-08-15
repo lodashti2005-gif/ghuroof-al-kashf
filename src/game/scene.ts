@@ -53,7 +53,9 @@ export const sceneHotspots: SceneHotspot[] = [
 
 export const sceneDecoys: SceneDecoy[] = [
   { id: "lamp", x: 53.4, y: 41, w: 5, h: 9, message: "أباجورة مضوية… ما لقيت شي مهم" },
+  { id: "dresser", x: 56.7, y: 45.5, w: 4, h: 4, message: "أشياء متفرقة على الكومدينة… ما لقيت شي مهم" },
   { id: "rug", x: 62.5, y: 69.5, w: 14, h: 8, message: "سجادة نظيفة، ما لقيت شي مهم" },
+
   { id: "bed", x: 30.5, y: 55, w: 18, h: 8, message: "شرشف مرتب نص ترتيب… ما لقيت شي مهم" },
   { id: "towel", x: 44, y: 50, w: 6, h: 5, message: "منشفة مرمية على طرف السرير، ما لقيت شي مهم" },
   { id: "slippers", x: 31, y: 69, w: 6, h: 5, message: "نعال، ما لقيت شي مهم" },
