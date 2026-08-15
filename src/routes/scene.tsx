@@ -181,6 +181,13 @@ function SceneRoute() {
                 />
               ))}
 
+              {flash !== null && (
+                <span
+                  key={flash}
+                  aria-hidden="true"
+                  className="evidence-flash pointer-events-none absolute inset-0 z-30"
+                />
+              )}
               {spark && (
                 <span
                   key={spark.k}
