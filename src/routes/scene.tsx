@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Check, Fingerprint, Search, Unlock, Users, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { SceneCrop } from "@/components/game/scene-crop";
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
@@ -14,6 +14,7 @@ import {
   sceneImage,
   sceneImageSize,
 } from "@/game/scene";
+import { playDiscoverySting } from "@/game/discovery-fx";
 import { useRoom } from "@/game/use-room";
 
 export const Route = createFileRoute("/scene")({
@@ -302,7 +303,7 @@ function SceneRoute() {
                     <Check className="size-4" /> موجود بلوحة الأدلة
                   </ActionButton>
                 ) : (
-                  <ActionButton className="w-full" onClick={() => addToBoard(foundItem.id)}>
+                  <ActionButton className="w-full" onClick={() => inspect(foundItem.id, { x: 50, y: 50 })}>
                     <Fingerprint className="size-4" /> إضافة إلى لوحة الأدلة
                   </ActionButton>
                 )}
