@@ -120,14 +120,16 @@ function SceneRoute() {
                 aria-label="فحص تفصيلة في مسرح الجريمة"
                 onClick={(e) => {
                   e.stopPropagation();
-                  inspect(h.evidenceId);
+                  inspect(h.evidenceId, { x: h.x, y: h.y });
                 }}
-                className="absolute cursor-crosshair rounded-full bg-transparent focus:outline-none"
+                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-crosshair rounded-full bg-transparent focus:outline-none"
                 style={{
-                  left: `${h.x - h.w / 2}%`,
-                  top: `${h.y - h.h / 2}%`,
+                  left: `${h.x}%`,
+                  top: `${h.y}%`,
                   width: `${h.w}%`,
                   height: `${h.h}%`,
+                  minWidth: "40px",
+                  minHeight: "40px",
                 }}
               />
             ))}
@@ -141,20 +143,31 @@ function SceneRoute() {
                   e.stopPropagation();
                   setMiss(d.message);
                 }}
-                className="absolute cursor-crosshair bg-transparent focus:outline-none"
+                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none"
                 style={{
-                  left: `${d.x - d.w / 2}%`,
-                  top: `${d.y - d.h / 2}%`,
+                  left: `${d.x}%`,
+                  top: `${d.y}%`,
                   width: `${d.w}%`,
                   height: `${d.h}%`,
                 }}
               />
             ))}
+            {spark && (
+              <span
+                key={spark.k}
+                aria-hidden="true"
+                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+                style={{ left: `${spark.x}%`, top: `${spark.y}%` }}
+              >
+                <span className="block size-12 animate-ping rounded-full border-2 border-evidence/80 bg-evidence/10" />
+              </span>
+            )}
             {miss && (
               <div className="pointer-events-none absolute bottom-3 right-1/2 translate-x-1/2 rounded-lg border border-border bg-card/90 px-3 py-1.5 text-xs text-muted-foreground">
                 {miss}
               </div>
             )}
+
           </div>
           <div className="flex items-center gap-2 border-t border-border/70 px-4 py-3 text-xs text-muted-foreground">
             <Search className="size-3.5 shrink-0" />
