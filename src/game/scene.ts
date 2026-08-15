@@ -33,25 +33,25 @@ export interface SceneDecoy {
 export const sceneImage = crimeScene;
 
 /** Natural pixel size of the scene photograph. */
-export const sceneImageSize = { width: 1376, height: 768 };
+export const sceneImageSize = { width: 1535, height: 1024 };
 
 /**
  * The six hidden evidence spots inside the chalet bedroom photo. The scene
  * phase is complete once all six are discovered.
  */
 export const sceneHotspots: SceneHotspot[] = [
-  // Empty charger still plugged into the left wall socket — the phone is gone.
-  { evidenceId: "phone", x: 3.6, y: 61.5, w: 5, h: 7, hard: true },
-  // Women's single high heel on the carpet beside the bed.
-  { evidenceId: "shoe", x: 27.6, y: 71.5, w: 5, h: 6, hard: true },
-  // Cracked wristwatch on the marble floor at the carpet edge.
-  { evidenceId: "watch", x: 21.8, y: 86.6, w: 12, h: 12 },
-  // Arabic coffee cup with a red mark on the brass side table.
-  { evidenceId: "cup", x: 79.2, y: 53.1, w: 4.5, h: 6, hard: true },
-  // Storage-room key on the marble floor near the door.
-  { evidenceId: "key", x: 87.6, y: 93.5, w: 5, h: 6, hard: true },
-  // Surveillance camera turned away from its original angle.
-  { evidenceId: "camera", x: 87.6, y: 5.9, w: 6, h: 9, hard: true },
+  // Wall socket beside the dresser: charger still plugged in, phone gone.
+  { evidenceId: "phone", x: 67.8, y: 55.2, w: 4.5, h: 6 },
+  // Women's single high heel dropped on the carpet.
+  { evidenceId: "shoe", x: 52, y: 76.5, w: 6, h: 7 },
+  // Cracked wristwatch on the marble tiles left of the carpet.
+  { evidenceId: "watch", x: 16, y: 78, w: 6, h: 7 },
+  // Arabic coffee cup with a red mark on the bedside table.
+  { evidenceId: "cup", x: 39.5, y: 48.5, w: 4.5, h: 6 },
+  // Storage-room key on the floor near the open door.
+  { evidenceId: "key", x: 76, y: 64.5, w: 5, h: 6 },
+  // Surveillance camera near the ceiling, turned away from its angle.
+  { evidenceId: "camera", x: 82, y: 7.5, w: 7, h: 8 },
 ];
 
 /** Evidence that can be discovered inside the crime-scene photo. */
@@ -59,14 +59,14 @@ export const SCENE_EVIDENCE_IDS = sceneHotspots.map((h) => h.evidenceId);
 
 /** Decoys are placed so they never overlap an evidence hotspot. */
 export const sceneDecoys: SceneDecoy[] = [
-  { id: "bed", x: 55, y: 55, w: 22, h: 14, message: "شرشف مرتب نص ترتيب… ما لقيت شي مهم" },
-  { id: "headboard", x: 55, y: 25, w: 12, h: 16, message: "نقش خشبي على ظهر السرير، ما لقيت شي مهم" },
-  { id: "lamp-right", x: 83.5, y: 44, w: 4, h: 10, message: "أباجورة مضوية… ما لقيت شي مهم" },
-  { id: "nightstand-left", x: 52, y: 46, w: 5, h: 7, message: "كومدينة فاضية… ما لقيت شي مهم" },
-  { id: "balcony", x: 25, y: 35, w: 22, h: 30, message: "باب البلكونة مسدود، ما لقيت شي مهم" },
-  { id: "curtain", x: 11, y: 32, w: 12, h: 32, message: "بردة مسدودة، ما لقيت شي مهم" },
-  { id: "door", x: 96, y: 50, w: 7, h: 55, message: "باب الغرفة سليم بدون أي كسر… ما لقيت شي مهم" },
-  { id: "rug", x: 55, y: 82, w: 28, h: 14, message: "سجادة نظيفة، ما لقيت شي مهم" },
-  { id: "floor-right", x: 70, y: 92, w: 16, h: 10, message: "أرضية فاضية، ما لقيت شي مهم" },
-  { id: "ceiling", x: 45, y: 4, w: 30, h: 6, message: "السقف والإضاءة بس، ما لقيت شي مهم" },
+  { id: "headboard", x: 22, y: 40, w: 14, h: 12, message: "ظهر السرير سليم، ما لقيت شي مهم" },
+  { id: "bed", x: 38, y: 63, w: 24, h: 16, message: "شرشف مرتب نص ترتيب… ما لقيت شي مهم" },
+  { id: "lamp-left", x: 3, y: 42, w: 6, h: 14, message: "أباجورة مضوية… ما لقيت شي مهم" },
+  { id: "mirror", x: 56, y: 33, w: 9, h: 13, message: "مراية نظيفة بدون أي أثر، ما لقيت شي مهم" },
+  { id: "dresser", x: 57, y: 52, w: 13, h: 9, message: "دواليب الكومدينة فاضية، ما لقيت شي مهم" },
+  { id: "balcony", x: 83, y: 42, w: 9, h: 28, message: "باب البلكونة مفتوح على الحديقة، ما لقيت شي مهم" },
+  { id: "rug", x: 61, y: 83, w: 24, h: 15, message: "سجادة نظيفة، ما لقيت شي مهم" },
+  { id: "floor-left", x: 8, y: 92, w: 16, h: 10, message: "أرضية فاضية، ما لقيت شي مهم" },
+  { id: "ceiling", x: 45, y: 4, w: 28, h: 6, message: "السقف والإضاءة بس، ما لقيت شي مهم" },
+  { id: "artwork", x: 16, y: 23, w: 12, h: 12, message: "لوحة معلقة على الطوفة، ما لقيت شي مهم" },
 ];
