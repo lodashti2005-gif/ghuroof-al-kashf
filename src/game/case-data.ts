@@ -5,6 +5,13 @@ import suspectFahad from "@/assets/suspect-fahad.jpg";
 import suspectNoura from "@/assets/suspect-noura.jpg";
 import suspectYousef from "@/assets/suspect-yousef.jpg";
 import suspectDana from "@/assets/suspect-dana.jpg";
+import evidenceWatch from "@/assets/evidence/watch.jpg";
+import evidencePhone from "@/assets/evidence/phone.jpg";
+import evidenceCup from "@/assets/evidence/cup.jpg";
+import evidenceShoe from "@/assets/evidence/shoe.jpg";
+import evidenceMessage from "@/assets/evidence/message.jpg";
+import evidenceCamera from "@/assets/evidence/camera.jpg";
+import evidenceKey from "@/assets/evidence/key.jpg";
 
 export const INTERROGATION_SECONDS = 5 * 60;
 
@@ -129,7 +136,7 @@ export const evidence: EvidenceItem[] = [
     detail: "الكسر صاير من ضربة، مو من طيحة. الوقت 01:47 يخالف رواية إن كل الناس طلعوا قبل 01:30.",
     icon: "watch",
     foundAt: "أرضية الغرفة الخاصة جنب السجادة",
-    crop: { x: 16, y: 78, zoom: 4.2 },
+    crop: { x: 16, y: 78, zoom: 4.2, photo: evidenceWatch },
     unlockHint: "اسأل أي مشتبه عن وقت آخر مرة شاف بدر",
   },
   {
@@ -141,7 +148,7 @@ export const evidence: EvidenceItem[] = [
     detail: "آخر نشاط للتلفون كان فتح ملف تحويلات بنكية الساعة 01:29 فجراً.",
     icon: "phone",
     foundAt: "الشاحن موصول بالطوفة جنب السرير والتلفون مفقود",
-    crop: { x: 67.8, y: 55.2, zoom: 4.6 },
+    crop: { x: 67.8, y: 55.2, zoom: 4.6, photo: evidencePhone },
     unlockHint: "اسأل عن التلفون أو عن آخر شي كان يسويه بدر",
   },
   {
@@ -153,7 +160,7 @@ export const evidence: EvidenceItem[] = [
     detail: "الفنجال الثاني عليه بصمة جزئية، ويطابق شخص جالس مقابل بدر بنفس الغرفة.",
     icon: "cup",
     foundAt: "طاولة جانبية داخل الغرفة",
-    crop: { x: 39.5, y: 48.5, zoom: 4.6 },
+    crop: { x: 39.5, y: 48.5, zoom: 4.6, photo: evidenceCup },
     unlockHint: "اسأل عن القهوة أو عن آخر شي شربه بدر",
   },
   {
@@ -165,7 +172,7 @@ export const evidence: EvidenceItem[] = [
     detail: "الخدش والتراب الطري يبيّنون إن أحد دخل الغرفة بسرعة وطلع مستعجل.",
     icon: "shoe",
     foundAt: "أرضية الغرفة قريب من السرير",
-    crop: { x: 52, y: 76.5, zoom: 4.2 },
+    crop: { x: 52, y: 76.5, zoom: 4.2, photo: evidenceShoe },
     unlockHint: "اسأل مين دخل الغرفة قبل الحادث",
   },
   {
@@ -177,7 +184,7 @@ export const evidence: EvidenceItem[] = [
     detail: "الرسالة موصلة الساعة 11:48 مساءً من رقم مسجل باسم شركة المقاولات.",
     icon: "message",
     foundAt: "تلفون بدر (نسخة الرسائل من المشغل)",
-    crop: { x: 57, y: 52, zoom: 4.0 },
+    crop: { x: 57, y: 52, zoom: 4.0, photo: evidenceMessage },
     unlockHint: "اسأل عن الخلافات أو التهديدات",
   },
   {
@@ -189,7 +196,7 @@ export const evidence: EvidenceItem[] = [
     detail: "نفس السيارة طلعت مرة قبل منتصف الليل، ورجعت مرة ثانية بعد الوفاة، والزاوية الجديدة تخفي جزء من المدخل.",
     icon: "camera",
     foundAt: "كاميرا المدخل — الزاوية متغيّرة",
-    crop: { x: 82, y: 7.5, zoom: 4.0 },
+    crop: { x: 82, y: 7.5, zoom: 4.0, photo: evidenceCamera },
     unlockHint: "اسأل عن الكاميرا أو عن الحركة بالمدخل",
   },
   {
@@ -201,7 +208,7 @@ export const evidence: EvidenceItem[] = [
     detail: "نفس المفتاح يفتح باب الغرفة الخاصة، وهذا يفسر إن الباب ما كان مكسور.",
     icon: "key",
     foundAt: "أرضية الغرفة قريب من الباب",
-    crop: { x: 76, y: 64.5, zoom: 4.6 },
+    crop: { x: 76, y: 64.5, zoom: 4.6, photo: evidenceKey },
     unlockHint: "اسأل عن الباب أو عن المفاتيح",
   },
 ];

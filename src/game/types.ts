@@ -84,6 +84,8 @@ export interface EvidenceCrop {
   y: number;
   /** Magnification factor applied to the scene image. */
   zoom: number;
+  /** Dedicated close-up photo of the item; overrides the scene crop. */
+  photo?: string;
 }
 
 export interface EvidenceItem {
