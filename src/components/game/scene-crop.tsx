@@ -26,11 +26,11 @@ export function SceneCrop({
       className={`relative block overflow-hidden bg-black ${className}`}
     >
       <img
-        src={sceneImage}
+        src={crop.photo ?? sceneImage}
         alt=""
         aria-hidden
-        className="absolute block max-w-none"
-        style={{
+        className={crop.photo ? "absolute inset-0 block size-full object-cover" : "absolute block max-w-none"}
+        style={crop.photo ? { filter: "contrast(1.04) saturate(1.04) brightness(1.08)" } : {
           width: `${crop.zoom * 100}%`,
           height: "auto",
           left: "50%",
