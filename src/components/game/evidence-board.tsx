@@ -25,6 +25,7 @@ const ICONS = {
   message: MessageSquare,
   camera: Camera,
   key: KeyRound,
+  shoe: Footprints,
 } as const;
 
 /**

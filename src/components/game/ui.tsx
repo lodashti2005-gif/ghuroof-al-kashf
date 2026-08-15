@@ -96,6 +96,7 @@ const EVIDENCE_ICONS = {
   message: MessageSquareWarning,
   camera: Camera,
   key: KeyRound,
+  shoe: Footprints,
 } as const;
 
 function formatClock(seconds: number) {
