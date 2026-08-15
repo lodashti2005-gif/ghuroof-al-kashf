@@ -432,7 +432,22 @@
   animation: pulse-blood 1.9s ease-in-out infinite;
 }
 
+@keyframes evidence-flash {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.evidence-flash {
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in oklab, var(--evidence) 45%, transparent) 0%, transparent 70%),
+    color-mix(in oklab, var(--evidence) 12%, transparent);
+  box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--evidence) 60%, transparent);
+  animation: evidence-flash 0.85s ease-out forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .evidence-flash,
   .sim-stage,
   .sim-react,
   .sim-speaking,

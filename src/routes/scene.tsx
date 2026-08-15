@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Check, Fingerprint, Search, Unlock, Users, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { SceneCrop } from "@/components/game/scene-crop";
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
@@ -14,6 +14,7 @@ import {
   sceneImage,
   sceneImageSize,
 } from "@/game/scene";
+import { playDiscoverySting } from "@/game/discovery-fx";
 import { useRoom } from "@/game/use-room";
 
 export const Route = createFileRoute("/scene")({
@@ -43,6 +44,9 @@ function SceneRoute() {
   const [board, setBoard] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [spark, setSpark] = useState<{ x: number; y: number; k: number } | null>(null);
+  const [flash, setFlash] = useState<number | null>(null);
+  /** Guards against double counting from rapid clicks before the room syncs. */
+  const claimed = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!toast) return;
@@ -62,20 +66,27 @@ function SceneRoute() {
     return () => clearTimeout(t);
   }, [spark]);
 
-  const addToBoard = (evidenceId: string) => {
-    if (unlockedIds.includes(evidenceId)) return;
-    actions.unlockEvidence(evidenceId);
-    setToast("🔎 انضاف الدليل للوحة الأدلة");
-  };
+  useEffect(() => {
+    if (flash === null) return;
+    const t = setTimeout(() => setFlash(null), 900);
+    return () => clearTimeout(t);
+  }, [flash]);
 
   const inspect = (evidenceId: string, at: { x: number; y: number }) => {
     const item = getEvidence(evidenceId);
     if (!item) return;
-    setSpark({ x: at.x, y: at.y, k: Date.now() });
+    const isNew = !unlockedIds.includes(evidenceId) && !claimed.current.has(evidenceId);
     setFound(evidenceId);
-    // Discovery adds the item to the shared board once, automatically.
-    addToBoard(evidenceId);
+    if (!isNew) return;
+    // Count each discovery exactly once, even on rapid repeat clicks.
+    claimed.current.add(evidenceId);
+    actions.unlockEvidence(evidenceId);
+    setSpark({ x: at.x, y: at.y, k: Date.now() });
+    setFlash(Date.now());
+    setToast("🔎 انضاف الدليل للوحة الأدلة");
+    playDiscoverySting();
   };
+
 
   const foundItem = found ? getEvidence(found) : undefined;
   const foundAdded = !!found && unlockedIds.includes(found);
@@ -170,6 +181,13 @@ function SceneRoute() {
                 />
               ))}
 
+              {flash !== null && (
+                <span
+                  key={flash}
+                  aria-hidden="true"
+                  className="evidence-flash pointer-events-none absolute inset-0 z-30"
+                />
+              )}
               {spark && (
                 <span
                   key={spark.k}
@@ -292,7 +310,7 @@ function SceneRoute() {
                     <Check className="size-4" /> موجود بلوحة الأدلة
                   </ActionButton>
                 ) : (
-                  <ActionButton className="w-full" onClick={() => addToBoard(foundItem.id)}>
+                  <ActionButton className="w-full" onClick={() => inspect(foundItem.id, { x: 50, y: 50 })}>
                     <Fingerprint className="size-4" /> إضافة إلى لوحة الأدلة
                   </ActionButton>
                 )}
