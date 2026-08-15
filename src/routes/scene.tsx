@@ -7,7 +7,13 @@ import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shel
 import { EvidenceBoard } from "@/components/game/evidence-board";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { caseFile, evidence, getEvidence } from "@/game/case-data";
-import { SCENE_EVIDENCE_IDS, sceneDecoys, sceneHotspots, sceneImage } from "@/game/scene";
+import {
+  SCENE_EVIDENCE_IDS,
+  sceneDecoys,
+  sceneHotspots,
+  sceneImage,
+  sceneImageSize,
+} from "@/game/scene";
 import { useRoom } from "@/game/use-room";
 
 export const Route = createFileRoute("/scene")({
