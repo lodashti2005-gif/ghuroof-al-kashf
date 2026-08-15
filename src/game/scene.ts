@@ -32,39 +32,41 @@ export interface SceneDecoy {
 
 export const sceneImage = crimeScene;
 
+/** Natural pixel size of the scene photograph. */
+export const sceneImageSize = { width: 1376, height: 768 };
+
 /**
- * The five hidden evidence spots inside the chalet photo. The scene phase is
- * complete once all five are discovered.
+ * The six hidden evidence spots inside the chalet bedroom photo. The scene
+ * phase is complete once all six are discovered.
  */
 export const sceneHotspots: SceneHotspot[] = [
-  // Empty charger still plugged into the wall socket — the phone itself is gone.
-  { evidenceId: "phone", x: 15.6, y: 72, w: 3.6, h: 3.4, hard: true },
-  // Coffee cup with a red mark on the far right side table, in shadow.
-  { evidenceId: "cup", x: 91.9, y: 49.5, w: 3.2, h: 4, hard: true },
-  // Single woman's shoe on the floor beside the bed.
-  { evidenceId: "shoe", x: 31, y: 69, w: 4, h: 4, hard: true },
-  // Storage-room key on the floor near the threshold.
-  { evidenceId: "key", x: 83.2, y: 67, w: 3.2, h: 3.4, hard: true },
+  // Empty charger still plugged into the left wall socket — the phone is gone.
+  { evidenceId: "phone", x: 3.6, y: 61.5, w: 5, h: 7, hard: true },
+  // Women's single high heel on the carpet beside the bed.
+  { evidenceId: "shoe", x: 27.6, y: 71.5, w: 5, h: 6, hard: true },
+  // Cracked wristwatch on the marble floor at the carpet edge.
+  { evidenceId: "watch", x: 21.8, y: 86.6, w: 12, h: 12 },
+  // Arabic coffee cup with a red mark on the brass side table.
+  { evidenceId: "cup", x: 79.2, y: 53.1, w: 4.5, h: 6, hard: true },
+  // Storage-room key on the marble floor near the door.
+  { evidenceId: "key", x: 87.6, y: 93.5, w: 5, h: 6, hard: true },
   // Surveillance camera turned away from its original angle.
-  { evidenceId: "camera", x: 76.7, y: 32.5, w: 4, h: 5.5, hard: true },
+  { evidenceId: "camera", x: 87.6, y: 5.9, w: 6, h: 9, hard: true },
 ];
 
 /** Evidence that can be discovered inside the crime-scene photo. */
 export const SCENE_EVIDENCE_IDS = sceneHotspots.map((h) => h.evidenceId);
 
+/** Decoys are placed so they never overlap an evidence hotspot. */
 export const sceneDecoys: SceneDecoy[] = [
-  { id: "lamp", x: 53.4, y: 41, w: 5, h: 9, message: "أباجورة مضوية… ما لقيت شي مهم" },
-  { id: "dresser", x: 56.7, y: 45.5, w: 4, h: 4, message: "أشياء متفرقة على الكومدينة… ما لقيت شي مهم" },
-  { id: "rug", x: 62.5, y: 69.5, w: 14, h: 8, message: "سجادة نظيفة، ما لقيت شي مهم" },
-
-  { id: "bed", x: 30.5, y: 55, w: 18, h: 8, message: "شرشف مرتب نص ترتيب… ما لقيت شي مهم" },
-  { id: "towel", x: 44, y: 50, w: 6, h: 5, message: "منشفة مرمية على طرف السرير، ما لقيت شي مهم" },
-  { id: "curtain", x: 27, y: 30, w: 15, h: 22, message: "بردة مسدودة، ما لقيت شي مهم" },
-  { id: "chair", x: 78.5, y: 53.5, w: 5, h: 9, message: "كرسي فاضي بالبلكونة… ما لقيت شي مهم" },
-  { id: "nightstand", x: 8.7, y: 49.5, w: 8, h: 7, message: "كتاب وكاس ماي… ما لقيت شي مهم" },
-  { id: "wall-light", x: 3, y: 22, w: 5, h: 18, message: "إضاءة جدارية بس، ما لقيت شي مهم" },
-  { id: "floor", x: 45, y: 88, w: 22, h: 10, message: "أرضية فاضية، ما لقيت شي مهم" },
-  { id: "ceiling", x: 51, y: 4, w: 20, h: 7, message: "السقف والمكيّف، ما لقيت شي مهم" },
+  { id: "bed", x: 55, y: 55, w: 22, h: 14, message: "شرشف مرتب نص ترتيب… ما لقيت شي مهم" },
+  { id: "headboard", x: 55, y: 25, w: 12, h: 16, message: "نقش خشبي على ظهر السرير، ما لقيت شي مهم" },
+  { id: "lamp-right", x: 83.5, y: 44, w: 4, h: 10, message: "أباجورة مضوية… ما لقيت شي مهم" },
+  { id: "nightstand-left", x: 52, y: 46, w: 5, h: 7, message: "كومدينة فاضية… ما لقيت شي مهم" },
+  { id: "balcony", x: 25, y: 35, w: 22, h: 30, message: "باب البلكونة مسدود، ما لقيت شي مهم" },
+  { id: "curtain", x: 11, y: 32, w: 12, h: 32, message: "بردة مسدودة، ما لقيت شي مهم" },
+  { id: "door", x: 96, y: 50, w: 7, h: 55, message: "باب الغرفة سليم بدون أي كسر… ما لقيت شي مهم" },
+  { id: "rug", x: 55, y: 82, w: 28, h: 14, message: "سجادة نظيفة، ما لقيت شي مهم" },
+  { id: "floor-right", x: 70, y: 92, w: 16, h: 10, message: "أرضية فاضية، ما لقيت شي مهم" },
+  { id: "ceiling", x: 45, y: 4, w: 30, h: 6, message: "السقف والإضاءة بس، ما لقيت شي مهم" },
 ];
-
-
