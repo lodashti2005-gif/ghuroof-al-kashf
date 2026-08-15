@@ -32,20 +32,24 @@ export interface SceneDecoy {
 
 export const sceneImage = crimeScene;
 
+/**
+ * Five hidden evidence spots inside the chalet photo. The remaining case
+ * material (phone records) is not physically present in the room and only
+ * surfaces through interrogation.
+ */
 export const sceneHotspots: SceneHotspot[] = [
   // Dark wristwatch half tucked under the right edge of the rug.
   { evidenceId: "watch", x: 72.8, y: 79, w: 3.4, h: 3.6, hard: true },
-  // Face-down phone in the shadow under the bed, lower left.
+  // Face-down phone charger in the shadow under the bed, lower left.
   { evidenceId: "phone", x: 15.6, y: 72, w: 3.6, h: 3.4, hard: true },
   // Coffee cup on the far right side table, in shadow.
   { evidenceId: "cup", x: 91.9, y: 49.5, w: 3.2, h: 4, hard: true },
-  // Small items on the dresser beside the lamp.
-  { evidenceId: "message", x: 56.7, y: 45.5, w: 3.2, h: 3.4, hard: true },
   // Window line of sight toward the gate camera.
   { evidenceId: "camera", x: 76.7, y: 32.5, w: 4, h: 5.5, hard: true },
   // Key on the floor near the balcony threshold, faint moon reflection.
   { evidenceId: "key", x: 83.2, y: 67, w: 3.2, h: 3.4, hard: true },
 ];
+
 
 export const sceneDecoys: SceneDecoy[] = [
   { id: "lamp", x: 53.4, y: 41, w: 5, h: 9, message: "أباجورة مضوية… ما لقيت شي مهم" },
