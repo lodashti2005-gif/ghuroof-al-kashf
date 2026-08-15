@@ -33,23 +33,24 @@ export interface SceneDecoy {
 export const sceneImage = crimeScene;
 
 /**
- * Five hidden evidence spots inside the chalet photo. The remaining case
- * material (phone records) is not physically present in the room and only
- * surfaces through interrogation.
+ * The five hidden evidence spots inside the chalet photo. The scene phase is
+ * complete once all five are discovered.
  */
 export const sceneHotspots: SceneHotspot[] = [
-  // Dark wristwatch half tucked under the right edge of the rug.
-  { evidenceId: "watch", x: 72.8, y: 79, w: 3.4, h: 3.6, hard: true },
-  // Face-down phone charger in the shadow under the bed, lower left.
+  // Empty charger still plugged into the wall socket — the phone itself is gone.
   { evidenceId: "phone", x: 15.6, y: 72, w: 3.6, h: 3.4, hard: true },
-  // Coffee cup on the far right side table, in shadow.
+  // Coffee cup with a red mark on the far right side table, in shadow.
   { evidenceId: "cup", x: 91.9, y: 49.5, w: 3.2, h: 4, hard: true },
-  // Window line of sight toward the gate camera.
-  { evidenceId: "camera", x: 76.7, y: 32.5, w: 4, h: 5.5, hard: true },
-  // Key on the floor near the balcony threshold, faint moon reflection.
+  // Single woman's shoe on the floor beside the bed.
+  { evidenceId: "shoe", x: 31, y: 69, w: 4, h: 4, hard: true },
+  // Storage-room key on the floor near the threshold.
   { evidenceId: "key", x: 83.2, y: 67, w: 3.2, h: 3.4, hard: true },
+  // Surveillance camera turned away from its original angle.
+  { evidenceId: "camera", x: 76.7, y: 32.5, w: 4, h: 5.5, hard: true },
 ];
 
+/** Evidence that can be discovered inside the crime-scene photo. */
+export const SCENE_EVIDENCE_IDS = sceneHotspots.map((h) => h.evidenceId);
 
 export const sceneDecoys: SceneDecoy[] = [
   { id: "lamp", x: 53.4, y: 41, w: 5, h: 9, message: "أباجورة مضوية… ما لقيت شي مهم" },
@@ -58,7 +59,6 @@ export const sceneDecoys: SceneDecoy[] = [
 
   { id: "bed", x: 30.5, y: 55, w: 18, h: 8, message: "شرشف مرتب نص ترتيب… ما لقيت شي مهم" },
   { id: "towel", x: 44, y: 50, w: 6, h: 5, message: "منشفة مرمية على طرف السرير، ما لقيت شي مهم" },
-  { id: "slippers", x: 31, y: 69, w: 6, h: 5, message: "نعال، ما لقيت شي مهم" },
   { id: "curtain", x: 27, y: 30, w: 15, h: 22, message: "بردة مسدودة، ما لقيت شي مهم" },
   { id: "chair", x: 78.5, y: 53.5, w: 5, h: 9, message: "كرسي فاضي بالبلكونة… ما لقيت شي مهم" },
   { id: "nightstand", x: 8.7, y: 49.5, w: 8, h: 7, message: "كتاب وكاس ماي… ما لقيت شي مهم" },
