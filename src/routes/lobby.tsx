@@ -71,9 +71,10 @@ function Lobby() {
             <ActionButton
               className="mt-6 w-full py-3.5 text-base"
               onClick={() => {
-                actions.startRoles(room?.players.map((p) => p.id) ?? []);
+                void actions.startRoles(room?.players.map((p) => p.id) ?? []);
                 navigate({ to: "/roles" });
               }}
+
             >
               <Play className="size-4.5" /> ابدأ القضية
             </ActionButton>
