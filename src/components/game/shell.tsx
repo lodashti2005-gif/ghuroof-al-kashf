@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { caseFile } from "@/game/case-data";
 import { useRoom } from "@/game/use-room";
 import { roleById } from "@/game/roles";
-import { RoleGlyph } from "@/routes/roles";
+import { RoleGlyph } from "@/components/game/role-glyph";
 
 /**
  * Shell for every in-game screen. Guards the route: a player without a room is

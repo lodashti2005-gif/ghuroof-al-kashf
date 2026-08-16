@@ -4,8 +4,8 @@ import { useEffect } from "react";
 
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
-import { roleById, RoleIcon } from "@/game/roles";
-import { FlaskConical, Mic, Search, Video } from "lucide-react";
+import { roleById } from "@/game/roles";
+import { RoleGlyph } from "@/components/game/role-glyph";
 import { useRoom } from "@/game/use-room";
 
 export const Route = createFileRoute("/roles")({
@@ -129,9 +129,4 @@ function RolesScreen() {
       </div>
     </GameShell>
   );
-}
-
-export function RoleGlyph({ icon, className }: { icon: RoleIcon; className?: string }) {
-  const Comp = icon === "search" ? Search : icon === "flask" ? FlaskConical : icon === "camera" ? Video : Mic;
-  return <Comp className={className} aria-hidden="true" />;
 }
