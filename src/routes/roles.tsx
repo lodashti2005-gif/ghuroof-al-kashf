@@ -4,7 +4,8 @@ import { useEffect } from "react";
 
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
-import { roleById } from "@/game/roles";
+import { roleById, RoleIcon } from "@/game/roles";
+import { FlaskConical, Mic, Search, Video } from "lucide-react";
 import { useRoom } from "@/game/use-room";
 
 export const Route = createFileRoute("/roles")({
@@ -52,8 +53,8 @@ function RolesScreen() {
           <Eyebrow>هويتك في التحقيق</Eyebrow>
           {myRole ? (
             <>
-              <div className="mx-auto mt-5 grid size-20 place-items-center rounded-2xl border border-border bg-surface-2 text-4xl">
-                <span aria-hidden="true">{myRole.emoji}</span>
+              <div className="mx-auto mt-5 grid size-20 place-items-center rounded-2xl border border-border bg-surface-2 text-primary">
+                <RoleGlyph icon={myRole.icon} className="size-9" />
               </div>
               <h1 className="mt-4 text-3xl font-extrabold">{myRole.title}</h1>
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
@@ -128,4 +129,9 @@ function RolesScreen() {
       </div>
     </GameShell>
   );
+}
+
+export function RoleGlyph({ icon, className }: { icon: RoleIcon; className?: string }) {
+  const Comp = icon === "search" ? Search : icon === "flask" ? FlaskConical : icon === "camera" ? Video : Mic;
+  return <Comp className={className} aria-hidden="true" />;
 }

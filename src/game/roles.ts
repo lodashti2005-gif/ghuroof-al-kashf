@@ -3,9 +3,12 @@
  * الأدوار تخصصات فقط: ما تغيّر أي منطق للأدلة أو الاستجواب أو المؤقت.
  */
 
+export type RoleIcon = "search" | "flask" | "camera" | "mic";
+
 export interface PlayerRole {
   id: string;
   emoji: string;
+  icon: RoleIcon;
   title: string;
   mission: string;
   /** الأدوار القابلة للتكرار لو عدد اللاعبين أكثر من الأدوار الأساسية. */
@@ -16,6 +19,7 @@ export interface PlayerRole {
 export const playerRoles: PlayerRole[] = [
   {
     id: "detective",
+    icon: "search",
     emoji: "🔍",
     title: "المحقق",
     mission: "ركّز على القضية كلها، اربط الأدلة بأقوال المشتبه فيهم ولاحظ التناقضات.",
@@ -23,6 +27,7 @@ export const playerRoles: PlayerRole[] = [
   },
   {
     id: "interrogator",
+    icon: "mic",
     emoji: "🗣️",
     title: "محقق الاستجواب",
     mission: "استجوب المشتبه فيهم، لاحظ تغير إجاباتهم والتناقضات ومؤشر التوتر.",
@@ -30,6 +35,7 @@ export const playerRoles: PlayerRole[] = [
   },
   {
     id: "forensics",
+    icon: "flask",
     emoji: "🧪",
     title: "الخبير الجنائي",
     mission: "حلّل الأدلة المادية بمسرح الجريمة: الساعة، الكعب، القهوة، الشاحن، والمفتاح.",
@@ -37,6 +43,7 @@ export const playerRoles: PlayerRole[] = [
   },
   {
     id: "surveillance",
+    icon: "camera",
     emoji: "📹",
     title: "مسؤول المراقبة",
     mission: "راقب الكاميرات والأوقات وتحركات الأشخاص قبل الجريمة وبعدها.",

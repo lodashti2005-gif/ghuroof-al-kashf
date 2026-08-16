@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { caseFile } from "@/game/case-data";
 import { useRoom } from "@/game/use-room";
 import { roleById } from "@/game/roles";
+import { RoleGlyph } from "@/routes/roles";
 
 /**
  * Shell for every in-game screen. Guards the route: a player without a room is
@@ -62,7 +63,7 @@ export function GameShell({
                 className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary px-2.5 py-1.5 text-xs"
                 title={myRole.mission}
               >
-                <span aria-hidden="true">{myRole.emoji}</span>
+                <RoleGlyph icon={myRole.icon} className="size-3.5 text-primary" />
                 <span className="hidden sm:inline">{myRole.title}</span>
               </span>
             )}
