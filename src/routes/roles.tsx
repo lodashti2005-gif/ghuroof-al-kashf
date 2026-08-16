@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, EyeOff, Loader2, Users } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
@@ -28,6 +28,8 @@ export const Route = createFileRoute("/roles")({
 function RolesScreen() {
   const { room, me, isHost, actions } = useRoom();
   const navigate = useNavigate();
+  const [stuck, setStuck] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const myRole = roleById(me ? room?.roles?.[me.id] : undefined);
   const readyCount = room?.ready?.length ?? 0;
@@ -41,10 +43,36 @@ function RolesScreen() {
     else if (room.phase !== "roles") navigate({ to: "/case" });
   }, [room, navigate]);
 
+  // لو ما وصل الدور (اللاعب دخل متأخر أو فوّت الحدث): مزامنة ثم يعطي نفسه دور ناقص.
+  useEffect(() => {
+    if (myRole || !me) {
+      setStuck(false);
+      return;
+    }
+    let alive = true;
+    const t1 = window.setTimeout(() => void actions.resync(), 1200);
+    const t2 = window.setTimeout(() => void actions.claimRole(me.id), 3000);
+    const t3 = window.setTimeout(() => alive && setStuck(true), 8000);
+    return () => {
+      alive = false;
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
+    };
+  }, [myRole, me, actions]);
+
+  const resync = async () => {
+    setSyncing(true);
+    await actions.resync();
+    if (me) await actions.claimRole(me.id);
+    setSyncing(false);
+  };
+
   // كل اللاعبين جاهزين → المضيف يفتح القضية للفريق كله.
   useEffect(() => {
     if (isHost && allReady && room?.phase === "roles") actions.setPhase("intro");
   }, [isHost, allReady, room?.phase, actions]);
+
 
   return (
     <GameShell title="هويتك في التحقيق" right={<LeaveRoomButton />}>

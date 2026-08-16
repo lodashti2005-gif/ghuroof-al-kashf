@@ -11,7 +11,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { INTERROGATION_SECONDS, caseFile, suspects } from "./case-data";
-import { assignRoles } from "./roles";
+import { assignRoles, playerRoles } from "./roles";
 import type { Deduction, Note, Player, RoomState, SuspectRuntime } from "./types";
 
 const SESSION_KEY = "ghurfa:session";
@@ -297,18 +297,93 @@ export function leaveRoom() {
 
 export const setPhase = (phase: RoomState["phase"]) => update((s) => void (s.phase = phase));
 
-/** المضيف يبدأ الجولة: توزيع عشوائي للأدوار + الانتقال لشاشة الهوية. */
-export const startRoles = (playerIds: string[]) =>
+/** إعادة مزامنة يدوية (زر «إعادة المزامنة»). */
+export async function resync() {
+  await refresh();
+}
+
+/** أحدث قائمة لاعبين من قاعدة البيانات — لا نعتمد على snapshot محلي قد يكون قديم. */
+async function fetchPlayerIds(code: string): Promise<string[]> {
+  const { data } = await supabase
+    .from("room_players")
+    .select("player_id")
+    .eq("room_code", code)
+    .order("joined_at");
+  return (data ?? []).map((p) => p.player_id);
+}
+
+/**
+ * المضيف يبدأ الجولة: يقرأ كل اللاعبين المتصلين فعلياً من قاعدة البيانات (حتى لو
+ * وصل أحدهم متأخراً)، يوزّع الأدوار، ثم يحفظ الحالة المشتركة.
+ */
+export async function startRoles(playerIds: string[] = []) {
+  const code = session?.code ?? state?.code;
+  if (!code) return;
+  const fresh = await fetchPlayerIds(code);
+  const ids = fresh.length ? fresh : playerIds.length ? playerIds : (state?.players ?? []).map((p) => p.id);
   update((s) => {
-    s.roles = assignRoles(playerIds.length ? playerIds : s.players.map((p) => p.id));
+    s.roles = assignRoles(ids);
     s.ready = [];
     s.phase = "roles";
   });
+}
+
+/**
+ * لو اللاعب ما عنده دور (انضم متأخر / فوّت الحدث): يعطي نفسه دور ناقص بقراءة
+ * الحالة المشتركة الحديثة ودمج مفتاحه فقط — يمنع race conditions ولا يعيد
+ * توزيع أدوار الآخرين، وما يتغير دوره بعد كل refresh.
+ */
+export async function claimRole(playerId: string): Promise<boolean> {
+  const code = session?.code ?? state?.code;
+  if (!code || !playerId) return false;
+
+  const { data: room } = await supabase
+    .from("rooms")
+    .select("state")
+    .eq("code", code)
+    .maybeSingle();
+  if (!room) return false;
+
+  const shared = { ...freshShared(), ...((room.state ?? {}) as Partial<SharedState>) };
+  const roles: Record<string, string> = { ...(shared.roles ?? {}) };
+  if (roles[playerId]) {
+    await refresh();
+    return true;
+  }
+
+  // اختَر دور من الأدوار الأقل استخداماً بالفريق (الأولوية للأدوار الأساسية).
+  const counts = new Map<string, number>();
+  Object.values(roles).forEach((r) => counts.set(r, (counts.get(r) ?? 0) + 1));
+  const candidates = [...playerRoles].sort(
+    (a, b) => (counts.get(a.id) ?? 0) - (counts.get(b.id) ?? 0),
+  );
+  const taken = new Set(Object.values(roles));
+  const pick =
+    candidates.find((r) => !taken.has(r.id)) ??
+    candidates.find((r) => r.repeatable) ??
+    playerRoles[0]!;
+  roles[playerId] = pick.id;
+
+  const { error } = await supabase
+    .from("rooms")
+    .update({
+      state: { ...shared, roles } as unknown as never,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("code", code);
+  if (error) {
+    console.error("[room] claim role failed:", error.message);
+    return false;
+  }
+  await refresh();
+  return true;
+}
 
 export const markReady = (playerId: string) =>
   update((s) => {
     if (!s.ready.includes(playerId)) s.ready.push(playerId);
   });
+
 
 export const unlockEvidence = (id: string) =>
   update((s) => {
