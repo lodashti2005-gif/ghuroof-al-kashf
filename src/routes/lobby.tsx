@@ -25,7 +25,9 @@ function Lobby() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (room && room.phase !== "lobby") navigate({ to: "/case" });
+    if (!room) return;
+    if (room.phase === "roles") navigate({ to: "/roles" });
+    else if (room.phase !== "lobby") navigate({ to: "/case" });
   }, [room, navigate]);
 
   const copy = () => {
@@ -69,15 +71,15 @@ function Lobby() {
             <ActionButton
               className="mt-6 w-full py-3.5 text-base"
               onClick={() => {
-                actions.setPhase("intro");
-                navigate({ to: "/case" });
+                actions.startRoles(room?.players.map((p) => p.id) ?? []);
+                navigate({ to: "/roles" });
               }}
             >
               <Play className="size-4.5" /> ابدأ القضية
             </ActionButton>
           ) : (
             <p className="mt-6 rounded-xl border border-border bg-secondary/60 px-4 py-3 text-center text-sm text-muted-foreground">
-              انتظر المضيف يبدأ القضية
+              انتظر المضيف يبدأ القضية وتوزيع الأدوار
             </p>
           )}
         </Panel>
