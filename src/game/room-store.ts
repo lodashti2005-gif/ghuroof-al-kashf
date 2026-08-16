@@ -11,6 +11,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { INTERROGATION_SECONDS, caseFile, suspects } from "./case-data";
+import { assignRoles } from "./roles";
 import type { Deduction, Note, Player, RoomState, SuspectRuntime } from "./types";
 
 const SESSION_KEY = "ghurfa:session";
@@ -23,7 +24,10 @@ export interface Session {
 type Listener = () => void;
 
 /** Portion of RoomState persisted inside `rooms.state`. */
-type SharedState = Pick<RoomState, "unlockedEvidence" | "notes" | "deductions" | "suspects">;
+type SharedState = Pick<
+  RoomState,
+  "unlockedEvidence" | "notes" | "deductions" | "suspects" | "roles" | "ready"
+>;
 
 let state: RoomState | null = null;
 let session: Session | null = null;
@@ -54,6 +58,8 @@ const freshShared = (): SharedState => ({
   notes: [],
   deductions: [],
   suspects: freshSuspects(),
+  roles: {},
+  ready: [],
 });
 
 function saveSession() {
@@ -107,6 +113,8 @@ async function fetchRoom(code: string): Promise<RoomState | null> {
     notes: shared.notes ?? [],
     deductions: shared.deductions ?? [],
     suspects: { ...freshSuspects(), ...(shared.suspects ?? {}) },
+    roles: shared.roles ?? {},
+    ready: shared.ready ?? [],
     votes: Object.fromEntries((votes ?? []).map((v) => [v.player_id, v.suspect_id])),
   };
 }
@@ -198,6 +206,8 @@ function update(mutate: (s: RoomState) => void) {
           notes: next.notes,
           deductions: next.deductions,
           suspects: next.suspects,
+          roles: next.roles,
+          ready: next.ready,
         } as unknown as never,
         updated_at: new Date().toISOString(),
       })
@@ -286,6 +296,19 @@ export function leaveRoom() {
 }
 
 export const setPhase = (phase: RoomState["phase"]) => update((s) => void (s.phase = phase));
+
+/** المضيف يبدأ الجولة: توزيع عشوائي للأدوار + الانتقال لشاشة الهوية. */
+export const startRoles = (playerIds: string[]) =>
+  update((s) => {
+    s.roles = assignRoles(playerIds.length ? playerIds : s.players.map((p) => p.id));
+    s.ready = [];
+    s.phase = "roles";
+  });
+
+export const markReady = (playerId: string) =>
+  update((s) => {
+    if (!s.ready.includes(playerId)) s.ready.push(playerId);
+  });
 
 export const unlockEvidence = (id: string) =>
   update((s) => {
@@ -376,6 +399,8 @@ export function resetCase() {
     s.unlockedEvidence = [];
     s.notes = [];
     s.suspects = freshSuspects();
+    s.roles = {};
+    s.ready = [];
     s.votes = {};
   });
 }

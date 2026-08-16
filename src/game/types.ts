@@ -1,4 +1,4 @@
-export type GamePhase = "lobby" | "intro" | "investigation" | "voting" | "reveal";
+export type GamePhase = "lobby" | "roles" | "intro" | "investigation" | "voting" | "reveal";
 
 export interface Player {
   id: string;
@@ -73,6 +73,10 @@ export interface RoomState {
   notes: Note[];
   deductions: Deduction[];
   suspects: Record<string, SuspectRuntime>;
+  /** playerId -> roleId (توزيع عشوائي عند بداية الجولة). */
+  roles: Record<string, string>;
+  /** أرقام اللاعبين اللي ضغطوا «فهمت دوري». */
+  ready: string[];
   votes: Record<string, string>; // playerId -> suspectId
 }
 

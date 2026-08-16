@@ -15,6 +15,7 @@ import { Route as CaseRouteImport } from './routes/case'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as LobbyRouteImport } from './routes/lobby'
 import { Route as RevealRouteImport } from './routes/reveal'
+import { Route as RolesRouteImport } from './routes/roles'
 import { Route as SceneRouteImport } from './routes/scene'
 import { Route as InterrogationSuspectIdRouteImport } from './routes/interrogation.$suspectId'
 import { Route as ApiPublicTtsRouteImport } from './routes/api/public/tts'
@@ -49,6 +50,11 @@ const RevealRoute = RevealRouteImport.update({
   path: '/reveal',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RolesRoute = RolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SceneRoute = SceneRouteImport.update({
   id: '/scene',
   path: '/scene',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/lobby': typeof LobbyRoute
   '/reveal': typeof RevealRoute
+  '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/lobby': typeof LobbyRoute
   '/reveal': typeof RevealRoute
+  '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/lobby': typeof LobbyRoute
   '/reveal': typeof RevealRoute
+  '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/lobby'
     | '/reveal'
+    | '/roles'
     | '/scene'
     | '/interrogation/$suspectId'
     | '/api/public/tts'
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/lobby'
     | '/reveal'
+    | '/roles'
     | '/scene'
     | '/interrogation/$suspectId'
     | '/api/public/tts'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/lobby'
     | '/reveal'
+    | '/roles'
     | '/scene'
     | '/interrogation/$suspectId'
     | '/api/public/tts'
@@ -142,6 +154,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   LobbyRoute: typeof LobbyRoute
   RevealRoute: typeof RevealRoute
+  RolesRoute: typeof RolesRoute
   SceneRoute: typeof SceneRoute
   InterrogationSuspectIdRoute: typeof InterrogationSuspectIdRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
@@ -191,6 +204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RevealRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/roles': {
+      id: '/roles'
+      path: '/roles'
+      fullPath: '/roles'
+      preLoaderRoute: typeof RolesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/scene': {
       id: '/scene'
       path: '/scene'
@@ -222,6 +242,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   LobbyRoute: LobbyRoute,
   RevealRoute: RevealRoute,
+  RolesRoute: RolesRoute,
   SceneRoute: SceneRoute,
   InterrogationSuspectIdRoute: InterrogationSuspectIdRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,

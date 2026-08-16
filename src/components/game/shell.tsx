@@ -5,6 +5,7 @@ import { useEffect, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { caseFile } from "@/game/case-data";
 import { useRoom } from "@/game/use-room";
+import { roleById } from "@/game/roles";
 
 /**
  * Shell for every in-game screen. Guards the route: a player without a room is
@@ -23,6 +24,7 @@ export function GameShell({
 }) {
   const { room, me } = useRoom();
   const navigate = useNavigate();
+  const myRole = roleById(me ? room?.roles?.[me.id] : undefined);
 
   useEffect(() => {
     if (!requireRoom) return;
@@ -53,6 +55,15 @@ export function GameShell({
               <span className="hidden items-center gap-1.5 rounded-md border border-border bg-secondary px-2.5 py-1.5 text-xs text-muted-foreground sm:inline-flex">
                 <Users className="size-3.5" />
                 {room.players.length}
+              </span>
+            )}
+            {myRole && (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary px-2.5 py-1.5 text-xs"
+                title={myRole.mission}
+              >
+                <span aria-hidden="true">{myRole.emoji}</span>
+                <span className="hidden sm:inline">{myRole.title}</span>
               </span>
             )}
             {right}
