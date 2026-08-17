@@ -235,40 +235,63 @@ export function useVoice({
       setVoiceError(null);
       setLoadingVoice(true);
 
-      const controller = new AbortController();
-      abortRef.current = controller;
+      const key = `${suspectId}|${line.state ?? "calm"}|${text}`;
+      let src = audioCache.get(key);
 
-      // نستخدم GET مباشرة كمصدر لعنصر <audio> حتى يبدأ التشغيل من أول
-      // بايتات البث (streaming) بدون انتظار تنزيل الملف كامل.
-      const params = new URLSearchParams({
-        suspectId,
-        text,
-        state: line.state ?? "calm",
-        stress: String(Math.round(line.stress ?? 0)),
-      });
-      const url = `/api/public/tts?${params.toString()}`;
+      if (!src) {
+        const controller = new AbortController();
+        abortRef.current = controller;
+        // مهلة معقولة: إذا تأخر ElevenLabs نكمل باللعبة نصياً بدون تعليق،
+        // ومحاولة واحدة فقط — بدون أي إعادة طلب تلقائي.
+        const timer = window.setTimeout(() => controller.abort(), 45_000);
+        try {
+          const res = await fetch("/api/public/tts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              suspectId,
+              text,
+              state: line.state ?? "calm",
+              stress: Math.round(line.stress ?? 0),
+            }),
+            signal: controller.signal,
+          });
+          const type = res.headers.get("Content-Type") ?? "";
+          if (!res.ok || !type.startsWith("audio/")) {
+            const detail = await res.text().catch(() => "");
+            console.error("ElevenLabs voice unavailable", res.status, detail.slice(0, 300));
+            setLoadingVoice(false);
+            setVoiceError("الصوت غير متوفر حالياً — الرد النصي موجود.");
+            return;
+          }
+          const blob = await res.blob();
+          src = URL.createObjectURL(blob);
+          // إعادة استخدام نفس الملف لنفس الرد (زر 🔊) بدون استهلاك credits.
+          cacheAudio(key, src);
+        } catch (error) {
+          setLoadingVoice(false);
+          if (controller.signal.aborted && !abortRef.current) return; // stopSpeaking
+          console.error("ElevenLabs voice request failed", error);
+          setVoiceError("الصوت تأخر — كمل بالنص.");
+          return;
+        } finally {
+          window.clearTimeout(timer);
+          abortRef.current = null;
+        }
+      }
 
       const audio = audioRef.current ?? new Audio();
       audioRef.current = audio;
       audio.preload = "auto";
-      audio.src = url;
+      audio.src = src;
       audio.onended = () => setSpeaking(false);
       audio.onplaying = () => {
         setLoadingVoice(false);
         setSpeaking(true);
       };
       audio.onerror = () => {
-        if (controller.signal.aborted) return;
         setLoadingVoice(false);
         setSpeaking(false);
-        // نجيب الخطأ الحقيقي من السيرفر حتى يظهر بالـ console بدل رسالة عامة.
-        void fetch(url)
-          .then((r) => r.text())
-          .then((detail) => {
-            console.error("ElevenLabs stream failed", detail);
-            setVoiceError(detail.slice(0, 200) || "تعذر تشغيل ملف الصوت");
-          })
-          .catch(() => setVoiceError("تعذر تشغيل ملف الصوت"));
       };
 
       try {
@@ -284,13 +307,12 @@ export function useVoice({
           pendingAudioRef.current = audio;
           return;
         }
-        if (controller.signal.aborted) return;
-        console.error("ElevenLabs automatic playback failed", error);
-        setVoiceError(error instanceof Error ? error.message : String(error));
+        console.error("suspect voice playback failed", error);
       }
     },
     [stopSpeaking, suspectId],
   );
+
 
 
   /** Speak a suspect line with its emotional delivery. */
