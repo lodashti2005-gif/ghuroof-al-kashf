@@ -598,19 +598,26 @@ export const endInterrogation = (suspectId: string) =>
     if (rt) rt.finished = true;
   });
 
-/** One vote per player, stored server-side so no device can fake others. */
+/** المضيف فقط يفتح مرحلة الاتهام النهائي — ما تبدأ تلقائياً. */
+export const startAccusation = () => setPhase("voting");
+
+/** المضيف فقط يكشف الحقيقة بعد ما يخلص التصويت. */
+export const revealTruth = () => setPhase("reveal");
+
+/**
+ * صوت واحد لكل لاعب محفوظ بالسيرفر. ما ينقدر يتغير بعد التأكيد ولا يتكرر
+ * حتى لو عمل اللاعب Refresh (الصوت يرجع من قاعدة البيانات).
+ */
 export function castVote(playerId: string, suspectId: string) {
   if (!state) return;
+  if (state.votes[playerId]) return; // ما يتغير الصوت بعد التثبيت
   const code = state.code;
   state = { ...state, votes: { ...state.votes, [playerId]: suspectId } };
   emit();
   run(
     supabase
       .from("room_votes")
-      .upsert(
-        { room_code: code, player_id: playerId, suspect_id: suspectId },
-        { onConflict: "room_code,player_id" },
-      ),
+      .insert({ room_code: code, player_id: playerId, suspect_id: suspectId }),
     "cast vote",
   );
 }
