@@ -12,7 +12,7 @@ import {
   Watch,
   X,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import { evidence as allEvidence } from "@/game/case-data";
