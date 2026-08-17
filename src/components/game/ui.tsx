@@ -93,7 +93,7 @@ export function StressMeter({ value, compact = false }: { value: number; compact
       <div className="mb-1.5 flex items-center justify-between text-xs">
         <span className="text-muted-foreground">مؤشر التوتر</span>
         <span dir="ltr" className="font-mono text-foreground">
-          {value}
+          {shown}
           <span className="text-muted-foreground">%</span>
         </span>
       </div>
@@ -104,13 +104,13 @@ export function StressMeter({ value, compact = false }: { value: number; compact
         )}
       >
         <div
-          className="h-full rounded-full transition-all duration-700 ease-out"
+          className="h-full rounded-full transition-all duration-500 ease-linear"
           style={{
-            width: `${value}%`,
+            width: `${shown}%`,
             background:
-              value >= 70
+              shown >= 70
                 ? "var(--gradient-blood)"
-                : `color-mix(in oklab, var(--evidence) ${Math.max(30, value)}%, var(--muted-foreground))`,
+                : `color-mix(in oklab, var(--evidence) ${Math.max(30, shown)}%, var(--muted-foreground))`,
           }}
         />
       </div>
