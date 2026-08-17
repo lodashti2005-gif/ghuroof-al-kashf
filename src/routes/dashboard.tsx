@@ -42,6 +42,13 @@ function Dashboard() {
       ((unlocked.length / evidence.length) * 0.7 + (interrogated / suspects.length) * 0.3) * 100,
     ),
   );
+  const allInterrogated = interrogated === suspects.length;
+  const accusationOpen = room?.phase === "voting" || room?.phase === "reveal";
+
+  // كل اللاعبين ينتقلون لحظياً لمن قائد الغرفة يبدأ الاتهام.
+  useEffect(() => {
+    if (accusationOpen) void navigate({ to: "/accusation" });
+  }, [accusationOpen, navigate]);
 
   return (
     <GameShell title="لوحة التحقيق" right={<LeaveRoomButton />}>
