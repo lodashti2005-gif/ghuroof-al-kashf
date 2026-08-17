@@ -650,18 +650,31 @@ function InterrogationRoom() {
               {voice.micSupported && (
                 <button
                   type="button"
-                  disabled={locked || busy}
-                  onClick={voice.listening ? voice.stopListening : voice.startListening}
-                  aria-label={voice.listening ? "إيقاف التسجيل" : "تكلم بالمايك"}
+                  disabled={locked || busy || voice.micStatus === "transcribing"}
+                  onClick={() => {
+                    if (voice.micStatus === "listening") voice.stopListening();
+                    else void voice.startListening();
+                  }}
+                  aria-label={
+                    voice.micStatus === "listening" ? "إيقاف التسجيل وإرسال" : "تكلم بالمايك"
+                  }
+                  title={voice.micStatus === "listening" ? "خلصت — أرسل" : "اسأل بصوتك"}
                   className={`grid size-11 shrink-0 place-items-center rounded-xl border transition-colors disabled:opacity-45 ${
-                    voice.listening
+                    voice.micStatus === "listening"
                       ? "border-primary/55 bg-primary/15 text-primary"
                       : "border-border bg-secondary text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {voice.listening ? <MicOff className="size-4" /> : <Mic className="size-4" />}
+                  {voice.micStatus === "transcribing" ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : voice.micStatus === "listening" ? (
+                    <MicOff className="size-4" />
+                  ) : (
+                    <Mic className="size-4" />
+                  )}
                 </button>
               )}
+
               <button
                 type="button"
                 disabled={locked || busy || unlocked.length === 0}
