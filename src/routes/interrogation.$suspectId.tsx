@@ -185,7 +185,9 @@ function InterrogationRoom() {
 
   const displayedTime = store.remainingTime(runtime);
   void clockTick;
-  const locked = !runtime || runtime.finished || displayedTime <= 0;
+  // مرحلة الاتهام تقفل التحقيق نهائياً: ما ينرسل أي سؤال جديد.
+  const accusationPhase = room?.phase === "voting" || room?.phase === "reveal";
+  const locked = !runtime || runtime.finished || displayedTime <= 0 || accusationPhase;
   // While a reply is generating, the session stays open but input is blocked so
   // the same question can't be sent twice.
   const busy = typing;

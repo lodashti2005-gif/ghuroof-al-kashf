@@ -46,6 +46,26 @@ function Reveal() {
   const groupPick = tally[0];
   const groupCorrect = groupPick?.count ? groupPick.id === killerId : false;
 
+  const killerContradictions = (room?.contradictions ?? []).filter((c) => c.suspectId === killerId);
+
+  const scoreboard = (room?.players ?? [])
+    .map((p) => {
+      const vote = room?.votes[p.id];
+      const correct = vote === killerId;
+      const bonus =
+        (room?.contradictions ?? []).filter((c) => c.author === p.name).length * 10 +
+        (room?.deductions ?? []).filter((d) => d.author === p.name).length * 10;
+      return {
+        id: p.id,
+        name: p.name,
+        vote,
+        voteName: vote ? (getSuspect(vote)?.name ?? "—") : "",
+        correct,
+        points: (vote ? (correct ? 100 : 20) : 0) + bonus,
+      };
+    })
+    .sort((a, b) => b.points - a.points);
+
   const fade = (from: number) =>
     `transition-all duration-700 ${stage >= from ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}`;
 
@@ -184,15 +204,73 @@ function Reveal() {
             </ul>
           </Panel>
 
-          {/* Stage 5 — motive */}
+          {/* Stage 5 — motive + method */}
           <Panel className={fade(5)}>
             <Eyebrow>سبب الجريمة</Eyebrow>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
               {solution.motive}
             </p>
           </Panel>
+
+          <Panel className={fade(5)}>
+            <Eyebrow>طريقة تنفيذ الجريمة</Eyebrow>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
+              {solution.method}
+            </p>
+          </Panel>
+
+          <Panel className={fade(5)}>
+            <Eyebrow>تناقضات {killer.name} اللي رصدها الفريق</Eyebrow>
+            {killerContradictions.length === 0 ? (
+              <p className="mt-2 text-sm text-muted-foreground">
+                ما رصد الفريق تناقضات بأقواله — بس التوقيت والأدلة كشفته.
+              </p>
+            ) : (
+              <ul className="mt-3 space-y-3">
+                {killerContradictions.map((c) => (
+                  <li key={c.id} className="rounded-xl border border-border bg-surface-2 p-3.5">
+                    <p className="text-sm leading-relaxed">«{c.claim}»</p>
+                    <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                      يتعارض مع: {c.conflictsWith}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
         </div>
       </div>
+
+      {/* Player scoreboard */}
+      <Panel className={`mt-5 ${fade(5)}`}>
+        <Eyebrow>نتائج المحققين</Eyebrow>
+        <h2 className="mt-1.5 text-xl font-bold">منو صاب ومنو خاب</h2>
+        <ul className="mt-4 space-y-2.5">
+          {scoreboard.map((p) => (
+            <li
+              key={p.id}
+              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-2 px-4 py-3"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold">{p.name}</p>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                  {p.vote ? `اتهم ${p.voteName}` : "ما ثبّت اتهام"}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <CaseTag tone={p.correct ? "evidence" : "danger"}>
+                  {p.vote ? (p.correct ? "اتهام صحيح" : "اتهام خاطئ") : "بدون تصويت"}
+                </CaseTag>
+                <span className="font-mono text-sm text-primary">{p.points} نقطة</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+          النقاط: اتهام صحيح ١٠٠ · اتهام خاطئ ٢٠ · +١٠ لكل تناقض رصدته · +١٠ لكل ربط أدلة صحيح.
+        </p>
+      </Panel>
+
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
         <ActionButton variant="outline" onClick={() => navigate({ to: "/dashboard" })}>
