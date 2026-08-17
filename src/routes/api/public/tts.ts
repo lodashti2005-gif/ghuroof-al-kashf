@@ -60,8 +60,9 @@ async function synthesize(parsed: z.infer<typeof bodySchema>): Promise<Response>
   outer: for (const voiceId of voiceIds) {
     for (const model of MODELS) {
       const res = await fetch(
-        // أقل حجم قطعة + بداية بث فورية = أقل تأخير ممكن قبل أول صوت.
-        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_44100_64&optimize_streaming_latency=3`,
+        // 128kbps + latency=1: أنظف صوت بأقل وشوشة/ضغط، مع بث سريع.
+        // (optimize_streaming_latency العالي يقلل جودة الصوت ويضيف ضجيج.)
+        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_44100_128&optimize_streaming_latency=1`,
         {
           method: "POST",
           headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
