@@ -423,10 +423,12 @@ export async function startRoles(playerIds: string[] = []) {
   const fresh = await fetchPlayerIds(code);
   const ids = fresh.length ? fresh : playerIds.length ? playerIds : (state?.players ?? []).map((p) => p.id);
   update((s) => {
-    s.roles = assignRoles(ids);
+    // توزيع مرة واحدة: أي دور محفوظ مسبقاً يبقى ثابت لنفس player_id.
+    s.roles = assignRoles(ids, s.roles ?? {});
     s.ready = [];
     s.phase = "roles";
   });
+
 }
 
 /**

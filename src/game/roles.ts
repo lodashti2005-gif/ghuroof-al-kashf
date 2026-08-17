@@ -3,7 +3,7 @@
  * الأدوار تخصصات فقط: ما تغيّر أي منطق للأدلة أو الاستجواب أو المؤقت.
  */
 
-export type RoleIcon = "search" | "flask" | "camera" | "mic";
+export type RoleIcon = "search" | "flask" | "camera" | "mic" | "clock" | "file";
 
 export interface PlayerRole {
   id: string;
@@ -49,6 +49,22 @@ export const playerRoles: PlayerRole[] = [
     mission: "راقب الكاميرات والأوقات وتحركات الأشخاص قبل الجريمة وبعدها.",
     repeatable: true,
   },
+  {
+    id: "timeline",
+    icon: "clock",
+    emoji: "⏱️",
+    title: "محلل الجدول الزمني",
+    mission: "رتّب أوقات الليلة الأخيرة وتأكد منو كان وين وبأي وقت.",
+    repeatable: true,
+  },
+  {
+    id: "records",
+    icon: "file",
+    emoji: "🗂️",
+    title: "مسؤول الملف",
+    mission: "دوّن الأقوال والتناقضات بملف القضية وخلي الفريق على نفس المعلومة.",
+    repeatable: true,
+  },
 ];
 
 export const roleById = (id?: string | null) =>
@@ -66,22 +82,40 @@ function shuffle<T>(list: T[]): T[] {
 }
 
 /**
- * توزيع عشوائي: اللاعبين يتخبطون، والأدوار تتوزع بالترتيب المهم أولاً.
- * لو عدد اللاعبين أكثر من الأدوار، تتكرر الأدوار القابلة للتكرار.
+ * توزيع عشوائي بدون تكرار: كل لاعب يأخذ دور واحد مختلف (ستة أدوار = ستة لاعبين).
+ * الأدوار الموجودة أصلاً ما تتغير — تنحفظ مثل ما هي (Refresh / رجوع للغرفة).
+ * لو عدد اللاعبين أكبر من عدد الأدوار، الأدوار القابلة للتكرار بس تتكرر.
  */
-export function assignRoles(playerIds: string[]): Record<string, string> {
-  const players = shuffle(playerIds);
-  const repeatable = playerRoles.filter((r) => r.repeatable);
+export function assignRoles(
+  playerIds: string[],
+  existing: Record<string, string> = {},
+): Record<string, string> {
   const roles: Record<string, string> = {};
+  // احتفظ بأدوار اللاعبين الحاليين (بدون تكرار).
+  const taken = new Set<string>();
+  playerIds.forEach((id) => {
+    const prev = existing[id];
+    if (prev && roleById(prev) && !taken.has(prev)) {
+      roles[id] = prev;
+      taken.add(prev);
+    }
+  });
 
-  players.forEach((id, i) => {
-    if (i < playerRoles.length) {
-      roles[id] = playerRoles[i]!.id;
+  const pending = shuffle(playerIds.filter((id) => !roles[id]));
+  const free = playerRoles.filter((r) => !taken.has(r.id));
+  const repeatable = playerRoles.filter((r) => r.repeatable);
+
+  pending.forEach((id, i) => {
+    const next = free[i];
+    if (next) {
+      roles[id] = next.id;
+      taken.add(next.id);
     } else {
       const pool = shuffle(repeatable);
-      roles[id] = pool[(i - playerRoles.length) % pool.length]!.id;
+      roles[id] = pool[(i - free.length) % pool.length]!.id;
     }
   });
 
   return roles;
 }
+
