@@ -86,6 +86,7 @@ function InterrogationRoom() {
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
   const [unlockToast, setUnlockToast] = useState<string | null>(null);
+  const [contradictionToast, setContradictionToast] = useState(false);
   const [retry, setRetry] = useState<{ text: string; evidenceId?: string | undefined } | null>(null);
   /** الدليل المطروح على الطاولة: يظهر كبطاقة بالمحادثة وينضم لأول سؤال يجي بعده. */
   const [pendingEvidence, setPendingEvidence] = useState<string | null>(null);
@@ -97,6 +98,7 @@ function InterrogationRoom() {
   const [confrontOpen, setConfrontOpen] = useState(false);
   const [suspectsOpen, setSuspectsOpen] = useState(false);
   const [boardOpen, setBoardOpen] = useState(false);
+  const [contradictionsOpen, setContradictionsOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const busyRef = useRef(false);
@@ -208,7 +210,12 @@ function InterrogationRoom() {
   const send = async (
     value: string,
     evidenceId?: string,
-    options?: { skipPush?: boolean; displayText?: string; maxStress?: number },
+    options?: {
+      skipPush?: boolean;
+      displayText?: string;
+      maxStress?: number;
+      contradictionConfront?: boolean;
+    },
   ) => {
     const text = value.trim();
     if (!text || locked || !me || busyRef.current) return;
@@ -242,6 +249,7 @@ function InterrogationRoom() {
           stress: runtime?.stress ?? 0,
           unlockedEvidence: room?.unlockedEvidence ?? [],
           confrontEvidenceId: confrontId ?? null,
+          ...(options?.contradictionConfront ? { contradictionConfront: true } : {}),
           // ذاكرة كاملة: كل أقوال الجلسة من بدايتها.
           transcript: history.slice(-60),
         },
@@ -263,6 +271,21 @@ function InterrogationRoom() {
         text: line,
         ...(reply.contradiction ? { flagged: true } : {}),
       });
+      // تناقض محقّق من السيرفر فقط (مربوط بقول سابق أو دليل أو جدول القضية).
+      const note = reply.contradictionNote;
+      if (note) {
+        actions.addContradiction({
+          suspectId,
+          suspectName: suspect.name,
+          claim: note.claim,
+          conflictsWith: note.conflictsWith,
+          source: note.source,
+          ...(note.evidenceId ? { evidenceId: note.evidenceId } : {}),
+          author: me.name,
+        });
+        setContradictionToast(true);
+        setTimeout(() => setContradictionToast(false), 4200);
+      }
       // إعادة استخدام نفس الدليل على نفس المشتبه فيه ما تعطي نفس الأثر.
       const delta =
         options?.maxStress !== undefined
@@ -318,6 +341,27 @@ function InterrogationRoom() {
 
 
   confrontRef.current = confront;
+
+  /** تناقضات هذا المشتبه فيه المرصودة وما تمت مواجهته بها بعد. */
+  const openContradictions = (room?.contradictions ?? []).filter(
+    (c) => c.suspectId === suspectId && !c.confronted,
+  );
+
+  /**
+   * «واجهه بالتناقض»: يعرض التناقض المرصود على المشتبه فيه. الرد يتغير حسب
+   * شخصيته ويرتفع التوتر بشكل أوضح، بدون اعتراف تلقائي.
+   */
+  const confrontContradiction = (id: string) => {
+    const item = (room?.contradictions ?? []).find((c) => c.id === id);
+    if (!item || locked || !me || busyRef.current) return;
+    setContradictionsOpen(false);
+    actions.markContradictionConfronted(item.id);
+    void send(
+      `أواجهك بتناقض: قلت «${item.claim}»، وهذا ما يركب مع «${item.conflictsWith}». شنو تفسيرك؟`,
+      undefined,
+      { contradictionConfront: true },
+    );
+  };
 
   /** Switching suspects only navigates — the timer interval unmounts here and the
    * session (transcript, stress, evidence confrontations, remaining time) stays
@@ -552,6 +596,44 @@ function InterrogationRoom() {
           </div>
 
           <div className="border-t border-border px-5 py-4">
+            {contradictionsOpen && (
+              <div className="cine-in mb-3 rounded-xl border border-evidence/35 bg-evidence/5 p-3">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <Eyebrow>تناقضات مرصودة على {suspect.name}</Eyebrow>
+                  <button
+                    type="button"
+                    onClick={() => setContradictionsOpen(false)}
+                    aria-label="إلغاء"
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+                {openContradictions.length === 0 ? (
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    ما فيه تناقض مرصود عليه الآن — كمّل أسئلة وواجهه بالأدلة.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {openContradictions.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        disabled={locked || busy}
+                        onClick={() => confrontContradiction(c.id)}
+                        className="w-full rounded-lg border border-evidence/45 bg-evidence/10 px-3 py-2 text-right text-xs leading-relaxed text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
+                      >
+                        <span className="block font-bold">قال: «{c.claim}»</span>
+                        <span className="mt-1 block text-muted-foreground">
+                          يتعارض مع: {c.conflictsWith}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {confrontOpen && (
               <div className="cine-in mb-3 rounded-xl border border-evidence/35 bg-evidence/5 p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
@@ -704,9 +786,25 @@ function InterrogationRoom() {
 
               <button
                 type="button"
+                disabled={locked || busy || openContradictions.length === 0}
+                onClick={() => setContradictionsOpen((v) => !v)}
+                aria-label="واجهه بالتناقض"
+                title="واجهه بالتناقض"
+                className="relative grid size-11 shrink-0 place-items-center rounded-xl border border-evidence/45 bg-evidence/10 text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
+              >
+                <AlertTriangle className="size-4" />
+                {openContradictions.length > 0 && (
+                  <span className="absolute -top-1 -left-1 grid size-4 place-items-center rounded-full bg-primary font-mono text-[0.6rem] text-primary-foreground">
+                    {openContradictions.length}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
                 disabled={locked || busy || unlocked.length === 0}
                 onClick={() => setConfrontOpen((v) => !v)}
                 aria-label="واجهه بدليل"
+                title="واجهه بدليل"
                 className="grid size-11 shrink-0 place-items-center rounded-xl border border-evidence/45 bg-evidence/10 text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
               >
                 <FileSearch className="size-4" />
@@ -853,6 +951,18 @@ function InterrogationRoom() {
                   });
                 }}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {contradictionToast && (
+        <div className="fixed bottom-24 right-1/2 z-50 translate-x-1/2 sm:right-6 sm:translate-x-0">
+          <div className="cine-in flex items-center gap-3 rounded-xl border border-evidence/45 bg-card px-4 py-3 shadow-[var(--shadow-noir)]">
+            <AlertTriangle className="size-4 shrink-0 text-evidence" />
+            <div className="min-w-0">
+              <p className="text-sm font-bold">⚠️ تم رصد تناقض محتمل</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">انسجل بملف القضية · قسم التناقضات</p>
             </div>
           </div>
         </div>

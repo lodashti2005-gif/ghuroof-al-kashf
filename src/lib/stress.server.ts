@@ -17,7 +17,13 @@
  */
 import type { SuspectProfile } from "@/game/profiles.server";
 
-export type QuestionKind = "normal" | "sensitive" | "confront" | "confrontLinked" | "confrontFeared";
+export type QuestionKind =
+  | "normal"
+  | "sensitive"
+  | "confront"
+  | "confrontLinked"
+  | "confrontFeared"
+  | "contradiction";
 
 /** كلمات حساسة: تحركات، توقيت، الغرفة، التلفون، العلاقة بالمجني عليه… */
 const SENSITIVE = [
@@ -69,14 +75,17 @@ function normalize(text: string) {
 export function classifyQuestion({
   message,
   confrontEvidenceId,
+  contradictionConfront,
   profile,
   linkedIds,
 }: {
   message: string;
   confrontEvidenceId?: string | null;
+  contradictionConfront?: boolean;
   profile: SuspectProfile;
   linkedIds: string[];
 }): QuestionKind {
+  if (contradictionConfront) return "contradiction";
   if (confrontEvidenceId) {
     if (profile.evidenceFeared.includes(confrontEvidenceId)) return "confrontFeared";
     if (linkedIds.includes(confrontEvidenceId)) return "confrontLinked";
@@ -92,6 +101,7 @@ const RANGES: Record<QuestionKind, [number, number]> = {
   confront: [1, 3],
   confrontLinked: [6, 11],
   confrontFeared: [9, 14],
+  contradiction: [8, 15],
 };
 
 export function clampRange(n: number, [min, max]: [number, number]) {

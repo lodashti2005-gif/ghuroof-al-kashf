@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Clock, MapPin, Play, Skull } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Clock, MapPin, Play, Skull } from "lucide-react";
 
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel, SuspectCard } from "@/components/game/ui";
@@ -25,6 +25,7 @@ function CaseIntro() {
   const { room, isHost, actions } = useRoom();
   const navigate = useNavigate();
   const v = caseFile.victim;
+  const contradictions = room?.contradictions ?? [];
 
   return (
     <GameShell title={caseFile.title} right={<LeaveRoomButton />}>
@@ -115,6 +116,63 @@ function CaseIntro() {
             <SuspectCard key={s.id} suspect={s} />
           ))}
         </div>
+      </section>
+
+      <section className="mt-8">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <Eyebrow>سجل الاستجواب</Eyebrow>
+            <h2 className="mt-1 text-2xl font-bold">التناقضات</h2>
+          </div>
+          <CaseTag tone={contradictions.length > 0 ? "evidence" : "muted"}>
+            {contradictions.length > 0 ? `${contradictions.length} تناقض مرصود` : "ما فيه شي بعد"}
+          </CaseTag>
+        </div>
+        <Panel className="cine-in">
+          {contradictions.length === 0 ? (
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              أي تناقض ينرصد بكلام المشتبه فيهم أثناء الاستجواب ينسجل هنا تلقائياً لكل الفريق.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {contradictions.map((c) => (
+                <li
+                  key={c.id}
+                  className="rounded-xl border border-evidence/35 bg-evidence/5 px-4 py-3 text-sm leading-relaxed"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 font-bold text-evidence">
+                      <AlertTriangle className="size-3.5" /> {c.suspectName}
+                    </span>
+                    <span dir="ltr" className="font-mono text-[0.7rem] text-muted-foreground">
+                      {new Date(c.createdAt).toLocaleTimeString("ar-KW", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-muted-foreground">
+                    <span className="text-foreground">قوله:</span> «{c.claim}»
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    <span className="text-foreground">
+                      {c.source === "evidence"
+                        ? "يتعارض مع دليل:"
+                        : c.source === "timeline"
+                          ? "يتعارض مع وقائع القضية:"
+                          : "يتعارض مع قوله السابق:"}
+                    </span>{" "}
+                    {c.conflictsWith}
+                  </p>
+                  <p className="mt-1.5 font-mono text-[0.7rem] text-muted-foreground/80">
+                    رصده {c.author}
+                    {c.confronted ? " · تمت المواجهة" : ""}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
       </section>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">

@@ -18,6 +18,8 @@ const inputSchema = z.object({
   stress: z.number().min(0).max(100),
   unlockedEvidence: z.array(z.string()).max(12),
   confrontEvidenceId: z.string().nullable().optional(),
+  /** المحقق يواجه المشتبه فيه بتناقض مرصود سابقاً. */
+  contradictionConfront: z.boolean().optional(),
   transcript: z
     .array(
       z.object({
@@ -43,6 +45,7 @@ export const askSuspect = createServerFn({ method: "POST" })
     const { buildSuspectPrompt, linkedEvidenceIds } = await import("./interrogation-prompt.server");
     const { callModel } = await import("./interrogation-model.server");
     const { classifyQuestion, shapeStressDelta } = await import("./stress.server");
+    const { validateContradiction } = await import("./contradictions.server");
     const { fallbackReply } = await import("./interrogation-fallback.server");
     const { system, user } = buildSuspectPrompt(profile, data);
 
@@ -50,6 +53,7 @@ export const askSuspect = createServerFn({ method: "POST" })
     const kind = classifyQuestion({
       message: data.message,
       confrontEvidenceId: data.confrontEvidenceId ?? null,
+      ...(data.contradictionConfront ? { contradictionConfront: true } : {}),
       profile,
       linkedIds,
     });
@@ -70,15 +74,22 @@ export const askSuspect = createServerFn({ method: "POST" })
         reply.unlock && canUnlockEvidence(reply.unlock, data.unlockedEvidence)
           ? reply.unlock
           : null;
+      // التناقض لازم يكون مربوط بمصدر حقيقي: قول سابق، دليل مكتشف، أو جدول القضية.
+      const note = reply.contradiction
+        ? validateContradiction(reply.rawNote as never, data, profile)
+        : null;
+      const { rawNote: _raw, ...clean } = reply;
       return {
-        ...reply,
+        ...clean,
         unlock,
-        stressDelta: shape(reply.stressDelta, reply.contradiction),
+        contradiction: !!note,
+        contradictionNote: note,
+        stressDelta: shape(reply.stressDelta, !!note),
       };
     } catch (error) {
       // كل سؤال لازم يحصل رد — لا تعليق ولا انتظار بلا نهاية.
       console.error("interrogation request failed", error);
       const fb = fallbackReply(profile, data);
-      return { ...fb, stressDelta: shape(fb.stressDelta, false) };
+      return { ...fb, contradictionNote: null, stressDelta: shape(fb.stressDelta, false) };
     }
   });
