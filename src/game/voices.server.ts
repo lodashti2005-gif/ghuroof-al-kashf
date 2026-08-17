@@ -18,6 +18,11 @@ export interface SuspectVoice {
   voiceId: string;
   /** Base delivery for this character. */
   base: { stability: number; similarity: number; style: number; speed: number };
+  /**
+   * speaker boost يزيد وضوح الصوت بس يضخّم ضجيج التسجيل الأصلي،
+   * فنطفيه للأصوات اللي فيها وشوشة.
+   */
+  speakerBoost: boolean;
   /** كم يتردد هذا الشخص (0 = ما يتردد، 1 = وايد). */
   hesitation: number;
   /** كلمات تعبئة كويتية خاصة بهذي الشخصية. */
@@ -33,48 +38,60 @@ const VOICE_HASAN = "6wsXez7Nsh9HQSbtqwIK"; // حسن → يوسف
 const VOICE_MARYAM = "w0uhBAmNIG5kUDeaFEsA"; // مريم → نورة
 const VOICE_LATIFA = "S7X9UnQjDL5psfuSlXrJ"; // لطيفة → دانة
 
+/**
+ * الإعدادات متوازنة: ثبات متوسط (مو مبالغ) وstyle منخفض حتى الأداء يطلع
+ * طبيعي بدون تمثيل زايد ولا artifacts/وشوشة من مبالغة similarity.
+ */
 export const SUSPECT_VOICES: Record<string, SuspectVoice> = {
   // فهد المطيري — رجل ٣٤، هادي بالبداية بس يتلخبط بسرعة: تردد أعلى، سرعة أقل.
   fahad: {
     voiceId: VOICE_ABU_SALEM,
-    base: { stability: 0.26, similarity: 0.9, style: 0.55, speed: 0.94 },
+    base: { stability: 0.42, similarity: 0.8, style: 0.22, speed: 0.96 },
+    speakerBoost: true,
     hesitation: 0.8,
     fillers: ["يعني", "والله", "لحظة"],
   },
   // نورة الشمري — امرأة ٢٩، عاطفية ومترددة: أقل ثبات، كلام متقطع.
   noura: {
     voiceId: VOICE_MARYAM,
-    base: { stability: 0.2, similarity: 0.9, style: 0.62, speed: 0.9 },
+    base: { stability: 0.38, similarity: 0.8, style: 0.26, speed: 0.94 },
+    speakerBoost: true,
     hesitation: 1,
     fillers: ["إي", "مادري", "يعني"],
   },
   // يوسف العازمي — رجل ٣١، واثق ومسيطر: أسرع، أثبت، تردد قليل.
   yousef: {
     voiceId: VOICE_HASAN,
-    base: { stability: 0.4, similarity: 0.92, style: 0.42, speed: 1.02 },
+    base: { stability: 0.5, similarity: 0.82, style: 0.18, speed: 1.0 },
+    speakerBoost: true,
     hesitation: 0.25,
     fillers: ["ترى", "عاد"],
   },
-  // دانة الهاجري — امرأة ٢٧، هادية ومتحفظة: بطيئة وواضحة، تردد متوسط.
+  // دانة الهاجري — امرأة ٢٧، هادية ومتحفظة: صوتها فيه وشوشة بالتسجيل الأصلي،
+  // فنرفع الثبات ونخفض similarity/style ونطفي speaker boost حتى يطلع نظيف.
   dana: {
     voiceId: VOICE_LATIFA,
-    base: { stability: 0.32, similarity: 0.9, style: 0.45, speed: 0.88 },
+    base: { stability: 0.6, similarity: 0.6, style: 0.06, speed: 0.92 },
+    speakerBoost: false,
     hesitation: 0.55,
     fillers: ["يعني", "لحظة"],
   },
 };
 
-/** Per-emotion delivery offsets — أوضح شوي حتى يبان الانفعال بالصوت. */
+/**
+ * Per-emotion delivery offsets — تغيّر النبرة بشكل محسوس بس بدون مبالغة
+ * تمثيلية أو تشويش (نخلي style بحدود منخفضة).
+ */
 const STATE_DELTA: Record<SuspectState, { stability: number; style: number; speed: number }> = {
-  calm: { stability: 0.06, style: -0.04, speed: 0 },
-  thinking: { stability: -0.06, style: 0.05, speed: -0.08 },
-  nervous: { stability: -0.18, style: 0.14, speed: -0.03 },
-  defensive: { stability: -0.12, style: 0.16, speed: 0.08 },
-  angry: { stability: -0.24, style: 0.26, speed: 0.13 },
-  shocked: { stability: -0.22, style: 0.18, speed: -0.05 },
-  scared: { stability: -0.26, style: 0.16, speed: -0.1 },
-  suspicious: { stability: -0.04, style: 0.12, speed: -0.03 },
-  silent: { stability: 0.08, style: -0.02, speed: -0.08 },
+  calm: { stability: 0.05, style: -0.03, speed: 0 },
+  thinking: { stability: -0.04, style: 0.03, speed: -0.07 },
+  nervous: { stability: -0.12, style: 0.08, speed: -0.03 },
+  defensive: { stability: -0.09, style: 0.09, speed: 0.06 },
+  angry: { stability: -0.16, style: 0.14, speed: 0.11 },
+  shocked: { stability: -0.14, style: 0.1, speed: -0.05 },
+  scared: { stability: -0.16, style: 0.09, speed: -0.09 },
+  suspicious: { stability: -0.03, style: 0.07, speed: -0.03 },
+  silent: { stability: 0.06, style: -0.02, speed: -0.07 },
 };
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
@@ -99,11 +116,11 @@ export function resolveVoiceSettings(suspectId: string, state: SuspectState, str
     voiceId: voiceIdFor(suspectId, voice.voiceId),
 
     settings: {
-      stability: clamp(voice.base.stability + delta.stability - tension * 0.1, 0.1, 0.75),
+      stability: clamp(voice.base.stability + delta.stability - tension * 0.07, 0.28, 0.7),
       similarity_boost: voice.base.similarity,
-      style: clamp(voice.base.style + delta.style + tension * 0.08, 0, 0.85),
-      use_speaker_boost: true,
-      speed: clamp(voice.base.speed + delta.speed + tension * 0.04, 0.7, 1.2),
+      style: clamp(voice.base.style + delta.style + tension * 0.05, 0, 0.45),
+      use_speaker_boost: voice.speakerBoost,
+      speed: clamp(voice.base.speed + delta.speed + tension * 0.04, 0.75, 1.15),
     },
   };
 }
@@ -175,11 +192,14 @@ export function shapeForSpeech(text: string, state: SuspectState, suspectId?: st
   out = out.replace(/\s+(و)(?=[^\s]{4,})/g, " … $1");
 
   const tense = state === "thinking" || state === "nervous" || state === "scared";
-  const alreadyHesitant = /^(إي|اي|لحظة|والله|يعني|ترى|عاد|ها|هاه|أه|ااه|مادري|…)/.test(out);
+  const alreadyHesitant = /^(إي|اي|لحظة|والله|يعني|ترى|عاد|ها|هاه|أه|ااه|مادري|شوف|…)/.test(out);
   if (tense && voice.hesitation >= 0.5 && !alreadyHesitant) {
-    const filler = voice.fillers[0] ?? "يعني";
+    // نلف على كلمات التردد الخاصة بالشخصية بشكل ثابت لكن مو متكرر بنفس الافتتاحية.
+    const hash = Array.from(out).reduce((a, c) => (a + c.charCodeAt(0)) % 997, 7);
+    const filler = voice.fillers[hash % voice.fillers.length] ?? "يعني";
     out = voice.hesitation >= 0.8 ? `${filler}… ${out}` : `… ${out}`;
   }
+
 
   // وقفة قصيرة بعد كلمات التردد والربط الكويتية = إيقاع محادثة طبيعي.
   out = out.replace(
