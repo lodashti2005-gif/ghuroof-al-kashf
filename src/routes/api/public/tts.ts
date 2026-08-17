@@ -16,7 +16,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { SUSPECT_STATES } from "@/game/types";
-import { HASAN_VOICE_ID, resolveVoiceSettings, shapeForSpeech } from "@/game/voices.server";
+import { resolveVoiceSettings, shapeForSpeech } from "@/game/voices.server";
 
 const bodySchema = z.object({
   suspectId: z.string().max(40),
