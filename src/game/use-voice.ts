@@ -79,7 +79,10 @@ export function useVoice({
   const unlockedRef = useRef(false);
 
   useEffect(() => {
-    setMicSupported(!!getRecognition());
+    setMicSupported(
+      (typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia) ||
+        !!getRecognition(),
+    );
 
     const unlock = () => {
       unlockedRef.current = true;
