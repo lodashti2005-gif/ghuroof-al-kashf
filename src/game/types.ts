@@ -67,6 +67,24 @@ export interface Deduction {
   author: string;
 }
 
+/** تناقض محتمل مرصود أثناء الاستجواب (يظهر بملف القضية لكل اللاعبين). */
+export interface Contradiction {
+  id: string;
+  suspectId: string;
+  suspectName: string;
+  /** قول المشتبه فيه المرصود. */
+  claim: string;
+  /** القول السابق أو الدليل المتعارض معه. */
+  conflictsWith: string;
+  source: "statement" | "evidence" | "timeline";
+  evidenceId?: string;
+  createdAt: number;
+  /** اسم اللاعب اللي كان يستجوب لحظة الرصد. */
+  author: string;
+  /** صار مواجهة بهذا التناقض. */
+  confronted?: boolean;
+}
+
 export interface RoomState {
   code: string;
   caseId: string;
@@ -76,6 +94,7 @@ export interface RoomState {
   unlockedEvidence: string[];
   notes: Note[];
   deductions: Deduction[];
+  contradictions: Contradiction[];
   suspects: Record<string, SuspectRuntime>;
   /** playerId -> roleId (توزيع عشوائي عند بداية الجولة). */
   roles: Record<string, string>;

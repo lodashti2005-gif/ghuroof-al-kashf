@@ -12,7 +12,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { INTERROGATION_SECONDS, caseFile, suspects } from "./case-data";
 import { assignRoles, playerRoles } from "./roles";
-import type { Deduction, Note, Player, RoomState, SuspectRuntime } from "./types";
+import type { Contradiction, Deduction, Note, Player, RoomState, SuspectRuntime } from "./types";
 
 const SESSION_KEY = "ghurfa:session";
 
@@ -26,7 +26,7 @@ type Listener = () => void;
 /** Portion of RoomState persisted inside `rooms.state`. */
 type SharedState = Pick<
   RoomState,
-  "unlockedEvidence" | "notes" | "deductions" | "suspects" | "roles" | "ready"
+  "unlockedEvidence" | "notes" | "deductions" | "contradictions" | "suspects" | "roles" | "ready"
 >;
 
 let state: RoomState | null = null;
@@ -57,6 +57,7 @@ const freshShared = (): SharedState => ({
   unlockedEvidence: [],
   notes: [],
   deductions: [],
+  contradictions: [],
   suspects: freshSuspects(),
   roles: {},
   ready: [],
@@ -114,6 +115,7 @@ async function fetchRoom(code: string): Promise<RoomState | null> {
     unlockedEvidence: shared.unlockedEvidence ?? [],
     notes: shared.notes ?? [],
     deductions: shared.deductions ?? [],
+    contradictions: shared.contradictions ?? [],
     suspects: { ...freshSuspects(), ...(shared.suspects ?? {}) },
     roles: shared.roles ?? {},
     ready: shared.ready ?? [],
@@ -254,6 +256,7 @@ function sharedPayload(next: RoomState) {
     unlockedEvidence: next.unlockedEvidence,
     notes: next.notes,
     deductions: next.deductions,
+    contradictions: next.contradictions,
     suspects: next.suspects,
     roles: next.roles,
     ready: next.ready,
@@ -503,6 +506,29 @@ export const addDeduction = (d: Omit<Deduction, "id" | "createdAt">) =>
     });
   };
 
+/**
+ * تسجيل تناقض محتمل بملف القضية. مشترك بين كل اللاعبين، ولا يتكرر لو نفس
+ * القول/التعارض انرصد قبل.
+ */
+export const addContradiction = (c: Omit<Contradiction, "id" | "createdAt">) => {
+  const entry: Contradiction = { ...c, id: uid(), createdAt: Date.now() };
+  update((s) => {
+    const dup = s.contradictions.some(
+      (x) =>
+        x.suspectId === entry.suspectId &&
+        x.claim.trim() === entry.claim.trim() &&
+        x.conflictsWith.trim() === entry.conflictsWith.trim(),
+    );
+    if (!dup) s.contradictions.unshift(entry);
+  });
+};
+
+export const markContradictionConfronted = (id: string) =>
+  update((s) => {
+    const item = s.contradictions.find((c) => c.id === id);
+    if (item) item.confronted = true;
+  });
+
 export const removeNote = (id: string) =>
   update((s) => void (s.notes = s.notes.filter((n) => n.id !== id)));
 
@@ -597,6 +623,7 @@ export function resetCase() {
     s.phase = "lobby";
     s.unlockedEvidence = [];
     s.notes = [];
+    s.contradictions = [];
     s.suspects = freshSuspects();
     s.roles = {};
     s.ready = [];
