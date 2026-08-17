@@ -3,7 +3,8 @@
  * profile (secrets, planned lies, contradictions) which must never ship to the
  * browser.
  */
-import { caseFile, evidence } from "@/game/case-data";
+import { caseFile, evidence, killerId } from "@/game/case-data";
+import { stressDirective } from "./stress.server";
 import type { SuspectProfile } from "@/game/profiles.server";
 import type { InterrogationInput } from "./interrogation.functions";
 
@@ -57,6 +58,9 @@ ${profile.contradictions.map((t) => `- ${t}`).join("\n")}
 ## مثيرات مشاعرك
 ${profile.emotionalTriggers.join(" | ")}
 تحمّلك للضغط: ${profile.stressTolerance}/100 (أعلى = أصعب تنكسر)
+
+## حالتك النفسية الحالية
+${stressDirective(data.stress, data.suspectId === killerId)}
 أدلة تخاف منها: ${profile.evidenceFeared.join(", ") || "لا شي"}
 
 ## قواعد الكلام
