@@ -24,10 +24,16 @@ function Accusation() {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<string | null>(null);
 
+  // نحسب بس أصوات اللاعبين الموجودين فعليًا بالغرفة (نفس Room Code).
+  const activePlayers = room?.players ?? [];
+  const activeVotes = activePlayers
+    .map((p) => room?.votes[p.id])
+    .filter((v): v is string => !!v);
+
   const myVote = me ? room?.votes[me.id] : undefined;
-  const votesCount = Object.keys(room?.votes ?? {}).length;
-  const total = room?.players.length ?? 1;
-  const allVoted = total > 0 && votesCount >= total;
+  const votesCount = activeVotes.length;
+  const total = activePlayers.length || 1;
+  const allVoted = activePlayers.length > 0 && votesCount >= activePlayers.length;
   const revealed = room?.phase === "reveal";
 
   // النتيجة الجماعية تظهر بس بعد ما يصوّت الجميع (تصويت سري قبل ذلك).
@@ -35,10 +41,11 @@ function Accusation() {
     .map((s) => ({
       id: s.id,
       name: s.name,
-      count: Object.values(room?.votes ?? {}).filter((v) => v === s.id).length,
+      count: activeVotes.filter((v) => v === s.id).length,
     }))
     .sort((a, b) => b.count - a.count);
   const leader = tally[0];
+
 
   useEffect(() => {
     if (revealed) void navigate({ to: "/reveal" });
