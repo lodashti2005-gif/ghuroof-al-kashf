@@ -46,6 +46,26 @@ function Reveal() {
   const groupPick = tally[0];
   const groupCorrect = groupPick?.count ? groupPick.id === killerId : false;
 
+  const killerContradictions = (room?.contradictions ?? []).filter((c) => c.suspectId === killerId);
+
+  const scoreboard = (room?.players ?? [])
+    .map((p) => {
+      const vote = room?.votes[p.id];
+      const correct = vote === killerId;
+      const bonus =
+        (room?.contradictions ?? []).filter((c) => c.author === p.name).length * 10 +
+        (room?.deductions ?? []).filter((d) => d.author === p.name).length * 10;
+      return {
+        id: p.id,
+        name: p.name,
+        vote,
+        voteName: vote ? (getSuspect(vote)?.name ?? "—") : "",
+        correct,
+        points: (vote ? (correct ? 100 : 20) : 0) + bonus,
+      };
+    })
+    .sort((a, b) => b.points - a.points);
+
   const fade = (from: number) =>
     `transition-all duration-700 ${stage >= from ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}`;
 
