@@ -271,6 +271,7 @@ async function flushMutations() {
       const mutate = mutationQueue[0];
       let saved = false;
       for (let attempt = 0; attempt < 5 && !saved; attempt++) {
+        if (!mutate) break;
         const { data: row, error: readError } = await supabase
           .from("rooms")
           .select("*")
@@ -542,7 +543,21 @@ export const setTimeLeft = (suspectId: string, seconds: number) =>
     const rt = s.suspects[suspectId];
     if (!rt) return;
     rt.timeLeft = Math.max(0, seconds);
+    rt.timerStartedAt = Date.now();
     if (rt.timeLeft === 0) rt.finished = true;
+  });
+
+export function remainingTime(runtime?: SuspectRuntime): number {
+  if (!runtime) return INTERROGATION_SECONDS;
+  if (runtime.finished || runtime.timeLeft <= 0) return 0;
+  if (!runtime.timerStartedAt) return runtime.timeLeft;
+  return Math.max(0, runtime.timeLeft - Math.floor((Date.now() - runtime.timerStartedAt) / 1000));
+}
+
+export const startInterrogationTimer = (suspectId: string) =>
+  update((s) => {
+    const rt = s.suspects[suspectId];
+    if (rt && !rt.timerStartedAt && !rt.finished) rt.timerStartedAt = Date.now();
   });
 
 export const endInterrogation = (suspectId: string) =>

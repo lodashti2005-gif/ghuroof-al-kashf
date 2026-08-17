@@ -48,6 +48,8 @@ export interface SuspectRuntime {
   /** Deepest information level the suspect has revealed so far (1-4). */
   level?: number;
   timeLeft: number;
+  /** Shared epoch when this suspect's countdown first started. */
+  timerStartedAt?: number;
   finished: boolean;
   transcript: ChatMessage[];
 }
