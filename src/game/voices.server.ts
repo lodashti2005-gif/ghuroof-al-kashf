@@ -18,6 +18,11 @@ export interface SuspectVoice {
   voiceId: string;
   /** Base delivery for this character. */
   base: { stability: number; similarity: number; style: number; speed: number };
+  /**
+   * speaker boost يزيد وضوح الصوت بس يضخّم ضجيج التسجيل الأصلي،
+   * فنطفيه للأصوات اللي فيها وشوشة.
+   */
+  speakerBoost: boolean;
   /** كم يتردد هذا الشخص (0 = ما يتردد، 1 = وايد). */
   hesitation: number;
   /** كلمات تعبئة كويتية خاصة بهذي الشخصية. */
@@ -33,32 +38,41 @@ const VOICE_HASAN = "6wsXez7Nsh9HQSbtqwIK"; // حسن → يوسف
 const VOICE_MARYAM = "w0uhBAmNIG5kUDeaFEsA"; // مريم → نورة
 const VOICE_LATIFA = "S7X9UnQjDL5psfuSlXrJ"; // لطيفة → دانة
 
+/**
+ * الإعدادات متوازنة: ثبات متوسط (مو مبالغ) وstyle منخفض حتى الأداء يطلع
+ * طبيعي بدون تمثيل زايد ولا artifacts/وشوشة من مبالغة similarity.
+ */
 export const SUSPECT_VOICES: Record<string, SuspectVoice> = {
   // فهد المطيري — رجل ٣٤، هادي بالبداية بس يتلخبط بسرعة: تردد أعلى، سرعة أقل.
   fahad: {
     voiceId: VOICE_ABU_SALEM,
-    base: { stability: 0.26, similarity: 0.9, style: 0.55, speed: 0.94 },
+    base: { stability: 0.42, similarity: 0.8, style: 0.22, speed: 0.96 },
+    speakerBoost: true,
     hesitation: 0.8,
     fillers: ["يعني", "والله", "لحظة"],
   },
   // نورة الشمري — امرأة ٢٩، عاطفية ومترددة: أقل ثبات، كلام متقطع.
   noura: {
     voiceId: VOICE_MARYAM,
-    base: { stability: 0.2, similarity: 0.9, style: 0.62, speed: 0.9 },
+    base: { stability: 0.38, similarity: 0.8, style: 0.26, speed: 0.94 },
+    speakerBoost: true,
     hesitation: 1,
     fillers: ["إي", "مادري", "يعني"],
   },
   // يوسف العازمي — رجل ٣١، واثق ومسيطر: أسرع، أثبت، تردد قليل.
   yousef: {
     voiceId: VOICE_HASAN,
-    base: { stability: 0.4, similarity: 0.92, style: 0.42, speed: 1.02 },
+    base: { stability: 0.5, similarity: 0.82, style: 0.18, speed: 1.0 },
+    speakerBoost: true,
     hesitation: 0.25,
     fillers: ["ترى", "عاد"],
   },
-  // دانة الهاجري — امرأة ٢٧، هادية ومتحفظة: بطيئة وواضحة، تردد متوسط.
+  // دانة الهاجري — امرأة ٢٧، هادية ومتحفظة: صوتها فيه وشوشة بالتسجيل الأصلي،
+  // فنرفع الثبات ونخفض similarity/style ونطفي speaker boost حتى يطلع نظيف.
   dana: {
     voiceId: VOICE_LATIFA,
-    base: { stability: 0.32, similarity: 0.9, style: 0.45, speed: 0.88 },
+    base: { stability: 0.6, similarity: 0.6, style: 0.06, speed: 0.92 },
+    speakerBoost: false,
     hesitation: 0.55,
     fillers: ["يعني", "لحظة"],
   },
