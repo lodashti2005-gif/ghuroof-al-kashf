@@ -164,11 +164,11 @@ export async function callModel({
     level: clamp(Math.round(Number(parsed.level ?? 1)), 1, 4),
     contradiction: parsed.contradiction === true,
     rawNote: {
-      claim: String(loose.contradictionClaim ?? ""),
-      conflictsWith: String(loose.contradictionAgainst ?? ""),
-      source: String(loose.contradictionSource ?? "statement"),
-      ...(loose.contradictionEvidenceId
-        ? { evidenceId: String(loose.contradictionEvidenceId) }
+      claim: String(loose["contradictionClaim"] ?? ""),
+      conflictsWith: String(loose["contradictionAgainst"] ?? ""),
+      source: String(loose["contradictionSource"] ?? "statement"),
+      ...(loose["contradictionEvidenceId"]
+        ? { evidenceId: String(loose["contradictionEvidenceId"]) }
         : {}),
     },
   };
