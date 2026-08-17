@@ -17,6 +17,7 @@ import { ActionButton } from "@/components/game/shell";
 import { SceneCrop } from "@/components/game/scene-crop";
 import { CaseTag, Eyebrow } from "@/components/game/ui";
 import { evidence as allEvidence, findEvidenceLink, suspects } from "@/game/case-data";
+import { forensicNotes } from "@/game/role-intel";
 import type { Deduction, EvidenceItem } from "@/game/types";
 
 const ICONS = {
@@ -297,10 +298,14 @@ function EvidenceDetail({
   item,
   onClose,
   onConfront,
+  canConfront = true,
+  forensics = false,
 }: {
   item: EvidenceItem;
   onClose: () => void;
   onConfront: (suspectId: string) => void;
+  canConfront?: boolean;
+  forensics?: boolean;
 }) {
   const [picking, setPicking] = useState(false);
   const Icon = ICONS[item.icon];
@@ -352,7 +357,14 @@ function EvidenceDetail({
             </p>
           </div>
 
-          {!picking ? (
+          {forensics && forensicNotes[item.id] && (
+            <div className="mt-4 rounded-xl border border-primary/30 bg-primary/8 p-4">
+              <Eyebrow>ملاحظة جنائية · خاصة بالخبير الجنائي</Eyebrow>
+              <p className="mt-1.5 text-sm leading-relaxed">{forensicNotes[item.id]}</p>
+            </div>
+          )}
+
+          {!canConfront ? null : !picking ? (
             <ActionButton className="mt-5 w-full" onClick={() => setPicking(true)}>
               استخدم في الاستجواب
             </ActionButton>
