@@ -78,17 +78,20 @@ export const SUSPECT_VOICES: Record<string, SuspectVoice> = {
   },
 };
 
-/** Per-emotion delivery offsets — أوضح شوي حتى يبان الانفعال بالصوت. */
+/**
+ * Per-emotion delivery offsets — تغيّر النبرة بشكل محسوس بس بدون مبالغة
+ * تمثيلية أو تشويش (نخلي style بحدود منخفضة).
+ */
 const STATE_DELTA: Record<SuspectState, { stability: number; style: number; speed: number }> = {
-  calm: { stability: 0.06, style: -0.04, speed: 0 },
-  thinking: { stability: -0.06, style: 0.05, speed: -0.08 },
-  nervous: { stability: -0.18, style: 0.14, speed: -0.03 },
-  defensive: { stability: -0.12, style: 0.16, speed: 0.08 },
-  angry: { stability: -0.24, style: 0.26, speed: 0.13 },
-  shocked: { stability: -0.22, style: 0.18, speed: -0.05 },
-  scared: { stability: -0.26, style: 0.16, speed: -0.1 },
-  suspicious: { stability: -0.04, style: 0.12, speed: -0.03 },
-  silent: { stability: 0.08, style: -0.02, speed: -0.08 },
+  calm: { stability: 0.05, style: -0.03, speed: 0 },
+  thinking: { stability: -0.04, style: 0.03, speed: -0.07 },
+  nervous: { stability: -0.12, style: 0.08, speed: -0.03 },
+  defensive: { stability: -0.09, style: 0.09, speed: 0.06 },
+  angry: { stability: -0.16, style: 0.14, speed: 0.11 },
+  shocked: { stability: -0.14, style: 0.1, speed: -0.05 },
+  scared: { stability: -0.16, style: 0.09, speed: -0.09 },
+  suspicious: { stability: -0.03, style: 0.07, speed: -0.03 },
+  silent: { stability: 0.06, style: -0.02, speed: -0.07 },
 };
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
@@ -113,11 +116,11 @@ export function resolveVoiceSettings(suspectId: string, state: SuspectState, str
     voiceId: voiceIdFor(suspectId, voice.voiceId),
 
     settings: {
-      stability: clamp(voice.base.stability + delta.stability - tension * 0.1, 0.1, 0.75),
+      stability: clamp(voice.base.stability + delta.stability - tension * 0.07, 0.28, 0.7),
       similarity_boost: voice.base.similarity,
-      style: clamp(voice.base.style + delta.style + tension * 0.08, 0, 0.85),
-      use_speaker_boost: true,
-      speed: clamp(voice.base.speed + delta.speed + tension * 0.04, 0.7, 1.2),
+      style: clamp(voice.base.style + delta.style + tension * 0.05, 0, 0.45),
+      use_speaker_boost: voice.speakerBoost,
+      speed: clamp(voice.base.speed + delta.speed + tension * 0.04, 0.75, 1.15),
     },
   };
 }
