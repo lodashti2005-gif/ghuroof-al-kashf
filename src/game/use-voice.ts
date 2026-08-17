@@ -54,7 +54,9 @@ export function useVoice({
   onTranscript: (text: string) => void;
   suspectId: string;
 }) {
-  const [listening, setListening] = useState(false);
+  /** idle → listening → transcribing، حالة محلية لهذا اللاعب فقط. */
+  const [micStatus, setMicStatus] = useState<"idle" | "listening" | "transcribing">("idle");
+  const [micError, setMicError] = useState<string | null>(null);
   // Voice playback is ON by default: the suspect talks back out loud.
   const [muted, setMuted] = useState(false);
   const [speaking, setSpeaking] = useState(false);
@@ -62,6 +64,7 @@ export function useVoice({
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [micSupported, setMicSupported] = useState(false);
   const recRef = useRef<RecognitionLike | null>(null);
+  const recordingRef = useRef<MediaRecorder | null>(null);
   const onTranscriptRef = useRef(onTranscript);
   onTranscriptRef.current = onTranscript;
   const audioRef = useRef<HTMLAudioElement | null>(null);
