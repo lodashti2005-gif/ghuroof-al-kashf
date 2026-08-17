@@ -14,6 +14,8 @@ export interface AiReply {
   unlock: string | null;
   /** Which reveal level the answer came from (1-4) — used for UI/debug only. */
   level: number;
+  /** true لمن كلام المشتبه ما يركب مع دليل مكتشف — تنبيه للاعب بدون كشف الحل. */
+  contradiction: boolean;
 }
 
 const RESPONSE_SCHEMA = {
@@ -24,12 +26,16 @@ const RESPONSE_SCHEMA = {
     stressDelta: { type: "number", description: "تغير التوتر من -5 إلى 20" },
     state: { type: "string", enum: [...SUSPECT_STATES] },
     level: { type: "integer", description: "مستوى المعلومة المكشوفة 1-4" },
+    contradiction: {
+      type: "boolean",
+      description: "true إذا رد المشتبه يخالف دليل مكتشف أو أقواله السابقة",
+    },
     unlock: {
       type: ["string", "null"],
       description: "معرّف الدليل الجديد إذا كشف الرد معلومة تفتح دليل، وإلا null",
     },
   },
-  required: ["text", "stressDelta", "state", "level", "unlock"],
+  required: ["text", "stressDelta", "state", "level", "unlock", "contradiction"],
 } as const;
 
 export function clamp(n: number, min: number, max: number) {
@@ -110,6 +116,7 @@ export async function callModel({
       : "calm",
     unlock,
     level: clamp(Math.round(Number(parsed.level ?? 1)), 1, 4),
+    contradiction: parsed.contradiction === true,
   };
 }
 
