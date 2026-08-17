@@ -1,0 +1,2 @@
+DELETE FROM public.room_votes v USING public.room_votes w WHERE v.room_code = w.room_code AND v.player_id = w.player_id AND v.created_at > w.created_at;
+CREATE UNIQUE INDEX IF NOT EXISTS room_votes_room_player_key ON public.room_votes (room_code, player_id);
