@@ -80,6 +80,16 @@ const STATE_DELTA: Record<SuspectState, { stability: number; style: number; spee
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
+/**
+ * كل مشتبه له صوت ثابت لا يتغير بين الأسئلة. يمكن تغييره لاحقاً من إعدادات
+ * المشروع بمتغير سيرفر مثل `ELEVENLABS_VOICE_YOUSEF` بدون تعديل الكود،
+ * وبدون كشف أي معرّف صوت في الواجهة الأمامية.
+ */
+function voiceIdFor(suspectId: string, fallback: string): string {
+  const override = process.env[`ELEVENLABS_VOICE_${suspectId.toUpperCase()}`];
+  return override?.trim() || fallback;
+}
+
 /** Resolve final ElevenLabs voice settings for a suspect + emotional state. */
 export function resolveVoiceSettings(suspectId: string, state: SuspectState, stress: number) {
   const voice = SUSPECT_VOICES[suspectId] ?? SUSPECT_VOICES["fahad"]!;
@@ -87,7 +97,8 @@ export function resolveVoiceSettings(suspectId: string, state: SuspectState, str
   // Rising stress nudges the delivery a bit less steady / a bit faster.
   const tension = clamp(stress / 100, 0, 1);
   return {
-    voiceId: voice.voiceId,
+    voiceId: voiceIdFor(suspectId, voice.voiceId),
+
     settings: {
       stability: clamp(voice.base.stability + delta.stability - tension * 0.1, 0.1, 0.75),
       similarity_boost: voice.base.similarity,
