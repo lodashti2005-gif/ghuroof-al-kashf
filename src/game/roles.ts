@@ -3,7 +3,7 @@
  * الأدوار تخصصات فقط: ما تغيّر أي منطق للأدلة أو الاستجواب أو المؤقت.
  */
 
-export type RoleIcon = "search" | "flask" | "camera" | "mic";
+export type RoleIcon = "search" | "flask" | "camera" | "mic" | "clock" | "file";
 
 export interface PlayerRole {
   id: string;
