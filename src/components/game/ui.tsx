@@ -12,7 +12,7 @@ import {
   Watch,
   X,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import { evidence as allEvidence } from "@/game/case-data";
@@ -56,15 +56,44 @@ export function CaseTag({
   );
 }
 
+/** يحرّك الرقم المعروض تدريجياً نحو القيمة الحقيقية (بلا قفزات مفاجئة). */
+function useEasedValue(target: number, step = 1) {
+  const clamped = Math.max(0, Math.min(100, Math.round(target)));
+  const [shown, setShown] = useState(clamped);
+  const shownRef = useRef(clamped);
+
+  useEffect(() => {
+    let raf = 0;
+    let last = 0;
+    const tick = (t: number) => {
+      if (t - last >= 40) {
+        last = t;
+        const diff = clamped - shownRef.current;
+        if (diff !== 0) {
+          const move = Math.sign(diff) * Math.min(Math.abs(diff), Math.max(step, Math.abs(diff) / 8));
+          shownRef.current = Math.round(shownRef.current + move);
+          setShown(shownRef.current);
+        }
+      }
+      if (shownRef.current !== clamped) raf = requestAnimationFrame(tick);
+    };
+    if (shownRef.current !== clamped) raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [clamped, step]);
+
+  return shown;
+}
+
 export function StressMeter({ value, compact = false }: { value: number; compact?: boolean }) {
+  const shown = useEasedValue(value);
   const label =
-    value >= 80 ? "على حد الانفجار" : value >= 60 ? "متوتر بشدة" : value >= 35 ? "متوتر" : "مرتاح";
+    shown >= 80 ? "على حد الانفجار" : shown >= 60 ? "متوتر بشدة" : shown >= 35 ? "متوتر" : "مرتاح";
   return (
     <div className="w-full">
       <div className="mb-1.5 flex items-center justify-between text-xs">
         <span className="text-muted-foreground">مؤشر التوتر</span>
         <span dir="ltr" className="font-mono text-foreground">
-          {value}
+          {shown}
           <span className="text-muted-foreground">%</span>
         </span>
       </div>
@@ -75,13 +104,13 @@ export function StressMeter({ value, compact = false }: { value: number; compact
         )}
       >
         <div
-          className="h-full rounded-full transition-all duration-700 ease-out"
+          className="h-full rounded-full transition-all duration-500 ease-linear"
           style={{
-            width: `${value}%`,
+            width: `${shown}%`,
             background:
-              value >= 70
+              shown >= 70
                 ? "var(--gradient-blood)"
-                : `color-mix(in oklab, var(--evidence) ${Math.max(30, value)}%, var(--muted-foreground))`,
+                : `color-mix(in oklab, var(--evidence) ${Math.max(30, shown)}%, var(--muted-foreground))`,
           }}
         />
       </div>

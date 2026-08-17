@@ -41,13 +41,27 @@ export const askSuspect = createServerFn({ method: "POST" })
     if (!apiKey) throw new Error("ai_unavailable");
 
     const { buildSuspectPrompt, linkedEvidenceIds } = await import("./interrogation-prompt.server");
-    const { callModel, clamp } = await import("./interrogation-model.server");
+    const { callModel } = await import("./interrogation-model.server");
+    const { classifyQuestion, shapeStressDelta } = await import("./stress.server");
+    const { fallbackReply } = await import("./interrogation-fallback.server");
     const { system, user } = buildSuspectPrompt(profile, data);
 
-    // Confronting a suspect with evidence that has nothing to do with them must
-    // only nudge the meter, never spike it.
-    const unrelatedConfront =
-      !!data.confrontEvidenceId && !linkedEvidenceIds(profile).includes(data.confrontEvidenceId);
+    const linkedIds = linkedEvidenceIds(profile);
+    const kind = classifyQuestion({
+      message: data.message,
+      confrontEvidenceId: data.confrontEvidenceId ?? null,
+      profile,
+      linkedIds,
+    });
+
+    const shape = (delta: number, contradiction: boolean) =>
+      shapeStressDelta({
+        modelDelta: delta,
+        kind,
+        contradiction,
+        currentStress: data.stress,
+        tolerance: profile.stressTolerance,
+      });
 
     try {
       const reply = await callModel({ system, user, profile });
@@ -59,10 +73,12 @@ export const askSuspect = createServerFn({ method: "POST" })
       return {
         ...reply,
         unlock,
-        stressDelta: unrelatedConfront ? clamp(reply.stressDelta, 1, 4) : reply.stressDelta,
+        stressDelta: shape(reply.stressDelta, reply.contradiction),
       };
     } catch (error) {
+      // كل سؤال لازم يحصل رد — لا تعليق ولا انتظار بلا نهاية.
       console.error("interrogation request failed", error);
-      throw new Error(`ai_reply_failed${error instanceof Error ? `: ${error.message}` : ""}`);
+      const fb = fallbackReply(profile, data);
+      return { ...fb, stressDelta: shape(fb.stressDelta, false) };
     }
   });

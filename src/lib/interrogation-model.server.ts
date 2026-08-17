@@ -52,8 +52,10 @@ export async function callModel({
   profile: { unlockTriggers: { evidenceId: string }[] };
 }): Promise<AiReply | null> {
   const apiKey = process.env["LOVABLE_API_KEY"]!;
+  // مهلة صارمة للنموذج حتى ما تعلق شاشة التحقيق.
   const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
     method: "POST",
+    signal: AbortSignal.timeout(50_000),
     headers: {
       "Content-Type": "application/json",
       "Lovable-API-Key": apiKey,
