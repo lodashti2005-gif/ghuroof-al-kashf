@@ -16,6 +16,13 @@ export interface AiReply {
   level: number;
   /** true لمن كلام المشتبه ما يركب مع دليل مكتشف — تنبيه للاعب بدون كشف الحل. */
   contradiction: boolean;
+  /** تفاصيل التناقض المرصود بعد التحقق منه سيرفر-سايد (null لو ما فيه). */
+  contradictionNote?: {
+    claim: string;
+    conflictsWith: string;
+    source: "statement" | "evidence" | "timeline";
+    evidenceId?: string;
+  } | null;
 }
 
 const RESPONSE_SCHEMA = {
@@ -28,15 +35,51 @@ const RESPONSE_SCHEMA = {
     level: { type: "integer", description: "مستوى المعلومة المكشوفة 1-4" },
     contradiction: {
       type: "boolean",
-      description: "true إذا رد المشتبه يخالف دليل مكتشف أو أقواله السابقة",
+      description: "true إذا رد المشتبه يخالف دليل مكتشف أو أقواله السابقة أو جدول القضية",
+    },
+    contradictionClaim: {
+      type: ["string", "null"],
+      description: "قول المشتبه فيه المتناقض (اقتباس مختصر من ردك الحالي)، وإلا null",
+    },
+    contradictionAgainst: {
+      type: ["string", "null"],
+      description:
+        "القول السابق الحرفي للمشتبه فيه أو حقيقة القضية اللي يخالفها (اقتباس فعلي مو تلخيص)، وإلا null",
+    },
+    contradictionSource: {
+      type: ["string", "null"],
+      enum: ["statement", "evidence", "timeline", null],
+      description: "مصدر التعارض: قول سابق، دليل مكتشف، أو جدول القضية",
+    },
+    contradictionEvidenceId: {
+      type: ["string", "null"],
+      description: "معرّف الدليل المكتشف المتعارض إذا كان المصدر evidence، وإلا null",
     },
     unlock: {
       type: ["string", "null"],
       description: "معرّف الدليل الجديد إذا كشف الرد معلومة تفتح دليل، وإلا null",
     },
   },
-  required: ["text", "stressDelta", "state", "level", "unlock", "contradiction"],
+  required: [
+    "text",
+    "stressDelta",
+    "state",
+    "level",
+    "unlock",
+    "contradiction",
+    "contradictionClaim",
+    "contradictionAgainst",
+    "contradictionSource",
+    "contradictionEvidenceId",
+  ],
 } as const;
+
+export interface RawNote {
+  claim: string;
+  conflictsWith: string;
+  source: string;
+  evidenceId?: string;
+}
 
 export function clamp(n: number, min: number, max: number) {
   return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : 0;
@@ -50,7 +93,7 @@ export async function callModel({
   system: string;
   user: string;
   profile: { unlockTriggers: { evidenceId: string }[] };
-}): Promise<AiReply | null> {
+}): Promise<(AiReply & { rawNote: RawNote }) | null> {
   const apiKey = process.env["LOVABLE_API_KEY"]!;
   // مهلة صارمة للنموذج حتى ما تعلق شاشة التحقيق.
   const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
@@ -101,6 +144,7 @@ export async function callModel({
     }
   }
 
+  const loose = parsed as Record<string, unknown>;
   const text = String(parsed.text ?? "").trim();
   if (!text) return null;
 
@@ -119,6 +163,14 @@ export async function callModel({
     unlock,
     level: clamp(Math.round(Number(parsed.level ?? 1)), 1, 4),
     contradiction: parsed.contradiction === true,
+    rawNote: {
+      claim: String(loose.contradictionClaim ?? ""),
+      conflictsWith: String(loose.contradictionAgainst ?? ""),
+      source: String(loose.contradictionSource ?? "statement"),
+      ...(loose.contradictionEvidenceId
+        ? { evidenceId: String(loose.contradictionEvidenceId) }
+        : {}),
+    },
   };
 }
 
