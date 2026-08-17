@@ -86,6 +86,7 @@ function InterrogationRoom() {
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
   const [unlockToast, setUnlockToast] = useState<string | null>(null);
+  const [contradictionToast, setContradictionToast] = useState(false);
   const [retry, setRetry] = useState<{ text: string; evidenceId?: string | undefined } | null>(null);
   /** الدليل المطروح على الطاولة: يظهر كبطاقة بالمحادثة وينضم لأول سؤال يجي بعده. */
   const [pendingEvidence, setPendingEvidence] = useState<string | null>(null);
@@ -97,6 +98,7 @@ function InterrogationRoom() {
   const [confrontOpen, setConfrontOpen] = useState(false);
   const [suspectsOpen, setSuspectsOpen] = useState(false);
   const [boardOpen, setBoardOpen] = useState(false);
+  const [contradictionsOpen, setContradictionsOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const busyRef = useRef(false);
@@ -208,7 +210,12 @@ function InterrogationRoom() {
   const send = async (
     value: string,
     evidenceId?: string,
-    options?: { skipPush?: boolean; displayText?: string; maxStress?: number },
+    options?: {
+      skipPush?: boolean;
+      displayText?: string;
+      maxStress?: number;
+      contradictionConfront?: boolean;
+    },
   ) => {
     const text = value.trim();
     if (!text || locked || !me || busyRef.current) return;
@@ -242,6 +249,7 @@ function InterrogationRoom() {
           stress: runtime?.stress ?? 0,
           unlockedEvidence: room?.unlockedEvidence ?? [],
           confrontEvidenceId: confrontId ?? null,
+          ...(options?.contradictionConfront ? { contradictionConfront: true } : {}),
           // ذاكرة كاملة: كل أقوال الجلسة من بدايتها.
           transcript: history.slice(-60),
         },
@@ -263,6 +271,21 @@ function InterrogationRoom() {
         text: line,
         ...(reply.contradiction ? { flagged: true } : {}),
       });
+      // تناقض محقّق من السيرفر فقط (مربوط بقول سابق أو دليل أو جدول القضية).
+      const note = reply.contradictionNote;
+      if (note) {
+        actions.addContradiction({
+          suspectId,
+          suspectName: suspect.name,
+          claim: note.claim,
+          conflictsWith: note.conflictsWith,
+          source: note.source,
+          ...(note.evidenceId ? { evidenceId: note.evidenceId } : {}),
+          author: me.name,
+        });
+        setContradictionToast(true);
+        setTimeout(() => setContradictionToast(false), 4200);
+      }
       // إعادة استخدام نفس الدليل على نفس المشتبه فيه ما تعطي نفس الأثر.
       const delta =
         options?.maxStress !== undefined
@@ -318,6 +341,27 @@ function InterrogationRoom() {
 
 
   confrontRef.current = confront;
+
+  /** تناقضات هذا المشتبه فيه المرصودة وما تمت مواجهته بها بعد. */
+  const openContradictions = (room?.contradictions ?? []).filter(
+    (c) => c.suspectId === suspectId && !c.confronted,
+  );
+
+  /**
+   * «واجهه بالتناقض»: يعرض التناقض المرصود على المشتبه فيه. الرد يتغير حسب
+   * شخصيته ويرتفع التوتر بشكل أوضح، بدون اعتراف تلقائي.
+   */
+  const confrontContradiction = (id: string) => {
+    const item = (room?.contradictions ?? []).find((c) => c.id === id);
+    if (!item || locked || !me || busyRef.current) return;
+    setContradictionsOpen(false);
+    actions.markContradictionConfronted(item.id);
+    void send(
+      `أواجهك بتناقض: قلت «${item.claim}»، وهذا ما يركب مع «${item.conflictsWith}». شنو تفسيرك؟`,
+      undefined,
+      { contradictionConfront: true },
+    );
+  };
 
   /** Switching suspects only navigates — the timer interval unmounts here and the
    * session (transcript, stress, evidence confrontations, remaining time) stays
