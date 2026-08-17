@@ -50,9 +50,8 @@ async function synthesize(parsed: z.infer<typeof bodySchema>): Promise<Response>
     parsed.state,
     parsed.stress,
   );
-  // صوت المشتبه نفسه أولاً، ثم صوت رجالي جاهز كاحتياط حتى لا يبقى
-  // التحقيق بدون صوت لو رفض ElevenLabs الصوت المطلوب.
-  const voiceIds = [...new Set([suspectVoiceId, HASAN_VOICE_ID])];
+  // صوت هذي الشخصية فقط — ما نستخدم صوت شخصية ثانية كاحتياط أبداً.
+  const voiceIds = [suspectVoiceId];
   const text = shapeForSpeech(parsed.text, parsed.state, parsed.suspectId);
 
   let lastStatus = 0;
