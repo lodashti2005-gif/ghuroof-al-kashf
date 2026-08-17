@@ -25,40 +25,39 @@ export interface SuspectVoice {
 }
 
 /**
- * صوت المشتبهين الرجال. صوت Hasan من مكتبة ElevenLabs يحتاج خطة مدفوعة،
- * فاستبدلناه بصوت George الجاهز (متاح على الخطة المجانية) مع موديل
- * multilingual الذي ينطق العربية بشكل طبيعي.
+ * أصوات ElevenLabs المخصصة لهذي القضية — صوت واحد ثابت لكل شخصية،
+ * ولا يُستخدم صوت شخصية مكان شخصية ثانية أبداً.
  */
-export const HASAN_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb";
-
-/** صوت رجالي ثاني (Brian) حتى لا يتشابه فهد ويوسف. */
-const BRIAN_VOICE_ID = "nPczCjzI2devNBz1zQrb";
+const VOICE_ABU_SALEM = "G1QUjBCuRBbLbAmYlTgl"; // أبو سالم → فهد
+const VOICE_HASAN = "6wsXez7Nsh9HQSbtqwIK"; // حسن → يوسف
+const VOICE_MARYAM = "w0uhBAmNIG5kUDeaFEsA"; // مريم → نورة
+const VOICE_LATIFA = "S7X9UnQjDL5psfuSlXrJ"; // لطيفة → دانة
 
 export const SUSPECT_VOICES: Record<string, SuspectVoice> = {
   // فهد المطيري — رجل ٣٤، هادي بالبداية بس يتلخبط بسرعة: تردد أعلى، سرعة أقل.
   fahad: {
-    voiceId: HASAN_VOICE_ID,
+    voiceId: VOICE_ABU_SALEM,
     base: { stability: 0.26, similarity: 0.9, style: 0.55, speed: 0.94 },
     hesitation: 0.8,
     fillers: ["يعني", "والله", "لحظة"],
   },
   // نورة الشمري — امرأة ٢٩، عاطفية ومترددة: أقل ثبات، كلام متقطع.
   noura: {
-    voiceId: "EXAVITQu4vr4xnSDxMaL", // Sarah
+    voiceId: VOICE_MARYAM,
     base: { stability: 0.2, similarity: 0.9, style: 0.62, speed: 0.9 },
     hesitation: 1,
     fillers: ["إي", "مادري", "يعني"],
   },
   // يوسف العازمي — رجل ٣١، واثق ومسيطر: أسرع، أثبت، تردد قليل.
   yousef: {
-    voiceId: BRIAN_VOICE_ID,
+    voiceId: VOICE_HASAN,
     base: { stability: 0.4, similarity: 0.92, style: 0.42, speed: 1.02 },
     hesitation: 0.25,
     fillers: ["ترى", "عاد"],
   },
   // دانة الهاجري — امرأة ٢٧، هادية ومتحفظة: بطيئة وواضحة، تردد متوسط.
   dana: {
-    voiceId: "Xb7hH8MSUJpSbSDYk0k2", // Alice
+    voiceId: VOICE_LATIFA,
     base: { stability: 0.32, similarity: 0.9, style: 0.45, speed: 0.88 },
     hesitation: 0.55,
     fillers: ["يعني", "لحظة"],
