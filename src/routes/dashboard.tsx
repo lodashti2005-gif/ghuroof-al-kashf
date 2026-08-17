@@ -179,18 +179,32 @@ function Dashboard() {
             <Eyebrow>المرحلة الأخيرة</Eyebrow>
             <h2 className="mt-1.5 text-base font-bold">الاتهام النهائي</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              لمن تخلصون التحقيق، صوتوا كلكم على اللي تشكون فيه، وبعدها تنكشف الحقيقة.
+              {accusationOpen
+                ? "التصويت مفتوح — كل واحد يصوت من جهازه بشكل سري."
+                : allInterrogated
+                  ? isHost
+                    ? "خلصتوا التحقيق مع كل المشتبهين. أنت قائد الغرفة، تقدر تبدأ الاتهام."
+                    : "خلصتوا التحقيق. انتظروا قائد الغرفة يبدأ الاتهام النهائي."
+                  : `باقي ${suspects.length - interrogated} استجواب قبل ما تفتح مرحلة الاتهام.`}
             </p>
-            <ActionButton
-              variant={isHost ? "primary" : "outline"}
-              className="mt-4 w-full"
-              onClick={() => {
-                if (isHost) actions.setPhase("voting");
-                navigate({ to: "/accusation" });
-              }}
-            >
-              <Gavel className="size-4" /> {isHost ? "افتح التصويت" : "روح للتصويت"}
-            </ActionButton>
+            {accusationOpen ? (
+              <ActionButton className="mt-4 w-full" onClick={() => navigate({ to: "/accusation" })}>
+                <Gavel className="size-4" /> روح للتصويت
+              </ActionButton>
+            ) : (
+              <ActionButton
+                variant={isHost ? "primary" : "outline"}
+                className="mt-4 w-full"
+                disabled={!isHost || !allInterrogated}
+                onClick={() => {
+                  actions.startAccusation();
+                  navigate({ to: "/accusation" });
+                }}
+              >
+                <Gavel className="size-4" />{" "}
+                {isHost ? "الانتقال إلى الاتهام النهائي" : "بانتظار قائد الغرفة"}
+              </ActionButton>
+            )}
           </Panel>
         </aside>
       </div>
