@@ -184,7 +184,7 @@ export function EvidenceBoard({
         <div className="mt-6 space-y-3">
           <Eyebrow>الاستنتاجات</Eyebrow>
           {deductions.map((d) => (
-            <DeductionCard key={d.id} deduction={d} onUse={onUseDeduction} />
+            <DeductionCard key={d.id} deduction={d} onUse={canConfront ? onUseDeduction : undefined} />
           ))}
         </div>
       )}
