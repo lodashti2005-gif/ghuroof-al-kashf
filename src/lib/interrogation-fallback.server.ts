@@ -91,5 +91,6 @@ export function fallbackReply(profile: SuspectProfile, data: InterrogationInput)
     state: tense ? "defensive" : repeat ? "suspicious" : "thinking",
     unlock: null,
     level: 1,
+    contradiction: false,
   };
 }

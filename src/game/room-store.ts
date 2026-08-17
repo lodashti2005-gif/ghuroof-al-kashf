@@ -508,7 +508,13 @@ export const removeNote = (id: string) =>
 
 export const pushMessage = (
   suspectId: string,
-  msg: { role: "investigator" | "suspect"; author: string; text: string; evidenceId?: string },
+  msg: {
+    role: "investigator" | "suspect";
+    author: string;
+    text: string;
+    evidenceId?: string;
+    flagged?: boolean;
+  },
 ) => {
   const entry = { ...msg, id: uid(), createdAt: Date.now() };
   update((s) => {

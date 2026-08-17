@@ -23,6 +23,8 @@ export interface ChatMessage {
   createdAt: number;
   /** When set, this investigator turn was an evidence confrontation. */
   evidenceId?: string;
+  /** تنبيه بسيط: كلام المشتبه ما يركب مع دليل مكتشف (بدون كشف الحل). */
+  flagged?: boolean;
 }
 
 

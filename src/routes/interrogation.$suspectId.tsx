@@ -23,6 +23,7 @@ import { EvidenceBoard } from "@/components/game/evidence-board";
 
 import { ActionButton, GameShell } from "@/components/game/shell";
 import { SuspectAvatar } from "@/components/game/suspect-avatar";
+import { AlertTriangle } from "lucide-react";
 import {
   CaseTag,
   EvidenceConfrontCard,
@@ -38,6 +39,7 @@ import {
   suspects as allSuspects,
 } from "@/game/case-data";
 import { suggestedQuestions } from "@/game/dialogue";
+import { questionsForSuspect } from "@/game/evidence-questions";
 
 import * as store from "@/game/room-store";
 import { formatClock, useRoom } from "@/game/use-room";
@@ -103,6 +105,12 @@ function InterrogationRoom() {
   const unlocked = useMemo(
     () => allEvidence.filter((e) => room?.unlockedEvidence.includes(e.id)),
     [room?.unlockedEvidence],
+  );
+
+  /** أسئلة تفتحها الأدلة المكتشفة فقط — ما تظهر قبل الاكتشاف. */
+  const evidenceAsks = useMemo(
+    () => questionsForSuspect(suspectId, room?.unlockedEvidence ?? []),
+    [suspectId, room?.unlockedEvidence],
   );
 
   const voice = useVoice({
@@ -249,7 +257,12 @@ function InterrogationRoom() {
       const line = reply.text?.trim();
       if (!line) throw new Error("empty reply");
       // Exactly one suspect message per successful question.
-      actions.pushMessage(suspectId, { role: "suspect", author: suspect.name, text: line });
+      actions.pushMessage(suspectId, {
+        role: "suspect",
+        author: suspect.name,
+        text: line,
+        ...(reply.contradiction ? { flagged: true } : {}),
+      });
       // إعادة استخدام نفس الدليل على نفس المشتبه فيه ما تعطي نفس الأثر.
       const delta =
         options?.maxStress !== undefined
@@ -496,6 +509,12 @@ function InterrogationRoom() {
                         )}
                       </div>
                     )}
+                    {m.role === "suspect" && m.flagged && (
+                      <p className="mt-1.5 flex items-center gap-1.5 rounded-lg border border-evidence/40 bg-evidence/10 px-2.5 py-1.5 text-[0.7rem] leading-relaxed text-evidence">
+                        <AlertTriangle className="size-3.5 shrink-0" />
+                        ⚠️ في شي بكلامه ما يركب مع الدليل
+                      </p>
+                    )}
                   </div>
                 </div>
               );
@@ -571,6 +590,25 @@ function InterrogationRoom() {
 
 
 
+
+            {!locked && evidenceAsks.length > 0 && (
+              <div className="cine-in mb-3 rounded-xl border border-evidence/30 bg-evidence/5 p-3">
+                <Eyebrow>أسئلة فتحتها الأدلة</Eyebrow>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {evidenceAsks.map((q) => (
+                    <button
+                      key={`${q.evidenceId}:${q.text}`}
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void send(q.text)}
+                      className="rounded-lg border border-evidence/45 bg-evidence/10 px-3 py-1.5 text-xs text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
+                    >
+                      {q.text}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {!locked && (
               <div className="mb-3 flex flex-wrap gap-2">
