@@ -49,31 +49,20 @@ export const askSuspect = createServerFn({ method: "POST" })
     const unrelatedConfront =
       !!data.confrontEvidenceId && !linkedEvidenceIds(profile).includes(data.confrontEvidenceId);
 
-    // Two attempts: reasoning models occasionally finish with reasoning only and
-    // no answer text. Never substitute a canned line — the caller retries or
-    // surfaces a retry button instead.
-    let lastError: unknown = null;
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const reply = await callModel({ system, user, profile });
-        if (reply) {
-          // Gate discoveries: prerequisites must already be on the board.
-          const unlock =
-            reply.unlock && canUnlockEvidence(reply.unlock, data.unlockedEvidence)
-              ? reply.unlock
-              : null;
-          return {
-            ...reply,
-            unlock,
-            stressDelta: unrelatedConfront ? clamp(reply.stressDelta, 1, 4) : reply.stressDelta,
-          };
-        }
-      } catch (error) {
-        lastError = error;
-        console.error(`interrogation attempt ${attempt + 1} failed`, error);
-      }
+    try {
+      const reply = await callModel({ system, user, profile });
+      if (!reply) throw new Error("empty_reply");
+      const unlock =
+        reply.unlock && canUnlockEvidence(reply.unlock, data.unlockedEvidence)
+          ? reply.unlock
+          : null;
+      return {
+        ...reply,
+        unlock,
+        stressDelta: unrelatedConfront ? clamp(reply.stressDelta, 1, 4) : reply.stressDelta,
+      };
+    } catch (error) {
+      console.error("interrogation request failed", error);
+      throw new Error(`ai_reply_failed${error instanceof Error ? `: ${error.message}` : ""}`);
     }
-    throw new Error(
-      `ai_reply_failed${lastError instanceof Error ? `: ${lastError.message}` : ""}`,
-    );
   });

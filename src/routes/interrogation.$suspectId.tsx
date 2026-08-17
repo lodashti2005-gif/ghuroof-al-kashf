@@ -80,6 +80,7 @@ function InterrogationRoom() {
   const ask = useServerFn(askSuspect);
   const suspect = getSuspect(suspectId);
   const runtime = room?.suspects[suspectId];
+  const [clockTick, setClockTick] = useState(0);
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
   const [unlockToast, setUnlockToast] = useState<string | null>(null);
@@ -111,13 +112,16 @@ function InterrogationRoom() {
 
   const sendRef = useRef<((text: string, evidenceId?: string) => void) | null>(null);
 
-  // Countdown — each suspect has its own independent 5 minutes. The interval is
-  // keyed on the suspect only, so sending a message never restarts or resets it.
+  // The shared countdown is timestamp-based. Every device renders it locally;
+  // nobody writes the room every second, avoiding a six-device update storm.
   useEffect(() => {
+    actions.startInterrogationTimer(suspectId);
     const id = setInterval(() => {
+      setClockTick((tick) => tick + 1);
       const current = store.getSnapshot()?.suspects[suspectId];
-      if (!current || current.finished || current.timeLeft <= 0) return;
-      actions.setTimeLeft(suspectId, current.timeLeft - 1);
+      if (current && !current.finished && store.remainingTime(current) === 0) {
+        actions.endInterrogation(suspectId);
+      }
     }, 1000);
     return () => clearInterval(id);
   }, [suspectId, actions]);
@@ -169,7 +173,9 @@ function InterrogationRoom() {
     );
   }
 
-  const locked = !runtime || runtime.finished || runtime.timeLeft <= 0;
+  const displayedTime = store.remainingTime(runtime);
+  void clockTick;
+  const locked = !runtime || runtime.finished || displayedTime <= 0;
   // While a reply is generating, the session stays open but input is blocked so
   // the same question can't be sent twice.
   const busy = typing;
@@ -207,7 +213,6 @@ function InterrogationRoom() {
     setRetry(null);
     setPendingEvidence(null);
     pendingRef.current = null;
-    const timeAtStart = store.getSnapshot()?.suspects[suspectId]?.timeLeft ?? null;
     const baseTranscript = transcript;
     if (!options?.skipPush) {
       actions.pushMessage(suspectId, {
@@ -218,8 +223,6 @@ function InterrogationRoom() {
     }
 
     setTyping(true);
-    actions.setSuspectState(suspectId, "thinking");
-
     const history = [...baseTranscript, { role: "investigator" as const, author: me.name, text }]
       .map((m) => ({ role: m.role, author: m.author, text: m.text }));
 
@@ -237,13 +240,12 @@ function InterrogationRoom() {
       });
 
     try {
-      let reply: Awaited<ReturnType<typeof requestReply>>;
-      try {
-        reply = await requestReply();
-      } catch (firstError) {
-        console.error("interrogation request failed, retrying once", firstError);
-        reply = await requestReply();
-      }
+      const reply = await Promise.race([
+        requestReply(),
+        new Promise<never>((_, reject) =>
+          window.setTimeout(() => reject(new Error("interrogation_timeout")), 75_000),
+        ),
+      ]);
       const line = reply.text?.trim();
       if (!line) throw new Error("empty reply");
       // Exactly one suspect message per successful question.
@@ -262,9 +264,7 @@ function InterrogationRoom() {
       });
     } catch (error) {
       console.error(error);
-      // Technical failure: no fake reply, no time lost, and a retry control.
-      if (timeAtStart !== null) actions.setTimeLeft(suspectId, timeAtStart);
-      actions.setSuspectState(suspectId, "calm");
+      // Technical failure stays local to this player and always releases input.
       setRetry({ text, ...(confrontId ? { evidenceId: confrontId } : {}) });
     } finally {
       setTyping(false);
@@ -330,7 +330,7 @@ function InterrogationRoom() {
           }`}
         >
           <Timer className="size-3.5" />
-          {formatClock(runtime?.timeLeft ?? INTERROGATION_SECONDS)}
+          {formatClock(displayedTime)}
         </span>
       }
     >

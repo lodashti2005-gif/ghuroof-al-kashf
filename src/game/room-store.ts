@@ -64,13 +64,15 @@ const freshShared = (): SharedState => ({
 
 function saveSession() {
   if (typeof window === "undefined") return;
-  if (session) window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  else window.localStorage.removeItem(SESSION_KEY);
+  // sessionStorage keeps refresh/reconnect working without making two tabs on
+  // the same device impersonate the same player.
+  if (session) window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  else window.sessionStorage.removeItem(SESSION_KEY);
 }
 
 function readSession(): Session | null {
   if (typeof window === "undefined") return null;
-  const raw = window.localStorage.getItem(SESSION_KEY);
+  const raw = window.sessionStorage.getItem(SESSION_KEY);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as Session;
@@ -119,7 +121,10 @@ async function fetchRoom(code: string): Promise<RoomState | null> {
   };
 }
 
-async function refresh() {
+let refreshInFlight: Promise<void> | null = null;
+let refreshQueued = false;
+
+async function refreshNow() {
   if (!session) return;
   const next = await fetchRoom(session.code);
   if (!next) {
@@ -132,6 +137,23 @@ async function refresh() {
   }
   state = next;
   emit();
+}
+
+/** Coalesce realtime bursts into one fetch. A single room write can otherwise
+ * wake every mounted consumer and cause overlapping three-query refreshes. */
+async function refresh() {
+  if (refreshInFlight) {
+    refreshQueued = true;
+    return refreshInFlight;
+  }
+  refreshInFlight = refreshNow().finally(() => {
+    refreshInFlight = null;
+    if (refreshQueued) {
+      refreshQueued = false;
+      window.setTimeout(() => void refresh(), 120);
+    }
+  });
+  return refreshInFlight;
 }
 
 /** Restore the player's room after a refresh / new device page load. */
@@ -148,6 +170,15 @@ export async function hydrate() {
 let rtCode: string | null = null;
 let rtCount = 0;
 let rtPoll: number | null = null;
+let refreshTimer: number | null = null;
+
+function scheduleRefresh() {
+  if (typeof window === "undefined" || refreshTimer !== null) return;
+  refreshTimer = window.setTimeout(() => {
+    refreshTimer = null;
+    void refresh();
+  }, 250);
+}
 
 export function startRealtime() {
   if (typeof window === "undefined") return () => {};
@@ -162,10 +193,32 @@ export function startRealtime() {
     rtCount = 1;
     channel = supabase
       .channel(`room-${code}-${Math.random().toString(36).slice(2, 8)}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "rooms", filter: `code=eq.${code}` }, () => void refresh())
-      .on("postgres_changes", { event: "*", schema: "public", table: "room_players", filter: `room_code=eq.${code}` }, () => void refresh())
-      .on("postgres_changes", { event: "*", schema: "public", table: "room_votes", filter: `room_code=eq.${code}` }, () => void refresh())
-      .subscribe();
+      .on("presence", { event: "sync" }, () => {
+        if (!channel || !state) return;
+        const online = new Set(
+          Object.values(channel.presenceState()).flatMap((entries) =>
+            entries.flatMap((entry) => {
+              const id = (entry as { playerId?: unknown }).playerId;
+              return typeof id === "string" ? [id] : [];
+            }),
+          ),
+        );
+        if (online.size > 0) {
+          const players = state.players.filter((player) => online.has(player.id));
+          if (players.length !== state.players.length) {
+            state = { ...state, players };
+            emit();
+          }
+        }
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "rooms", filter: `code=eq.${code}` }, scheduleRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "room_players", filter: `room_code=eq.${code}` }, scheduleRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "room_votes", filter: `room_code=eq.${code}` }, scheduleRefresh)
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED" && channel && session?.code === code) {
+          void channel.track({ playerId: session.playerId, onlineAt: new Date().toISOString() });
+        }
+      });
     // Safety net for flaky mobile connections.
     rtPoll = window.setInterval(() => void refresh(), 5000);
   }
@@ -177,6 +230,10 @@ export function startRealtime() {
 }
 
 function teardownRealtime() {
+  if (refreshTimer !== null) {
+    window.clearTimeout(refreshTimer);
+    refreshTimer = null;
+  }
   if (rtPoll !== null) {
     window.clearInterval(rtPoll);
     rtPoll = null;
@@ -189,31 +246,72 @@ function teardownRealtime() {
   rtCount = 0;
 }
 
-/** Optimistically mutate local state, then persist the shared part. */
+const mutationQueue: Array<(s: RoomState) => void> = [];
+let flushingMutations = false;
+
+function sharedPayload(next: RoomState) {
+  return {
+    unlockedEvidence: next.unlockedEvidence,
+    notes: next.notes,
+    deductions: next.deductions,
+    suspects: next.suspects,
+    roles: next.roles,
+    ready: next.ready,
+  };
+}
+
+/** Persist each mutation against the newest database snapshot. This prevents
+ * concurrent players from replacing one another's transcript, role, or timer
+ * with an older full-state snapshot. */
+async function flushMutations() {
+  if (flushingMutations) return;
+  flushingMutations = true;
+  try {
+    while (mutationQueue.length > 0 && session) {
+      const mutate = mutationQueue[0];
+      let saved = false;
+      for (let attempt = 0; attempt < 5 && !saved; attempt++) {
+        if (!mutate) break;
+        const { data: row, error: readError } = await supabase
+          .from("rooms")
+          .select("*")
+          .eq("code", session.code)
+          .maybeSingle();
+        if (readError || !row) break;
+        const remote = await fetchRoom(session.code);
+        if (!remote) break;
+        mutate(remote);
+        const { data: updated, error } = await supabase
+          .from("rooms")
+          .update({
+            phase: remote.phase,
+            state: sharedPayload(remote) as unknown as never,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("code", remote.code)
+          .eq("updated_at", row.updated_at)
+          .select("code")
+          .maybeSingle();
+        if (error) console.error("[room] sync state failed:", error.message);
+        saved = !!updated;
+      }
+      mutationQueue.shift();
+      if (!saved) scheduleRefresh();
+    }
+  } finally {
+    flushingMutations = false;
+  }
+}
+
+/** Optimistically mutate local state, then serialize that exact mutation. */
 function update(mutate: (s: RoomState) => void) {
   if (!state) return;
   const next: RoomState = JSON.parse(JSON.stringify(state));
   mutate(next);
   state = next;
   emit();
-  run(
-    supabase
-      .from("rooms")
-      .update({
-        phase: next.phase,
-        state: {
-          unlockedEvidence: next.unlockedEvidence,
-          notes: next.notes,
-          deductions: next.deductions,
-          suspects: next.suspects,
-          roles: next.roles,
-          ready: next.ready,
-        } as unknown as never,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("code", next.code),
-    "sync state",
-  );
+  mutationQueue.push(mutate);
+  void flushMutations();
 }
 
 export const generateRoomCode = () => String(Math.floor(Math.random() * 1000000)).padStart(6, "0");
@@ -391,15 +489,19 @@ export const unlockEvidence = (id: string) =>
   });
 
 export const addNote = (note: Omit<Note, "id" | "createdAt">) =>
-  update((s) => {
-    s.notes.unshift({ ...note, id: uid(), createdAt: Date.now() });
-  });
+  {
+    const entry = { ...note, id: uid(), createdAt: Date.now() };
+    update((s) => void s.notes.unshift(entry));
+  };
 
 export const addDeduction = (d: Omit<Deduction, "id" | "createdAt">) =>
-  update((s) => {
+  {
+    const entry = { ...d, id: uid(), createdAt: Date.now() };
+    update((s) => {
     if (s.deductions.some((x) => x.linkId === d.linkId)) return;
-    s.deductions.unshift({ ...d, id: uid(), createdAt: Date.now() });
-  });
+      s.deductions.unshift(entry);
+    });
+  };
 
 export const removeNote = (id: string) =>
   update((s) => void (s.notes = s.notes.filter((n) => n.id !== id)));
@@ -407,12 +509,14 @@ export const removeNote = (id: string) =>
 export const pushMessage = (
   suspectId: string,
   msg: { role: "investigator" | "suspect"; author: string; text: string; evidenceId?: string },
-) =>
+) => {
+  const entry = { ...msg, id: uid(), createdAt: Date.now() };
   update((s) => {
     const rt = s.suspects[suspectId];
     if (!rt) return;
-    rt.transcript.push({ ...msg, id: uid(), createdAt: Date.now() });
+    if (!rt.transcript.some((message) => message.id === entry.id)) rt.transcript.push(entry);
   });
+};
 
 
 export const setSuspectState = (
@@ -439,7 +543,21 @@ export const setTimeLeft = (suspectId: string, seconds: number) =>
     const rt = s.suspects[suspectId];
     if (!rt) return;
     rt.timeLeft = Math.max(0, seconds);
+    rt.timerStartedAt = Date.now();
     if (rt.timeLeft === 0) rt.finished = true;
+  });
+
+export function remainingTime(runtime?: SuspectRuntime): number {
+  if (!runtime) return INTERROGATION_SECONDS;
+  if (runtime.finished || runtime.timeLeft <= 0) return 0;
+  if (!runtime.timerStartedAt) return runtime.timeLeft;
+  return Math.max(0, runtime.timeLeft - Math.floor((Date.now() - runtime.timerStartedAt) / 1000));
+}
+
+export const startInterrogationTimer = (suspectId: string) =>
+  update((s) => {
+    const rt = s.suspects[suspectId];
+    if (rt && !rt.timerStartedAt && !rt.finished) rt.timerStartedAt = Date.now();
   });
 
 export const endInterrogation = (suspectId: string) =>
