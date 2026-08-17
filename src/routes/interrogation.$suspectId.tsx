@@ -596,6 +596,44 @@ function InterrogationRoom() {
           </div>
 
           <div className="border-t border-border px-5 py-4">
+            {contradictionsOpen && (
+              <div className="cine-in mb-3 rounded-xl border border-evidence/35 bg-evidence/5 p-3">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <Eyebrow>تناقضات مرصودة على {suspect.name}</Eyebrow>
+                  <button
+                    type="button"
+                    onClick={() => setContradictionsOpen(false)}
+                    aria-label="إلغاء"
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+                {openContradictions.length === 0 ? (
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    ما فيه تناقض مرصود عليه الآن — كمّل أسئلة وواجهه بالأدلة.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {openContradictions.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        disabled={locked || busy}
+                        onClick={() => confrontContradiction(c.id)}
+                        className="w-full rounded-lg border border-evidence/45 bg-evidence/10 px-3 py-2 text-right text-xs leading-relaxed text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
+                      >
+                        <span className="block font-bold">قال: «{c.claim}»</span>
+                        <span className="mt-1 block text-muted-foreground">
+                          يتعارض مع: {c.conflictsWith}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {confrontOpen && (
               <div className="cine-in mb-3 rounded-xl border border-evidence/35 bg-evidence/5 p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
@@ -748,9 +786,25 @@ function InterrogationRoom() {
 
               <button
                 type="button"
+                disabled={locked || busy || openContradictions.length === 0}
+                onClick={() => setContradictionsOpen((v) => !v)}
+                aria-label="واجهه بالتناقض"
+                title="واجهه بالتناقض"
+                className="relative grid size-11 shrink-0 place-items-center rounded-xl border border-evidence/45 bg-evidence/10 text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
+              >
+                <AlertTriangle className="size-4" />
+                {openContradictions.length > 0 && (
+                  <span className="absolute -top-1 -left-1 grid size-4 place-items-center rounded-full bg-primary font-mono text-[0.6rem] text-primary-foreground">
+                    {openContradictions.length}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
                 disabled={locked || busy || unlocked.length === 0}
                 onClick={() => setConfrontOpen((v) => !v)}
                 aria-label="واجهه بدليل"
+                title="واجهه بدليل"
                 className="grid size-11 shrink-0 place-items-center rounded-xl border border-evidence/45 bg-evidence/10 text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
               >
                 <FileSearch className="size-4" />
@@ -897,6 +951,18 @@ function InterrogationRoom() {
                   });
                 }}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {contradictionToast && (
+        <div className="fixed bottom-24 right-1/2 z-50 translate-x-1/2 sm:right-6 sm:translate-x-0">
+          <div className="cine-in flex items-center gap-3 rounded-xl border border-evidence/45 bg-card px-4 py-3 shadow-[var(--shadow-noir)]">
+            <AlertTriangle className="size-4 shrink-0 text-evidence" />
+            <div className="min-w-0">
+              <p className="text-sm font-bold">⚠️ تم رصد تناقض محتمل</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">انسجل بملف القضية · قسم التناقضات</p>
             </div>
           </div>
         </div>
