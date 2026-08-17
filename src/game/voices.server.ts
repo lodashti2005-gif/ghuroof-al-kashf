@@ -192,11 +192,14 @@ export function shapeForSpeech(text: string, state: SuspectState, suspectId?: st
   out = out.replace(/\s+(و)(?=[^\s]{4,})/g, " … $1");
 
   const tense = state === "thinking" || state === "nervous" || state === "scared";
-  const alreadyHesitant = /^(إي|اي|لحظة|والله|يعني|ترى|عاد|ها|هاه|أه|ااه|مادري|…)/.test(out);
+  const alreadyHesitant = /^(إي|اي|لحظة|والله|يعني|ترى|عاد|ها|هاه|أه|ااه|مادري|شوف|…)/.test(out);
   if (tense && voice.hesitation >= 0.5 && !alreadyHesitant) {
-    const filler = voice.fillers[0] ?? "يعني";
+    // نلف على كلمات التردد الخاصة بالشخصية بشكل ثابت لكن مو متكرر بنفس الافتتاحية.
+    const hash = Array.from(out).reduce((a, c) => (a + c.charCodeAt(0)) % 997, 7);
+    const filler = voice.fillers[hash % voice.fillers.length] ?? "يعني";
     out = voice.hesitation >= 0.8 ? `${filler}… ${out}` : `… ${out}`;
   }
+
 
   // وقفة قصيرة بعد كلمات التردد والربط الكويتية = إيقاع محادثة طبيعي.
   out = out.replace(
