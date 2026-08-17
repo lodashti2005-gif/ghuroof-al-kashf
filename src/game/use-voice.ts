@@ -38,6 +38,23 @@ function getRecognition(): RecognitionLike | null {
   return rec;
 }
 
+/**
+ * ذاكرة صوت محلية للجهاز: نفس الرد لنفس المشتبه ما يتولد مرتين، فزر 🔊
+ * يعيد نفس الملف بدون طلب جديد ولا استهلاك credits.
+ */
+const audioCache = new Map<string, string>();
+const AUDIO_CACHE_MAX = 40;
+function cacheAudio(key: string, url: string) {
+  audioCache.set(key, url);
+  while (audioCache.size > AUDIO_CACHE_MAX) {
+    const oldest = audioCache.keys().next().value;
+    if (!oldest) break;
+    const stale = audioCache.get(oldest);
+    audioCache.delete(oldest);
+    if (stale) URL.revokeObjectURL(stale);
+  }
+}
+
 export interface SpeakOptions {
   state?: SuspectState;
   stress?: number;
