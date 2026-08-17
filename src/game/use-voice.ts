@@ -103,24 +103,100 @@ export function useVoice({
     };
   }, []);
 
-  const startListening = useCallback(() => {
-    const rec = getRecognition();
-    if (!rec) return;
-    recRef.current = rec;
-    rec.onresult = (e) => {
-      const text = e.results?.[0]?.[0]?.transcript ?? "";
-      if (text.trim()) onTranscriptRef.current(text.trim());
+  /**
+   * Mic turn: record ONE complete file, then transcribe it on the server.
+   * كل شي هنا محلي لهذا اللاعب: لو فشل المايك أو التحويل نرجع للكتابة بدون
+   * تعليق شاشة الاستجواب عند أي لاعب ثاني.
+   */
+  const startListening = useCallback(async () => {
+    if (recordingRef.current) return;
+    setMicError(null);
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      // احتياط أخير: مُعرّف الكلام في المتصفح.
+      const rec = getRecognition();
+      if (!rec) {
+        setMicError("المايك غير مدعوم بهذا المتصفح — استخدم الكتابة.");
+        return;
+      }
+      recRef.current = rec;
+      rec.onresult = (e) => {
+        const text = e.results?.[0]?.[0]?.transcript ?? "";
+        if (text.trim()) onTranscriptRef.current(text.trim());
+      };
+      rec.onerror = () => setMicStatus("idle");
+      rec.onend = () => setMicStatus("idle");
+      setMicStatus("listening");
+      rec.start();
+      return;
+    }
+
+    let stream: MediaStream;
+    try {
+      // إذن الميكروفون يُطلب مرة واحدة؛ المتصفح يتذكره بعدها.
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      setMicStatus("idle");
+      setMicError("ما عطيت إذن المايك — تقدر تكتب سؤالك.");
+      return;
+    }
+
+    const mime = ["audio/webm", "audio/mp4", "audio/ogg"].find(
+      (t) => typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(t),
+    );
+    let recorder: MediaRecorder;
+    try {
+      recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+    } catch {
+      stream.getTracks().forEach((t) => t.stop());
+      setMicStatus("idle");
+      setMicError("تعذر تشغيل المايك — استخدم الكتابة.");
+      return;
+    }
+
+    const chunks: Blob[] = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
     };
-    rec.onerror = () => setListening(false);
-    rec.onend = () => setListening(false);
-    setListening(true);
-    rec.start();
+    recorder.onstop = () => {
+      stream.getTracks().forEach((t) => t.stop());
+      recordingRef.current = null;
+      const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+      if (blob.size < 2048) {
+        setMicStatus("idle");
+        setMicError("التسجيل فاضي — جرّب مرة ثانية.");
+        return;
+      }
+      setMicStatus("transcribing");
+      const form = new FormData();
+      form.append("file", blob, "question.webm");
+      void fetch("/api/public/stt", { method: "POST", body: form })
+        .then(async (res) => {
+          const data = (await res.json().catch(() => null)) as { text?: string } | null;
+          if (!res.ok || !data?.text?.trim()) throw new Error("stt_failed");
+          onTranscriptRef.current(data.text.trim());
+        })
+        .catch((error: unknown) => {
+          console.error("speech-to-text failed", error);
+          setMicError("ما فهمنا التسجيل — اكتب سؤالك أو جرّب مرة ثانية.");
+        })
+        .finally(() => setMicStatus("idle"));
+    };
+
+    recordingRef.current = recorder;
+    setMicStatus("listening");
+    recorder.start();
   }, []);
 
   const stopListening = useCallback(() => {
+    const recorder = recordingRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      recorder.stop();
+      return;
+    }
     recRef.current?.stop();
-    setListening(false);
+    setMicStatus("idle");
   }, []);
+
 
   /** Hard-stop whatever is currently playing or being generated. */
   const stopSpeaking = useCallback(() => {

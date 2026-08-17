@@ -18,6 +18,7 @@ import { Route as RevealRouteImport } from './routes/reveal'
 import { Route as RolesRouteImport } from './routes/roles'
 import { Route as SceneRouteImport } from './routes/scene'
 import { Route as InterrogationSuspectIdRouteImport } from './routes/interrogation.$suspectId'
+import { Route as ApiPublicSttRouteImport } from './routes/api/public/stt'
 import { Route as ApiPublicTtsRouteImport } from './routes/api/public/tts'
 
 const IndexRoute = IndexRouteImport.update({
@@ -65,6 +66,11 @@ const InterrogationSuspectIdRoute = InterrogationSuspectIdRouteImport.update({
   path: '/interrogation/$suspectId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSttRoute = ApiPublicSttRouteImport.update({
+  id: '/api/public/stt',
+  path: '/api/public/stt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicTtsRoute = ApiPublicTtsRouteImport.update({
   id: '/api/public/tts',
   path: '/api/public/tts',
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
+  '/api/public/stt': typeof ApiPublicSttRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
 }
 export interface FileRoutesByTo {
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
+  '/api/public/stt': typeof ApiPublicSttRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
 }
 export interface FileRoutesById {
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
+  '/api/public/stt': typeof ApiPublicSttRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
 }
 export interface FileRouteTypes {
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/roles'
     | '/scene'
     | '/interrogation/$suspectId'
+    | '/api/public/stt'
     | '/api/public/tts'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/roles'
     | '/scene'
     | '/interrogation/$suspectId'
+    | '/api/public/stt'
     | '/api/public/tts'
   id:
     | '__root__'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/roles'
     | '/scene'
     | '/interrogation/$suspectId'
+    | '/api/public/stt'
     | '/api/public/tts'
   fileRoutesById: FileRoutesById
 }
@@ -157,6 +169,7 @@ export interface RootRouteChildren {
   RolesRoute: typeof RolesRoute
   SceneRoute: typeof SceneRoute
   InterrogationSuspectIdRoute: typeof InterrogationSuspectIdRoute
+  ApiPublicSttRoute: typeof ApiPublicSttRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
 }
 
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InterrogationSuspectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/stt': {
+      id: '/api/public/stt'
+      path: '/api/public/stt'
+      fullPath: '/api/public/stt'
+      preLoaderRoute: typeof ApiPublicSttRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/tts': {
       id: '/api/public/tts'
       path: '/api/public/tts'
@@ -245,6 +265,7 @@ const rootRouteChildren: RootRouteChildren = {
   RolesRoute: RolesRoute,
   SceneRoute: SceneRoute,
   InterrogationSuspectIdRoute: InterrogationSuspectIdRoute,
+  ApiPublicSttRoute: ApiPublicSttRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,
 }
 export const routeTree = rootRouteImport
