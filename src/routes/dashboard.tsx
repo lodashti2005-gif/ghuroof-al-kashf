@@ -11,7 +11,19 @@ import {
   ProgressRing,
   SuspectCard,
 } from "@/components/game/ui";
+import {
+  ContradictionsPanel,
+  ForensicsPanel,
+  RecordsPanel,
+  RoleBanner,
+  RoleLockedNote,
+  SurveillancePanel,
+  TeamIntelPanel,
+  TimelinePanel,
+} from "@/components/game/role-panels";
 import { INTERROGATION_SECONDS, caseFile, evidence, suspects } from "@/game/case-data";
+import { accessFor } from "@/game/role-access";
+import { roleById } from "@/game/roles";
 import { useRoom } from "@/game/use-room";
 
 export const Route = createFileRoute("/dashboard")({
@@ -34,6 +46,14 @@ function Dashboard() {
   const { room, me, isHost, actions } = useRoom();
   const navigate = useNavigate();
 
+  const myRoleId = me ? room?.roles?.[me.id] : undefined;
+  const access = accessFor(myRoleId);
+  const myRole = roleById(myRoleId);
+  const share = (text: string) => {
+    if (!me) return;
+    actions.addNote({ author: me.name, text, tag: myRole?.title ?? "الفريق" });
+  };
+
   const unlocked = room?.unlockedEvidence ?? [];
   const interrogated = suspects.filter((s) => room?.suspects[s.id]?.finished).length;
   const progress = Math.min(
@@ -54,6 +74,7 @@ function Dashboard() {
     <GameShell title="لوحة التحقيق" right={<LeaveRoomButton />}>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="min-w-0 space-y-6">
+          <RoleBanner roleId={myRoleId} />
           <Panel className="cine-in grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <div className="flex min-w-0 items-center gap-4">
               <img
@@ -91,6 +112,7 @@ function Dashboard() {
             </ActionButton>
           </Panel>
 
+          {access.interrogate ? (
           <section>
             <div className="mb-4 flex items-end justify-between gap-4">
               <div className="min-w-0">
@@ -113,7 +135,11 @@ function Dashboard() {
               ))}
             </div>
           </section>
+          ) : (
+            <RoleLockedNote text="استجواب المشتبه فيهم مسؤولية «محقق الاستجواب» بالفريق." />
+          )}
 
+          {access.evidenceBoard && (
           <section>
             <div className="mb-4 flex items-end justify-between gap-4">
               <div className="min-w-0">
@@ -141,6 +167,9 @@ function Dashboard() {
                   search: { ask: text },
                 })
               }
+              canLink={access.linkEvidence}
+              canConfront={access.interrogate}
+              forensics={access.forensics}
               onConfront={(evidenceId, suspectId) =>
                 navigate({
                   to: "/interrogation/$suspectId",
@@ -150,6 +179,13 @@ function Dashboard() {
               }
             />
           </section>
+          )}
+
+          {access.forensics && <ForensicsPanel unlockedIds={unlocked} onShare={share} />}
+          {access.surveillance && <SurveillancePanel unlockedIds={unlocked} onShare={share} />}
+          {access.timeline && <TimelinePanel unlockedIds={unlocked} onShare={share} />}
+          {access.records && <RecordsPanel room={room} onShare={share} />}
+          {access.contradictions && !access.records && <ContradictionsPanel room={room} />}
 
         </div>
 
@@ -179,6 +215,8 @@ function Dashboard() {
               ))}
             </ul>
           </Panel>
+
+          <TeamIntelPanel notes={room?.notes ?? []} />
 
           <NotesPanel />
 

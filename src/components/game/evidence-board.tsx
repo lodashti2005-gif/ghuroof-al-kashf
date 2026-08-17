@@ -17,6 +17,7 @@ import { ActionButton } from "@/components/game/shell";
 import { SceneCrop } from "@/components/game/scene-crop";
 import { CaseTag, Eyebrow } from "@/components/game/ui";
 import { evidence as allEvidence, findEvidenceLink, suspects } from "@/game/case-data";
+import { forensicNotes } from "@/game/role-intel";
 import type { Deduction, EvidenceItem } from "@/game/types";
 
 const ICONS = {
@@ -40,10 +41,19 @@ export function EvidenceBoard({
   deductions = [],
   onDeduction,
   onUseDeduction,
+  canLink = true,
+  canConfront = true,
+  forensics = false,
 }: {
   unlockedIds: string[];
   onConfront: (evidenceId: string, suspectId: string) => void;
   compact?: boolean;
+  /** ربط دليلين — صلاحية «المحقق». */
+  canLink?: boolean;
+  /** استخدام الدليل بالاستجواب — صلاحية «محقق الاستجواب». */
+  canConfront?: boolean;
+  /** الملاحظات الجنائية التفصيلية — صلاحية «الخبير الجنائي». */
+  forensics?: boolean;
   deductions?: Deduction[];
   /** ينفّذ لمن ينجح ربط دليلين — يحفظ الاستنتاج بلوحة الأدلة. */
   onDeduction?: (link: { id: string; title: string; insight: string; pair: string[] }) => void;
@@ -95,7 +105,7 @@ export function EvidenceBoard({
 
   return (
     <>
-      {items.length >= 2 && (
+      {canLink && items.length >= 2 && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <ActionButton
             variant={linking ? "outline" : "primary"}
@@ -170,17 +180,19 @@ export function EvidenceBoard({
         ))}
       </div>
 
-      {deductions.length > 0 && (
+      {(canLink || canConfront) && deductions.length > 0 && (
         <div className="mt-6 space-y-3">
           <Eyebrow>الاستنتاجات</Eyebrow>
           {deductions.map((d) => (
-            <DeductionCard key={d.id} deduction={d} onUse={onUseDeduction} />
+            <DeductionCard key={d.id} deduction={d} onUse={canConfront ? onUseDeduction : undefined} />
           ))}
         </div>
       )}
       {open && (
         <EvidenceDetail
           item={open}
+          canConfront={canConfront}
+          forensics={forensics}
           onClose={() => setOpenId(null)}
           onConfront={(suspectId) => {
             setOpenId(null);
@@ -286,10 +298,14 @@ function EvidenceDetail({
   item,
   onClose,
   onConfront,
+  canConfront = true,
+  forensics = false,
 }: {
   item: EvidenceItem;
   onClose: () => void;
   onConfront: (suspectId: string) => void;
+  canConfront?: boolean;
+  forensics?: boolean;
 }) {
   const [picking, setPicking] = useState(false);
   const Icon = ICONS[item.icon];
@@ -341,7 +357,14 @@ function EvidenceDetail({
             </p>
           </div>
 
-          {!picking ? (
+          {forensics && forensicNotes[item.id] && (
+            <div className="mt-4 rounded-xl border border-primary/30 bg-primary/8 p-4">
+              <Eyebrow>ملاحظة جنائية · خاصة بالخبير الجنائي</Eyebrow>
+              <p className="mt-1.5 text-sm leading-relaxed">{forensicNotes[item.id]}</p>
+            </div>
+          )}
+
+          {!canConfront ? null : !picking ? (
             <ActionButton className="mt-5 w-full" onClick={() => setPicking(true)}>
               استخدم في الاستجواب
             </ActionButton>
