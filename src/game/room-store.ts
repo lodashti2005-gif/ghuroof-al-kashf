@@ -614,13 +614,17 @@ export function castVote(playerId: string, suspectId: string) {
   const code = state.code;
   state = { ...state, votes: { ...state.votes, [playerId]: suspectId } };
   emit();
-  run(
-    supabase
-      .from("room_votes")
-      .insert({ room_code: code, player_id: playerId, suspect_id: suspectId }),
-    "cast vote",
-  );
+  // upsert + ignoreDuplicates: أول صوت هو الصوت الثابت، وأي محاولة ثانية
+  // (Refresh أو جهاز ثاني) ما تسجل ولا تغير الصوت — القيد بقاعدة البيانات.
+  void supabase
+    .from("room_votes")
+    .upsert({ room_code: code, player_id: playerId, suspect_id: suspectId }, {
+      onConflict: "room_code,player_id",
+      ignoreDuplicates: true,
+    })
+    .then(() => refresh());
 }
+
 
 export function resetCase() {
   if (!state) return;
