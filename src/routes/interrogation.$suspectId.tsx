@@ -626,7 +626,34 @@ function InterrogationRoom() {
               </div>
             )}
 
+            {(voice.micStatus !== "idle" || voice.micError) && (
+              <div className="mb-2 flex items-center gap-2 text-xs">
+                {voice.micStatus === "listening" && (
+                  <span className="flex items-center gap-1.5 rounded-lg border border-primary/45 bg-primary/10 px-2.5 py-1.5 text-primary">
+                    <span className="size-2 animate-pulse rounded-full bg-primary" />
+                    جاري الاستماع… اضغط المايك لما تخلص
+                  </span>
+                )}
+                {voice.micStatus === "transcribing" && (
+                  <span className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-muted-foreground">
+                    <Loader2 className="size-3.5 animate-spin" />
+                    جاري تحويل الصوت…
+                  </span>
+                )}
+                {voice.micError && voice.micStatus === "idle" && (
+                  <button
+                    type="button"
+                    onClick={voice.clearMicError}
+                    className="rounded-lg border border-evidence/40 bg-evidence/10 px-2.5 py-1.5 text-evidence"
+                  >
+                    {voice.micError}
+                  </button>
+                )}
+              </div>
+            )}
+
             <form
+
               className="flex items-end gap-2"
               onSubmit={(e) => {
                 e.preventDefault();
