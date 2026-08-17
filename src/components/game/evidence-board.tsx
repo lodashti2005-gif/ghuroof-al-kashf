@@ -40,10 +40,19 @@ export function EvidenceBoard({
   deductions = [],
   onDeduction,
   onUseDeduction,
+  canLink = true,
+  canConfront = true,
+  forensics = false,
 }: {
   unlockedIds: string[];
   onConfront: (evidenceId: string, suspectId: string) => void;
   compact?: boolean;
+  /** ربط دليلين — صلاحية «المحقق». */
+  canLink?: boolean;
+  /** استخدام الدليل بالاستجواب — صلاحية «محقق الاستجواب». */
+  canConfront?: boolean;
+  /** الملاحظات الجنائية التفصيلية — صلاحية «الخبير الجنائي». */
+  forensics?: boolean;
   deductions?: Deduction[];
   /** ينفّذ لمن ينجح ربط دليلين — يحفظ الاستنتاج بلوحة الأدلة. */
   onDeduction?: (link: { id: string; title: string; insight: string; pair: string[] }) => void;
@@ -95,7 +104,7 @@ export function EvidenceBoard({
 
   return (
     <>
-      {items.length >= 2 && (
+      {canLink && items.length >= 2 && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <ActionButton
             variant={linking ? "outline" : "primary"}
@@ -170,7 +179,7 @@ export function EvidenceBoard({
         ))}
       </div>
 
-      {deductions.length > 0 && (
+      {(canLink || canConfront) && deductions.length > 0 && (
         <div className="mt-6 space-y-3">
           <Eyebrow>الاستنتاجات</Eyebrow>
           {deductions.map((d) => (
@@ -181,6 +190,8 @@ export function EvidenceBoard({
       {open && (
         <EvidenceDetail
           item={open}
+          canConfront={canConfront}
+          forensics={forensics}
           onClose={() => setOpenId(null)}
           onConfront={(suspectId) => {
             setOpenId(null);
