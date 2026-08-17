@@ -1,6 +1,6 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Gavel, NotebookPen, Search, Trash2, Users } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { EvidenceBoard } from "@/components/game/evidence-board";
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
