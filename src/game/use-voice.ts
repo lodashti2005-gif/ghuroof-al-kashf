@@ -315,7 +315,10 @@ export function useVoice({
   }, [stopSpeaking]);
 
   return {
-    listening,
+    listening: micStatus === "listening",
+    micStatus,
+    micError,
+    clearMicError: () => setMicError(null),
     startListening,
     stopListening,
     micSupported,
