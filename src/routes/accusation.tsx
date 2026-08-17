@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Check, Gavel } from "lucide-react";
-import { useState } from "react";
+import { Check, Gavel, Lock } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
@@ -11,7 +11,7 @@ export const Route = createFileRoute("/accusation")({
   head: () => ({
     meta: [
       { title: "الاتهام النهائي — ورا السالفة" },
-      { name: "description", content: "كل محقق يصوت مرة واحدة على اللي يشك إنه قتل بدر العتيبي." },
+      { name: "description", content: "كل محقق يصوت سرًا مرة واحدة على اللي يشك إنه قتل بدر العتيبي." },
       { property: "og:title", content: "الاتهام النهائي" },
       { property: "og:description", content: "صوت واحد لكل محقق. منو القاتل؟" },
     ],
@@ -27,11 +27,22 @@ function Accusation() {
   const myVote = me ? room?.votes[me.id] : undefined;
   const votesCount = Object.keys(room?.votes ?? {}).length;
   const total = room?.players.length ?? 1;
-  const tally = suspects.map((s) => ({
-    id: s.id,
-    name: s.name,
-    count: Object.values(room?.votes ?? {}).filter((v) => v === s.id).length,
-  }));
+  const allVoted = total > 0 && votesCount >= total;
+  const revealed = room?.phase === "reveal";
+
+  // النتيجة الجماعية تظهر بس بعد ما يصوّت الجميع (تصويت سري قبل ذلك).
+  const tally = suspects
+    .map((s) => ({
+      id: s.id,
+      name: s.name,
+      count: Object.values(room?.votes ?? {}).filter((v) => v === s.id).length,
+    }))
+    .sort((a, b) => b.count - a.count);
+  const leader = tally[0];
+
+  useEffect(() => {
+    if (revealed) void navigate({ to: "/reveal" });
+  }, [revealed, navigate]);
 
   return (
     <GameShell title="الاتهام النهائي" right={<LeaveRoomButton />}>
@@ -39,7 +50,8 @@ function Accusation() {
         <Eyebrow>المرحلة الختامية</Eyebrow>
         <h1 className="mt-1.5 text-3xl font-extrabold sm:text-4xl">منو قتل بدر؟</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          كل محقق عنده صوت واحد بس. لمن يصوت الجميع، المضيف يكشف الحقيقة.
+          التحقيق مقفل. كل محقق يصوت من جهازه بشكل سري وصوت واحد بس — ما ينتغير بعد التثبيت،
+          والاختيارات ما تظهر إلا لمن يخلص الجميع.
         </p>
       </div>
 
@@ -76,7 +88,13 @@ function Accusation() {
                   <p className="truncate text-xs text-muted-foreground">{s.role}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CaseTag tone={votes ? "danger" : "muted"}>{votes} صوت</CaseTag>
+                  {allVoted ? (
+                    <CaseTag tone={votes ? "danger" : "muted"}>{votes} صوت</CaseTag>
+                  ) : (
+                    <CaseTag tone="muted">
+                      <Lock className="me-1 inline size-3" /> سري
+                    </CaseTag>
+                  )}
                   {active && (
                     <span className="inline-flex items-center gap-1 font-display text-xs text-primary">
                       <Check className="size-3.5" /> اختيارك
@@ -93,8 +111,15 @@ function Accusation() {
         <div className="min-w-0">
           <Eyebrow>حالة التصويت</Eyebrow>
           <p className="mt-1 text-sm text-muted-foreground">
-            صوّت {votesCount} من {total} محققين
+            {votesCount}/{total} صوّتوا
           </p>
+          {allVoted && leader && (
+            <p className="mt-1.5 text-sm">
+              نتيجة المجموعة: أعلى اتهام على{" "}
+              <span className="font-bold text-primary">{leader.name}</span> بـ {leader.count} صوت —
+              الحقيقة بعد ما يكشفها قائد الغرفة.
+            </p>
+          )}
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           {!myVote ? (
@@ -109,17 +134,22 @@ function Accusation() {
               تم تثبيت صوتك
             </ActionButton>
           )}
-          <ActionButton
-            variant={myVote ? "danger" : "ghost"}
-            disabled={!myVote}
-            onClick={() => {
-              if (isHost) actions.setPhase("reveal");
-              navigate({ to: "/reveal" });
-            }}
-          >
-            {myVote ? "اكشف الحقيقة" : "ثبّت اتهامك أول"}
-          </ActionButton>
-
+          {isHost ? (
+            <ActionButton
+              variant="danger"
+              disabled={!allVoted}
+              onClick={() => {
+                actions.revealTruth();
+                navigate({ to: "/reveal" });
+              }}
+            >
+              {allVoted ? "اكشف الحقيقة" : "بانتظار بقية الأصوات"}
+            </ActionButton>
+          ) : (
+            <ActionButton variant="ghost" disabled>
+              {allVoted ? "بانتظار قائد الغرفة" : "بانتظار بقية الأصوات"}
+            </ActionButton>
+          )}
         </div>
       </Panel>
     </GameShell>
