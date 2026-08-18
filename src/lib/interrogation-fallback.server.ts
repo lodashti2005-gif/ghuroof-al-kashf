@@ -81,11 +81,111 @@ const TENSE_LINES = [
 ];
 
 export function fallbackReply(profile: SuspectProfile, data: InterrogationInput): AiReply {
+  const q = normalize(data.message);
   const repeat = isRepeat(data);
   const tense = data.stress >= 55;
-  const pool = tense ? TENSE_LINES : repeat ? REPEAT_LINES : FIRST_LINES;
-  const seed = data.transcript.length + data.message.length + profile.name.length;
-  const text = pool[seed % pool.length]!;
+
+  let text: string | null = null;
+
+  // متى آخر مرة شاف بدر؟
+  if (
+    q.includes("اخر مره") ||
+    q.includes("اخر مرة") ||
+    (q.includes("متى") && (q.includes("بدر") || q.includes("شفت")))
+  ) {
+    text =
+      profile.publicStory.find(
+        (x) =>
+          normalize(x).includes("بدر") ||
+          normalize(x).includes("شفت")
+      ) ??
+      profile.trueTimeline.find((x) => normalize(x).includes("بدر")) ??
+      "آخر مرة شفت بدر كانت قبل لا نتفرق بالشاليه.";
+  }
+
+  // وين كنت / الساعة كم / وقت معين
+  else if (
+    q.includes("وين كنت") ||
+    q.includes("وينك") ||
+    q.includes("الساعه") ||
+    q.includes("الساعة") ||
+    q.includes("وحده ونص") ||
+    q.includes("وحدة ونص")
+  ) {
+    text =
+      profile.publicStory.find(
+        (x) =>
+          normalize(x).includes("كنت") ||
+          normalize(x).includes("رحت") ||
+          normalize(x).includes("ساعه")
+      ) ??
+      profile.trueTimeline[0] ??
+      "كنت بالمكان اللي قلت لكم عنه من البداية.";
+  }
+
+  // منو كان وياك؟
+  else if (
+    q.includes("منو") &&
+    (q.includes("وياك") || q.includes("معاك"))
+  ) {
+    text =
+      profile.whatTheySaw.find(
+        (x) =>
+          normalize(x).includes("شفت") ||
+          normalize(x).includes("كان")
+      ) ??
+      "على حسب اللي أذكره، ما كان أحد وياي بهاللحظة.";
+  }
+
+  // تلفون بدر
+  else if (
+    q.includes("تلفون") ||
+    q.includes("تلفونه") ||
+    q.includes("موبايل") ||
+    q.includes("هاتف")
+  ) {
+    text =
+      profile.whatTheyKnow.find(
+        (x) =>
+          normalize(x).includes("تلفون") ||
+          normalize(x).includes("هاتف")
+      ) ??
+      profile.whatTheySaw.find(
+        (x) =>
+          normalize(x).includes("تلفون") ||
+          normalize(x).includes("هاتف")
+      ) ??
+      "ما عندي شي أكيد عن تلفون بدر.";
+  }
+
+  // الكاميرا
+  else if (q.includes("كاميرا") || q.includes("الكاميرا")) {
+    text =
+      profile.whatTheyKnow.find((x) =>
+        normalize(x).includes("كاميرا")
+      ) ??
+      profile.whatTheySaw.find((x) =>
+        normalize(x).includes("كاميرا")
+      ) ??
+      "الكاميرا؟ ما أدري منو غيّر اتجاهها.";
+  }
+
+  // إذا كرر نفس السؤال
+  else if (repeat) {
+    const seed = data.transcript.length + data.message.length + profile.name.length;
+    text = REPEAT_LINES[seed % REPEAT_LINES.length]!;
+  }
+
+  // إذا متوتر
+  else if (tense) {
+    const seed = data.transcript.length + data.message.length + profile.name.length;
+    text = TENSE_LINES[seed % TENSE_LINES.length]!;
+  }
+
+  // fallback أخير فقط
+  else {
+    text = profile.publicStory[0] ?? "مادري بالضبط، بس هذا اللي أعرفه.";
+  }
 
   return {
     text,
