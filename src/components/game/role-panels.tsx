@@ -30,7 +30,7 @@ function ShareButton({ onShare }: { onShare: () => void }) {
 }
 
 /** بطاقة الدور: الاسم + وصف قصير للمهمة. */
-export function RoleBanner({ roleId }: { roleId?: string | null }) {
+export function RoleBanner({ roleId }: { roleId?: string | null | undefined }) {
   const role = roleById(roleId);
   if (!role) return null;
   return (
