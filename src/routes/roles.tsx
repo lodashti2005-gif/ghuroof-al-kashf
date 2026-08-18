@@ -73,7 +73,7 @@ const total = Math.max(
 
   // كل اللاعبين جاهزين → المضيف يفتح القضية للفريق كله.
   useEffect(() => {
-    if (isHost && allReady && room?.phase === "roles") actions.setPhase("intro");
+   // if (isHost && allReady && room?.phase === "roles") actions.setPhase("intro");
   }, [isHost, allReady, room?.phase, actions]);
 
 
