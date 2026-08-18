@@ -32,7 +32,7 @@ function RolesScreen() {
   const [syncing, setSyncing] = useState(false);
 
   const myRole = roleById(me ? room?.roles?.[me.id] : undefined);
-const readyCount = Math.max(room?.ready?.length ?? 0, Object.keys(room?.roles ?? {}).length);
+const readyCount = Math.max(room?.ready?.length ?? 0;
 const total = Math.max(
   room?.players.length ?? 0,
   Object.keys(room?.roles ?? {}).length
