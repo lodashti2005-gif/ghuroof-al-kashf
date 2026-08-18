@@ -110,6 +110,14 @@ const total = Math.max(
                   </>
                 )}
               </ActionButton>
+              {isHost && allReady && (
+  <ActionButton
+    className="mt-3 w-full py-3.5 text-base"
+    onClick={() => actions.setPhase("intro")}
+  >
+    ابدأ التحقيق للجميع
+  </ActionButton>
+)}
             </>
           ) : (
             <p className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
