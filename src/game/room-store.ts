@@ -126,6 +126,22 @@ async function fetchRoom(code: string): Promise<RoomState | null> {
 let refreshInFlight: Promise<void> | null = null;
 let refreshQueued = false;
 
+/** Presence is a hint, not the source of truth: `room_players` is. A player who
+ * just joined (or whose presence hasn't synced yet) must still be counted. */
+let presenceOnline: Set<string> | null = null;
+const PRESENCE_GRACE_MS = 25_000;
+
+function applyPresence(players: Player[]): Player[] {
+  if (!presenceOnline || presenceOnline.size === 0) return players;
+  const now = Date.now();
+  return players.filter(
+    (p) =>
+      presenceOnline!.has(p.id) ||
+      p.id === session?.playerId ||
+      now - p.joinedAt < PRESENCE_GRACE_MS,
+  );
+}
+
 async function refreshNow() {
   if (!session) return;
   const next = await fetchRoom(session.code);
@@ -137,7 +153,7 @@ async function refreshNow() {
     emit();
     return;
   }
-  state = next;
+  state = { ...next, players: applyPresence(next.players) };
   emit();
 }
 
