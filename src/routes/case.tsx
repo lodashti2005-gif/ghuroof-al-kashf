@@ -5,7 +5,7 @@ import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shel
 import { CaseTag, Eyebrow, Panel, SuspectCard } from "@/components/game/ui";
 import { caseFile, suspects } from "@/game/case-data";
 import { useRoom } from "@/game/use-room";
-
+import { useEffect } from "react";
 export const Route = createFileRoute("/case")({
   head: () => ({
     meta: [
@@ -26,7 +26,11 @@ function CaseIntro() {
   const navigate = useNavigate();
   const v = caseFile.victim;
   const contradictions = room?.contradictions ?? [];
-
+useEffect(() => {
+  if (room?.phase === "investigation") {
+    navigate({ to: "/dashboard" });
+  }
+}, [room?.phase, navigate]);
   return (
     <GameShell title={caseFile.title} right={<LeaveRoomButton />}>
       <section className="cine-in surface-panel overflow-hidden p-0">
