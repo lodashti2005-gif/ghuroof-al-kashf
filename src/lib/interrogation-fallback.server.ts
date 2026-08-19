@@ -103,16 +103,39 @@ export function fallbackReply(profile: SuspectProfile, data: InterrogationInput)
       "آخر مرة شفت بدر كانت قبل لا نتفرق بالشاليه.";
   }
 
-  // وين كنت / الساعة كم / وقت معين
-  else if (
-    q.includes("وين كنت") ||
-    q.includes("وينك") ||
-    q.includes("الساعه") ||
-    q.includes("الساعة") ||
-    q.includes("وحده ونص") ||
-    q.includes("وحدة ونص")
-  ) {
-    text =
+// وين كنت / الساعة كم / وقت معين
+else if (
+  q.includes("وين كنت") ||
+  q.includes("وينك") ||
+  q.includes("الساعه") ||
+  q.includes("الساعة") ||
+  q.includes("وحده ونص") ||
+  q.includes("وحدة ونص")
+) {
+  const placeWords = [
+    "غرف",
+    "صاله",
+    "مطبخ",
+    "حوش",
+    "برا",
+    "سياره",
+    "حمام",
+    "ممر",
+    "شاليه",
+  ];
+
+  text =
+    profile.publicStory.find((x) =>
+      placeWords.some((word) => normalize(x).includes(word))
+    ) ??
+    profile.trueTimeline.find((x) =>
+      placeWords.some((word) => normalize(x).includes(word))
+    ) ??
+    profile.publicStory.find((x) =>
+      normalize(x).includes("كنت")
+    ) ??
+    "ما أذكر بالضبط وين كنت بهالوقت.";
+}
       profile.publicStory.find(
         (x) =>
           normalize(x).includes("كنت") ||
