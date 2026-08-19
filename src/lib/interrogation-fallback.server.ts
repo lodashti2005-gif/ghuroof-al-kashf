@@ -169,7 +169,32 @@ export function fallbackReply(profile: SuspectProfile, data: InterrogationInput)
       ) ??
       "الكاميرا؟ ما أدري منو غيّر اتجاهها.";
   }
-
+  // القهوة / منو سواها / منو كان يشربها
+  else if (
+    q.includes("قهوه") ||
+    q.includes("قهوة") ||
+    q.includes("فنجان") ||
+    q.includes("تركيه") ||
+    q.includes("تركية")
+  ) {
+    text =
+      profile.whatTheyKnow.find(
+        (x) =>
+          normalize(x).includes("قهو") ||
+          normalize(x).includes("فنجان")
+      ) ??
+      profile.whatTheySaw.find(
+        (x) =>
+          normalize(x).includes("قهو") ||
+          normalize(x).includes("فنجان")
+      ) ??
+      profile.publicStory.find(
+        (x) =>
+          normalize(x).includes("قهو") ||
+          normalize(x).includes("فنجان")
+      ) ??
+      "ما أدري منو سوا القهوة بالضبط.";
+  }
   // إذا كرر نفس السؤال
   else if (repeat) {
     const seed = data.transcript.length + data.message.length + profile.name.length;
