@@ -161,23 +161,21 @@ else if (
   }
 
   // تلفون بدر
-  else if (
-    q.includes("تلفون") ||
-    q.includes("تلفونه") ||
-    q.includes("موبايل") ||
-    q.includes("هاتف")
-  ) {
-    text =
-      profile.whatTheyKnow.find(
-        (x) =>
-          normalize(x).includes("تلفون") ||
-          normalize(x).includes("هاتف")
-      ) ??
-      profile.whatTheySaw.find(
-        (x) =>
-          normalize(x).includes("تلفون") ||
-          normalize(x).includes("هاتف")
-      ) ??
+ // تلفون بدر
+else if (
+  q.includes("تلفون") ||
+  q.includes("تلفونه") ||
+  q.includes("موبايل") ||
+  q.includes("هاتف")
+) {
+  text =
+    profile.publicStory.find((x) =>
+      ["تلفون", "هاتف", "موبايل"].some((word) =>
+        normalize(x).includes(word)
+      )
+    ) ??
+    "ما أدري وين تلفون بدر، آخر مرة ما انتبهت له.";
+}
       "ما عندي شي أكيد عن تلفون بدر.";
   }
 
@@ -192,32 +190,22 @@ else if (
       ) ??
       "الكاميرا؟ ما أدري منو غيّر اتجاهها.";
   }
-  // القهوة / منو سواها / منو كان يشربها
-  else if (
-    q.includes("قهوه") ||
-    q.includes("قهوة") ||
-    q.includes("فنجان") ||
-    q.includes("تركيه") ||
-    q.includes("تركية")
-  ) {
-    text =
-      profile.whatTheyKnow.find(
-        (x) =>
-          normalize(x).includes("قهو") ||
-          normalize(x).includes("فنجان")
-      ) ??
-      profile.whatTheySaw.find(
-        (x) =>
-          normalize(x).includes("قهو") ||
-          normalize(x).includes("فنجان")
-      ) ??
-      profile.publicStory.find(
-        (x) =>
-          normalize(x).includes("قهو") ||
-          normalize(x).includes("فنجان")
-      ) ??
-      "ما أدري منو سوا القهوة بالضبط.";
-  }
+// القهوة / منو سواها / منو كان يشربها
+else if (
+  q.includes("قهوه") ||
+  q.includes("قهوة") ||
+  q.includes("فنجان") ||
+  q.includes("تركيه") ||
+  q.includes("تركية")
+) {
+  const coffeeLine = profile.publicStory.find((x) =>
+    ["قهو", "فنجان"].some((word) => normalize(x).includes(word))
+  );
+
+  text =
+    coffeeLine ??
+    "ما أدري منو سوا القهوة بالضبط.";
+}
   // إذا كرر نفس السؤال
   else if (repeat) {
     const seed = data.transcript.length + data.message.length + profile.name.length;
