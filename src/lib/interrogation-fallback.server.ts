@@ -136,15 +136,6 @@ else if (
     ) ??
     "ما أذكر بالضبط وين كنت بهالوقت.";
 }
-      profile.publicStory.find(
-        (x) =>
-          normalize(x).includes("كنت") ||
-          normalize(x).includes("رحت") ||
-          normalize(x).includes("ساعه")
-      ) ??
-      profile.trueTimeline[0] ??
-      "كنت بالمكان اللي قلت لكم عنه من البداية.";
-  }
 
   // منو كان وياك؟
   else if (
@@ -176,8 +167,6 @@ else if (
     ) ??
     "ما أدري وين تلفون بدر، آخر مرة ما انتبهت له.";
 }
-      "ما عندي شي أكيد عن تلفون بدر.";
-  }
 
   // الكاميرا
   else if (q.includes("كاميرا") || q.includes("الكاميرا")) {
