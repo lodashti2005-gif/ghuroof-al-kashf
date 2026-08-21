@@ -334,29 +334,22 @@ async function flushMutations() {
       const mutate = mutationQueue[0];
       let saved = false;
       for (let attempt = 0; attempt < 5 && !saved; attempt++) {
-        if (!mutate) break;
-        const { data: row, error: readError } = await supabase
-          .from("rooms")
-          .select("*")
-          .eq("code", session.code)
-          .maybeSingle();
-        if (readError || !row) break;
-        const remote = await fetchRoom(session.code);
-        if (!remote) break;
+        if (!mutate || !session) break;
+        const snap = await loadSnapshot(session.code, session.playerId);
+        if (!snap) break;
+        const expected = snap.room.updated_at;
+        const remote = toRoomState(snap);
         mutate(remote);
-        const { data: updated, error } = await supabase
-          .from("rooms")
-          .update({
-            phase: remote.phase,
-            state: sharedPayload(remote) as unknown as never,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("code", remote.code)
-          .eq("updated_at", row.updated_at)
-          .select("code")
-          .maybeSingle();
+        const { data: newTs, error } = await rpc<string>("room_set_state", {
+          _code: remote.code,
+          _player_id: session.playerId,
+          _phase: remote.phase,
+          _state: sharedPayload(remote),
+          _expected_updated_at: expected,
+        });
         if (error) console.error("[room] sync state failed:", error.message);
-        saved = !!updated;
+        saved = !!newTs;
+        if (saved) lastUpdatedAt = newTs;
       }
       mutationQueue.shift();
       if (!saved) scheduleRefresh();
@@ -384,21 +377,16 @@ export async function createRoom(hostName: string): Promise<{ ok: boolean; code?
 
   for (let attempt = 0; attempt < 6; attempt++) {
     const code = generateRoomCode();
-    const { error } = await supabase.from("rooms").insert({
-      code,
-      case_id: caseFile.id,
-      phase: "lobby",
-      host_player_id: playerId,
-      state: freshShared() as unknown as never,
+    const { data: result, error } = await rpc<string>("room_create", {
+      _code: code,
+      _case_id: caseFile.id,
+      _host_player_id: playerId,
+      _host_name: hostName,
+      _state: freshShared(),
     });
-    if (error) {
-      if (error.code === "23505") continue; // code collision, retry
-      return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
-    }
-    const { error: pErr } = await supabase
-      .from("room_players")
-      .insert({ room_code: code, player_id: playerId, name: hostName, is_host: true });
-    if (pErr) return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
+    if (error) return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
+    if (result === "code_taken") continue; // code collision, retry
+    if (result !== "ok") return { ok: false, error: "تأكد من الاسم وجرب مرة ثانية" };
 
     session = { code, playerId };
     saveSession();
@@ -410,26 +398,16 @@ export async function createRoom(hostName: string): Promise<{ ok: boolean; code?
 
 export async function joinRoom(code: string, name: string): Promise<{ ok: boolean; error?: string }> {
   const clean = code.trim();
-  const { data: room, error } = await supabase
-    .from("rooms")
-    .select("code")
-    .eq("code", clean)
-    .maybeSingle();
-  if (error) return { ok: false, error: "ما قدرنا نتصل بالسيرفر، تحقق من النت" };
-  if (!room) return { ok: false, error: "ما لقينا غرفة بهذا الرمز" };
-
-  const { data: existing } = await supabase
-    .from("room_players")
-    .select("name")
-    .eq("room_code", clean);
-  if ((existing ?? []).some((p) => p.name.trim() === name.trim()))
-    return { ok: false, error: "الاسم مستخدم بالغرفة، جرب اسم ثاني" };
-
   const playerId = uid();
-  const { error: pErr } = await supabase
-    .from("room_players")
-    .insert({ room_code: clean, player_id: playerId, name: name.trim(), is_host: false });
-  if (pErr) return { ok: false, error: "ما قدرنا ندخلك الغرفة، جرب مرة ثانية" };
+  const { data: result, error } = await rpc<string>("room_join", {
+    _code: clean,
+    _player_id: playerId,
+    _name: name,
+  });
+  if (error) return { ok: false, error: "ما قدرنا نتصل بالسيرفر، تحقق من النت" };
+  if (result === "not_found") return { ok: false, error: "ما لقينا غرفة بهذا الرمز" };
+  if (result === "name_taken") return { ok: false, error: "الاسم مستخدم بالغرفة، جرب اسم ثاني" };
+  if (result !== "ok") return { ok: false, error: "تأكد من الاسم وجرب مرة ثانية" };
 
   session = { code: clean, playerId };
   saveSession();
@@ -441,13 +419,10 @@ export function leaveRoom() {
   const current = session;
   if (current) {
     run(
-      supabase
-        .from("room_players")
-        .delete()
-        .eq("room_code", current.code)
-        .eq("player_id", current.playerId),
+      rpc("room_leave", { _code: current.code, _player_id: current.playerId }),
       "leave room",
     );
+
   }
   state = null;
   session = null;
