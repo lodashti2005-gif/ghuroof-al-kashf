@@ -36,14 +36,25 @@ let channel: ReturnType<typeof supabase.channel> | null = null;
 
 const emit = () => listeners.forEach((l) => l());
 
-/** Postgrest builders are lazy — they only fire once awaited/then-ed. */
-function run(builder: PromiseLike<{ error: { message: string } | null }>, label: string) {
-  void Promise.resolve(builder).then(({ error }) => {
+/**
+ * كل الوصول لبيانات الغرفة يمر عبر دوال قاعدة البيانات المحمية (RPC) — الجداول
+ * نفسها مقفلة تماماً على العميل، فما أحد يقرأ أو يعدل غرفة هو ما فيها.
+ */
+type RpcResult<T> = Promise<{ data: T | null; error: { message: string } | null }>;
+const rpc = <T,>(fn: string, args: Record<string, unknown>): RpcResult<T> =>
+  (supabase.rpc as unknown as (name: string, params: Record<string, unknown>) => RpcResult<T>)(
+    fn,
+    args,
+  );
+
+function run<T>(call: RpcResult<T>, label: string) {
+  void call.then(({ error }) => {
     if (error) console.error(`[room] ${label} failed:`, error.message);
   });
 }
 
 const uid = () => Math.random().toString(36).slice(2, 10);
+
 
 const freshSuspects = (): Record<string, SuspectRuntime> =>
   Object.fromEntries(
@@ -91,22 +102,40 @@ export const getSnapshot = () => state;
 export const getServerSnapshot = () => null;
 export const getSession = () => session;
 
-/** Load a full room (row + players + votes) from the backend. */
-async function fetchRoom(code: string): Promise<RoomState | null> {
-  const [{ data: room }, { data: players }, { data: votes }] = await Promise.all([
-    supabase.from("rooms").select("*").eq("code", code).maybeSingle(),
-    supabase.from("room_players").select("*").eq("room_code", code).order("joined_at"),
-    supabase.from("room_votes").select("*").eq("room_code", code),
-  ]);
-  if (!room) return null;
+interface Snapshot {
+  room: {
+    code: string;
+    case_id: string;
+    phase: string;
+    host_player_id: string;
+    state: Partial<SharedState> | null;
+    created_at: string;
+    updated_at: string;
+  };
+  players: Array<{ player_id: string; name: string; is_host: boolean; joined_at: string }>;
+  votes: Array<{ player_id: string; suspect_id: string }>;
+}
 
-  const shared = { ...freshShared(), ...((room.state ?? {}) as Partial<SharedState>) };
+async function loadSnapshot(code: string, playerId: string): Promise<Snapshot | null> {
+  const { data, error } = await rpc<Snapshot>("room_snapshot", {
+    _code: code,
+    _player_id: playerId,
+  });
+  if (error) {
+    console.error("[room] snapshot failed:", error.message);
+    return null;
+  }
+  return data ?? null;
+}
+
+function toRoomState(snap: Snapshot): RoomState {
+  const shared = { ...freshShared(), ...((snap.room.state ?? {}) as Partial<SharedState>) };
   return {
-    code: room.code,
-    caseId: room.case_id,
-    phase: room.phase as RoomState["phase"],
-    createdAt: new Date(room.created_at).getTime(),
-    players: (players ?? []).map<Player>((p) => ({
+    code: snap.room.code,
+    caseId: snap.room.case_id,
+    phase: snap.room.phase as RoomState["phase"],
+    createdAt: new Date(snap.room.created_at).getTime(),
+    players: (snap.players ?? []).map<Player>((p) => ({
       id: p.player_id,
       name: p.name,
       isHost: p.is_host,
@@ -119,9 +148,20 @@ async function fetchRoom(code: string): Promise<RoomState | null> {
     suspects: { ...freshSuspects(), ...(shared.suspects ?? {}) },
     roles: shared.roles ?? {},
     ready: shared.ready ?? [],
-    votes: Object.fromEntries((votes ?? []).map((v) => [v.player_id, v.suspect_id])),
+    votes: Object.fromEntries(
+      (snap.votes ?? []).map((v) => [v.player_id, v.suspect_id]),
+    ),
   };
 }
+
+/** Load a full room (row + players + votes) for the current player. */
+async function fetchRoom(code: string, playerId?: string): Promise<RoomState | null> {
+  const id = playerId ?? session?.playerId;
+  if (!id) return null;
+  const snap = await loadSnapshot(code, id);
+  return snap ? toRoomState(snap) : null;
+}
+
 
 let refreshInFlight: Promise<void> | null = null;
 let refreshQueued = false;
@@ -237,8 +277,9 @@ export function startRealtime() {
           void channel.track({ playerId: session.playerId, onlineAt: new Date().toISOString() });
         }
       });
-    // Safety net for flaky mobile connections.
-    rtPoll = window.setInterval(() => void refresh(), 5000);
+    // الجداول مقفلة على العميل، فتحديثات postgres_changes ما توصل — نعتمد على
+    // الحضور + استقصاء سريع كمصدر للمزامنة اللحظية.
+    rtPoll = window.setInterval(() => void refresh(), 1500);
   }
 
   return () => {
@@ -290,29 +331,21 @@ async function flushMutations() {
       const mutate = mutationQueue[0];
       let saved = false;
       for (let attempt = 0; attempt < 5 && !saved; attempt++) {
-        if (!mutate) break;
-        const { data: row, error: readError } = await supabase
-          .from("rooms")
-          .select("*")
-          .eq("code", session.code)
-          .maybeSingle();
-        if (readError || !row) break;
-        const remote = await fetchRoom(session.code);
-        if (!remote) break;
+        if (!mutate || !session) break;
+        const snap = await loadSnapshot(session.code, session.playerId);
+        if (!snap) break;
+        const expected = snap.room.updated_at;
+        const remote = toRoomState(snap);
         mutate(remote);
-        const { data: updated, error } = await supabase
-          .from("rooms")
-          .update({
-            phase: remote.phase,
-            state: sharedPayload(remote) as unknown as never,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("code", remote.code)
-          .eq("updated_at", row.updated_at)
-          .select("code")
-          .maybeSingle();
+        const { data: newTs, error } = await rpc<string>("room_set_state", {
+          _code: remote.code,
+          _player_id: session.playerId,
+          _phase: remote.phase,
+          _state: sharedPayload(remote),
+          _expected_updated_at: expected,
+        });
         if (error) console.error("[room] sync state failed:", error.message);
-        saved = !!updated;
+        saved = !!newTs;
       }
       mutationQueue.shift();
       if (!saved) scheduleRefresh();
@@ -340,21 +373,16 @@ export async function createRoom(hostName: string): Promise<{ ok: boolean; code?
 
   for (let attempt = 0; attempt < 6; attempt++) {
     const code = generateRoomCode();
-    const { error } = await supabase.from("rooms").insert({
-      code,
-      case_id: caseFile.id,
-      phase: "lobby",
-      host_player_id: playerId,
-      state: freshShared() as unknown as never,
+    const { data: result, error } = await rpc<string>("room_create", {
+      _code: code,
+      _case_id: caseFile.id,
+      _host_player_id: playerId,
+      _host_name: hostName,
+      _state: freshShared(),
     });
-    if (error) {
-      if (error.code === "23505") continue; // code collision, retry
-      return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
-    }
-    const { error: pErr } = await supabase
-      .from("room_players")
-      .insert({ room_code: code, player_id: playerId, name: hostName, is_host: true });
-    if (pErr) return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
+    if (error) return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
+    if (result === "code_taken") continue; // code collision, retry
+    if (result !== "ok") return { ok: false, error: "تأكد من الاسم وجرب مرة ثانية" };
 
     session = { code, playerId };
     saveSession();
@@ -366,26 +394,16 @@ export async function createRoom(hostName: string): Promise<{ ok: boolean; code?
 
 export async function joinRoom(code: string, name: string): Promise<{ ok: boolean; error?: string }> {
   const clean = code.trim();
-  const { data: room, error } = await supabase
-    .from("rooms")
-    .select("code")
-    .eq("code", clean)
-    .maybeSingle();
-  if (error) return { ok: false, error: "ما قدرنا نتصل بالسيرفر، تحقق من النت" };
-  if (!room) return { ok: false, error: "ما لقينا غرفة بهذا الرمز" };
-
-  const { data: existing } = await supabase
-    .from("room_players")
-    .select("name")
-    .eq("room_code", clean);
-  if ((existing ?? []).some((p) => p.name.trim() === name.trim()))
-    return { ok: false, error: "الاسم مستخدم بالغرفة، جرب اسم ثاني" };
-
   const playerId = uid();
-  const { error: pErr } = await supabase
-    .from("room_players")
-    .insert({ room_code: clean, player_id: playerId, name: name.trim(), is_host: false });
-  if (pErr) return { ok: false, error: "ما قدرنا ندخلك الغرفة، جرب مرة ثانية" };
+  const { data: result, error } = await rpc<string>("room_join", {
+    _code: clean,
+    _player_id: playerId,
+    _name: name,
+  });
+  if (error) return { ok: false, error: "ما قدرنا نتصل بالسيرفر، تحقق من النت" };
+  if (result === "not_found") return { ok: false, error: "ما لقينا غرفة بهذا الرمز" };
+  if (result === "name_taken") return { ok: false, error: "الاسم مستخدم بالغرفة، جرب اسم ثاني" };
+  if (result !== "ok") return { ok: false, error: "تأكد من الاسم وجرب مرة ثانية" };
 
   session = { code: clean, playerId };
   saveSession();
@@ -397,13 +415,10 @@ export function leaveRoom() {
   const current = session;
   if (current) {
     run(
-      supabase
-        .from("room_players")
-        .delete()
-        .eq("room_code", current.code)
-        .eq("player_id", current.playerId),
+      rpc("room_leave", { _code: current.code, _player_id: current.playerId }),
       "leave room",
     );
+
   }
   state = null;
   session = null;
@@ -421,13 +436,11 @@ export async function resync() {
 
 /** أحدث قائمة لاعبين من قاعدة البيانات — لا نعتمد على snapshot محلي قد يكون قديم. */
 async function fetchPlayerIds(code: string): Promise<string[]> {
-  const { data } = await supabase
-    .from("room_players")
-    .select("player_id")
-    .eq("room_code", code)
-    .order("joined_at");
-  return (data ?? []).map((p) => p.player_id);
+  if (!session) return [];
+  const snap = await loadSnapshot(code, session.playerId);
+  return (snap?.players ?? []).map((p) => p.player_id);
 }
+
 
 /**
  * المضيف يبدأ الجولة: يقرأ كل اللاعبين المتصلين فعلياً من قاعدة البيانات (حتى لو
@@ -454,16 +467,12 @@ export async function startRoles(playerIds: string[] = []) {
  */
 export async function claimRole(playerId: string): Promise<boolean> {
   const code = session?.code ?? state?.code;
-  if (!code || !playerId) return false;
+  if (!code || !playerId || !session) return false;
 
-  const { data: room } = await supabase
-    .from("rooms")
-    .select("state")
-    .eq("code", code)
-    .maybeSingle();
-  if (!room) return false;
+  const snap = await loadSnapshot(code, session.playerId);
+  if (!snap) return false;
 
-  const shared = { ...freshShared(), ...((room.state ?? {}) as Partial<SharedState>) };
+  const shared = { ...freshShared(), ...((snap.room.state ?? {}) as Partial<SharedState>) };
   const roles: Record<string, string> = { ...(shared.roles ?? {}) };
   if (roles[playerId]) {
     await refresh();
@@ -483,17 +492,18 @@ export async function claimRole(playerId: string): Promise<boolean> {
     playerRoles[0]!;
   roles[playerId] = pick.id;
 
-  const { error } = await supabase
-    .from("rooms")
-    .update({
-      state: { ...shared, roles } as unknown as never,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("code", code);
-  if (error) {
-    console.error("[room] claim role failed:", error.message);
+  const { data: newTs, error } = await rpc<string>("room_set_state", {
+    _code: code,
+    _player_id: session.playerId,
+    _phase: snap.room.phase,
+    _state: { ...shared, roles },
+    _expected_updated_at: snap.room.updated_at,
+  });
+  if (error || !newTs) {
+    if (error) console.error("[room] claim role failed:", error.message);
     return false;
   }
+
   await refresh();
   return true;
 }
@@ -627,27 +637,26 @@ export const revealTruth = () => setPhase("reveal");
  * حتى لو عمل اللاعب Refresh (الصوت يرجع من قاعدة البيانات).
  */
 export function castVote(playerId: string, suspectId: string) {
-  if (!state) return;
+  if (!state || !session) return;
+  if (playerId !== session.playerId) return; // كل جهاز يصوّت بنفسه فقط
   if (state.votes[playerId]) return; // ما يتغير الصوت بعد التثبيت
   const code = state.code;
   state = { ...state, votes: { ...state.votes, [playerId]: suspectId } };
   emit();
-  // upsert + ignoreDuplicates: أول صوت هو الصوت الثابت، وأي محاولة ثانية
-  // (Refresh أو جهاز ثاني) ما تسجل ولا تغير الصوت — القيد بقاعدة البيانات.
-  void supabase
-    .from("room_votes")
-    .upsert({ room_code: code, player_id: playerId, suspect_id: suspectId }, {
-      onConflict: "room_code,player_id",
-      ignoreDuplicates: true,
-    })
-    .then(() => refresh());
+  // الصوت الأول هو الصوت الثابت — القيد محفوظ بقاعدة البيانات.
+  void rpc<boolean>("room_cast_vote", {
+    _code: code,
+    _player_id: playerId,
+    _suspect_id: suspectId,
+  }).then(() => refresh());
 }
 
 
 export function resetCase() {
-  if (!state) return;
+  if (!state || !session) return;
   const code = state.code;
-  run(supabase.from("room_votes").delete().eq("room_code", code), "reset votes");
+  run(rpc("room_reset_votes", { _code: code, _player_id: session.playerId }), "reset votes");
+
   update((s) => {
     s.phase = "lobby";
     s.unlockedEvidence = [];

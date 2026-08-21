@@ -116,7 +116,50 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      room_cast_vote: {
+        Args: { _code: string; _player_id: string; _suspect_id: string }
+        Returns: boolean
+      }
+      room_create: {
+        Args: {
+          _case_id: string
+          _code: string
+          _host_name: string
+          _host_player_id: string
+          _state: Json
+        }
+        Returns: string
+      }
+      room_is_member: {
+        Args: { _code: string; _player_id: string }
+        Returns: boolean
+      }
+      room_join: {
+        Args: { _code: string; _name: string; _player_id: string }
+        Returns: string
+      }
+      room_leave: {
+        Args: { _code: string; _player_id: string }
+        Returns: undefined
+      }
+      room_reset_votes: {
+        Args: { _code: string; _player_id: string }
+        Returns: boolean
+      }
+      room_set_state: {
+        Args: {
+          _code: string
+          _expected_updated_at: string
+          _phase: string
+          _player_id: string
+          _state: Json
+        }
+        Returns: string
+      }
+      room_snapshot: {
+        Args: { _code: string; _player_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
