@@ -642,27 +642,26 @@ export const revealTruth = () => setPhase("reveal");
  * حتى لو عمل اللاعب Refresh (الصوت يرجع من قاعدة البيانات).
  */
 export function castVote(playerId: string, suspectId: string) {
-  if (!state) return;
+  if (!state || !session) return;
+  if (playerId !== session.playerId) return; // كل جهاز يصوّت بنفسه فقط
   if (state.votes[playerId]) return; // ما يتغير الصوت بعد التثبيت
   const code = state.code;
   state = { ...state, votes: { ...state.votes, [playerId]: suspectId } };
   emit();
-  // upsert + ignoreDuplicates: أول صوت هو الصوت الثابت، وأي محاولة ثانية
-  // (Refresh أو جهاز ثاني) ما تسجل ولا تغير الصوت — القيد بقاعدة البيانات.
-  void supabase
-    .from("room_votes")
-    .upsert({ room_code: code, player_id: playerId, suspect_id: suspectId }, {
-      onConflict: "room_code,player_id",
-      ignoreDuplicates: true,
-    })
-    .then(() => refresh());
+  // الصوت الأول هو الصوت الثابت — القيد محفوظ بقاعدة البيانات.
+  void rpc<boolean>("room_cast_vote", {
+    _code: code,
+    _player_id: playerId,
+    _suspect_id: suspectId,
+  }).then(() => refresh());
 }
 
 
 export function resetCase() {
-  if (!state) return;
+  if (!state || !session) return;
   const code = state.code;
-  run(supabase.from("room_votes").delete().eq("room_code", code), "reset votes");
+  run(rpc("room_reset_votes", { _code: code, _player_id: session.playerId }), "reset votes");
+
   update((s) => {
     s.phase = "lobby";
     s.unlockedEvidence = [];
