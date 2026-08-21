@@ -39,12 +39,20 @@ const total = Math.max(
 );
   const iAmReady = !!me && !!room?.ready?.includes(me.id);
   const allReady = total > 0 && readyCount >= total;
+  // كل اللاعبين النشطين عندهم دور محفوظ بالحالة المشتركة.
+  const allRolesAssigned =
+    (room?.players.length ?? 0) > 0 &&
+    (room?.players ?? []).every((p) => !!room?.roles?.[p.id]);
 
   useEffect(() => {
     if (!room) return;
-    if (room.phase === "lobby") navigate({ to: "/lobby" });
-    else if (room.phase !== "roles") navigate({ to: "/case" });
-  }, [room, navigate]);
+    if (room.phase === "lobby") {
+      navigate({ to: "/lobby" });
+      return;
+    }
+    // ما ننقل اللاعب من بطاقة دوره إلا بعد ما يضغط «فهمت دوري».
+    if (room.phase !== "roles" && iAmReady) navigate({ to: "/case" });
+  }, [room, iAmReady, navigate]);
 
   // لو ما وصل الدور (اللاعب دخل متأخر أو فوّت الحدث): مزامنة ثم يعطي نفسه دور ناقص.
   useEffect(() => {
