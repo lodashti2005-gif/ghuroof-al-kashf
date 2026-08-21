@@ -36,14 +36,25 @@ let channel: ReturnType<typeof supabase.channel> | null = null;
 
 const emit = () => listeners.forEach((l) => l());
 
-/** Postgrest builders are lazy — they only fire once awaited/then-ed. */
-function run(builder: PromiseLike<{ error: { message: string } | null }>, label: string) {
-  void Promise.resolve(builder).then(({ error }) => {
+/**
+ * كل الوصول لبيانات الغرفة يمر عبر دوال قاعدة البيانات المحمية (RPC) — الجداول
+ * نفسها مقفلة تماماً على العميل، فما أحد يقرأ أو يعدل غرفة هو ما فيها.
+ */
+type RpcResult<T> = Promise<{ data: T | null; error: { message: string } | null }>;
+const rpc = <T,>(fn: string, args: Record<string, unknown>): RpcResult<T> =>
+  (supabase.rpc as unknown as (name: string, params: Record<string, unknown>) => RpcResult<T>)(
+    fn,
+    args,
+  );
+
+function run<T>(call: RpcResult<T>, label: string) {
+  void call.then(({ error }) => {
     if (error) console.error(`[room] ${label} failed:`, error.message);
   });
 }
 
 const uid = () => Math.random().toString(36).slice(2, 10);
+
 
 const freshSuspects = (): Record<string, SuspectRuntime> =>
   Object.fromEntries(
