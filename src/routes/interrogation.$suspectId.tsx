@@ -122,18 +122,25 @@ function InterrogationRoom() {
 
   const sendRef = useRef<((text: string, evidenceId?: string) => void) | null>(null);
 
-  // The shared countdown is timestamp-based. Every device renders it locally;
-  // nobody writes the room every second, avoiding a six-device update storm.
+  // العدّاد المشترك مبني على وقت البداية المحفوظ بالغرفة: كل جهاز يعرضه محلياً
+  // بدون ما يكتب بقاعدة البيانات كل ثانية. فتح المشتبه يشغّل عدّاده ويوقف غيره،
+  // والخروج من الصفحة يوقف عدّاده ويحفظ الوقت المتبقي بالضبط.
+  const endedRef = useRef(false);
   useEffect(() => {
+    endedRef.current = false;
     actions.startInterrogationTimer(suspectId);
     const id = setInterval(() => {
       setClockTick((tick) => tick + 1);
       const current = store.getSnapshot()?.suspects[suspectId];
-      if (current && !current.finished && store.remainingTime(current) === 0) {
+      if (current && !current.finished && store.remainingTime(current) === 0 && !endedRef.current) {
+        endedRef.current = true;
         actions.endInterrogation(suspectId);
       }
     }, 1000);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      actions.pauseInterrogationTimer(suspectId);
+    };
   }, [suspectId, actions]);
 
   useEffect(() => {
