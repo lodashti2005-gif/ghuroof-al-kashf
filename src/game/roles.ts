@@ -103,18 +103,26 @@ export function assignRoles(
   });
 
   const pending = shuffle(playerIds.filter((id) => !roles[id]));
-  const free = playerRoles.filter((r) => !taken.has(r.id));
-  const repeatable = playerRoles.filter((r) => r.repeatable);
+  const free = shuffle(playerRoles.filter((r) => !taken.has(r.id)));
+  const repeatable = shuffle(playerRoles.filter((r) => r.repeatable));
+  // عدّاد الاستخدام: لو اللاعبين أكثر من الأدوار، نكرر الأقل استخداماً فقط.
+  const counts = new Map<string, number>();
+  playerRoles.forEach((r) => counts.set(r.id, 0));
+  Object.values(roles).forEach((r) => counts.set(r, (counts.get(r) ?? 0) + 1));
 
-  pending.forEach((id, i) => {
-    const next = free[i];
+  pending.forEach((id) => {
+    const next = free.find((r) => !taken.has(r.id));
     if (next) {
       roles[id] = next.id;
       taken.add(next.id);
-    } else {
-      const pool = shuffle(repeatable);
-      roles[id] = pool[(i - free.length) % pool.length]!.id;
+      counts.set(next.id, (counts.get(next.id) ?? 0) + 1);
+      return;
     }
+    const pick = repeatable.reduce((best, r) =>
+      (counts.get(r.id) ?? 0) < (counts.get(best.id) ?? 0) ? r : best,
+    );
+    roles[id] = pick.id;
+    counts.set(pick.id, (counts.get(pick.id) ?? 0) + 1);
   });
 
   return roles;

@@ -449,12 +449,16 @@ async function fetchPlayerIds(code: string): Promise<string[]> {
 export async function startRoles(playerIds: string[] = []) {
   const code = session?.code ?? state?.code;
   if (!code) return;
+  // المضيف فقط يوزّع الأدوار — يمنع أجهزة متعددة من تشغيل التوزيع بنفس الوقت.
+  const me = state?.players.find((p) => p.id === session?.playerId);
+  if (me && !me.isHost) return;
   const fresh = await fetchPlayerIds(code);
   const ids = fresh.length ? fresh : playerIds.length ? playerIds : (state?.players ?? []).map((p) => p.id);
   update((s) => {
+    const hadRoles = Object.keys(s.roles ?? {}).length > 0;
     // توزيع مرة واحدة: أي دور محفوظ مسبقاً يبقى ثابت لنفس player_id.
     s.roles = assignRoles(ids, s.roles ?? {});
-    s.ready = [];
+    if (!hadRoles) s.ready = [];
     s.phase = "roles";
   });
 
@@ -464,48 +468,56 @@ export async function startRoles(playerIds: string[] = []) {
  * لو اللاعب ما عنده دور (انضم متأخر / فوّت الحدث): يعطي نفسه دور ناقص بقراءة
  * الحالة المشتركة الحديثة ودمج مفتاحه فقط — يمنع race conditions ولا يعيد
  * توزيع أدوار الآخرين، وما يتغير دوره بعد كل refresh.
+ * التحديث ذرّي (expected updated_at)؛ لو صار تعارض مع لاعب ثاني نعيد المحاولة
+ * على أحدث حالة حتى لا يتكرر نفس الدور الفريد بين لاعبين.
  */
 export async function claimRole(playerId: string): Promise<boolean> {
   const code = session?.code ?? state?.code;
   if (!code || !playerId || !session) return false;
 
-  const snap = await loadSnapshot(code, session.playerId);
-  if (!snap) return false;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const snap = await loadSnapshot(code, session.playerId);
+    if (!snap) return false;
 
-  const shared = { ...freshShared(), ...((snap.room.state ?? {}) as Partial<SharedState>) };
-  const roles: Record<string, string> = { ...(shared.roles ?? {}) };
-  if (roles[playerId]) {
-    await refresh();
-    return true;
+    const shared = { ...freshShared(), ...((snap.room.state ?? {}) as Partial<SharedState>) };
+    const roles: Record<string, string> = { ...(shared.roles ?? {}) };
+    if (roles[playerId]) {
+      await refresh();
+      return true;
+    }
+
+    // اختَر دور من الأدوار الأقل استخداماً بالفريق (الأولوية للأدوار الأساسية).
+    const counts = new Map<string, number>();
+    Object.values(roles).forEach((r) => counts.set(r, (counts.get(r) ?? 0) + 1));
+    const candidates = [...playerRoles].sort(
+      (a, b) => (counts.get(a.id) ?? 0) - (counts.get(b.id) ?? 0),
+    );
+    const taken = new Set(Object.values(roles));
+    const pick =
+      candidates.find((r) => !taken.has(r.id)) ??
+      candidates.find((r) => r.repeatable) ??
+      playerRoles[0]!;
+    roles[playerId] = pick.id;
+
+    const { data: newTs, error } = await rpc<string>("room_set_state", {
+      _code: code,
+      _player_id: session.playerId,
+      _phase: snap.room.phase,
+      _state: { ...shared, roles },
+      _expected_updated_at: snap.room.updated_at,
+    });
+    if (error) {
+      console.error("[room] claim role failed:", error.message);
+      return false;
+    }
+    if (newTs) {
+      await refresh();
+      return true;
+    }
+    // تعارض: لاعب ثاني كتب قبلنا — نعيد القراءة ونحاول مرة ثانية.
+    await new Promise((r) => setTimeout(r, 120 + attempt * 150));
   }
-
-  // اختَر دور من الأدوار الأقل استخداماً بالفريق (الأولوية للأدوار الأساسية).
-  const counts = new Map<string, number>();
-  Object.values(roles).forEach((r) => counts.set(r, (counts.get(r) ?? 0) + 1));
-  const candidates = [...playerRoles].sort(
-    (a, b) => (counts.get(a.id) ?? 0) - (counts.get(b.id) ?? 0),
-  );
-  const taken = new Set(Object.values(roles));
-  const pick =
-    candidates.find((r) => !taken.has(r.id)) ??
-    candidates.find((r) => r.repeatable) ??
-    playerRoles[0]!;
-  roles[playerId] = pick.id;
-
-  const { data: newTs, error } = await rpc<string>("room_set_state", {
-    _code: code,
-    _player_id: session.playerId,
-    _phase: snap.room.phase,
-    _state: { ...shared, roles },
-    _expected_updated_at: snap.room.updated_at,
-  });
-  if (error || !newTs) {
-    if (error) console.error("[room] claim role failed:", error.message);
-    return false;
-  }
-
-  await refresh();
-  return true;
+  return false;
 }
 
 export const markReady = (playerId: string) =>
