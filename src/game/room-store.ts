@@ -630,7 +630,7 @@ export function remainingTime(runtime?: SuspectRuntime): number {
 function bank(rt: SuspectRuntime, now: number) {
   if (!rt.timerStartedAt) return;
   rt.timeLeft = Math.max(0, rt.timeLeft - Math.floor((now - rt.timerStartedAt) / 1000));
-  rt.timerStartedAt = undefined;
+  delete rt.timerStartedAt;
   if (rt.timeLeft === 0) rt.finished = true;
 }
 
