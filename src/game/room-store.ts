@@ -471,16 +471,12 @@ export async function startRoles(playerIds: string[] = []) {
  */
 export async function claimRole(playerId: string): Promise<boolean> {
   const code = session?.code ?? state?.code;
-  if (!code || !playerId) return false;
+  if (!code || !playerId || !session) return false;
 
-  const { data: room } = await supabase
-    .from("rooms")
-    .select("state")
-    .eq("code", code)
-    .maybeSingle();
-  if (!room) return false;
+  const snap = await loadSnapshot(code, session.playerId);
+  if (!snap) return false;
 
-  const shared = { ...freshShared(), ...((room.state ?? {}) as Partial<SharedState>) };
+  const shared = { ...freshShared(), ...((snap.room.state ?? {}) as Partial<SharedState>) };
   const roles: Record<string, string> = { ...(shared.roles ?? {}) };
   if (roles[playerId]) {
     await refresh();
@@ -500,17 +496,19 @@ export async function claimRole(playerId: string): Promise<boolean> {
     playerRoles[0]!;
   roles[playerId] = pick.id;
 
-  const { error } = await supabase
-    .from("rooms")
-    .update({
-      state: { ...shared, roles } as unknown as never,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("code", code);
-  if (error) {
-    console.error("[room] claim role failed:", error.message);
+  const { data: newTs, error } = await rpc<string>("room_set_state", {
+    _code: code,
+    _player_id: session.playerId,
+    _phase: snap.room.phase,
+    _state: { ...shared, roles },
+    _expected_updated_at: snap.room.updated_at,
+  });
+  if (error || !newTs) {
+    if (error) console.error("[room] claim role failed:", error.message);
     return false;
   }
+  lastUpdatedAt = newTs;
+
   await refresh();
   return true;
 }
