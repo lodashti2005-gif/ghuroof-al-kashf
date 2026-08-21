@@ -440,13 +440,11 @@ export async function resync() {
 
 /** أحدث قائمة لاعبين من قاعدة البيانات — لا نعتمد على snapshot محلي قد يكون قديم. */
 async function fetchPlayerIds(code: string): Promise<string[]> {
-  const { data } = await supabase
-    .from("room_players")
-    .select("player_id")
-    .eq("room_code", code)
-    .order("joined_at");
-  return (data ?? []).map((p) => p.player_id);
+  if (!session) return [];
+  const snap = await loadSnapshot(code, session.playerId);
+  return (snap?.players ?? []).map((p) => p.player_id);
 }
+
 
 /**
  * المضيف يبدأ الجولة: يقرأ كل اللاعبين المتصلين فعلياً من قاعدة البيانات (حتى لو
