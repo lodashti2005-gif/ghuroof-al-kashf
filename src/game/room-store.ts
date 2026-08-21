@@ -116,9 +116,6 @@ interface Snapshot {
   votes: Array<{ player_id: string; suspect_id: string }>;
 }
 
-/** آخر `updated_at` معروف — نستخدمه للكتابة المتزامنة بدون قراءة الجدول مباشرة. */
-let lastUpdatedAt: string | null = null;
-
 async function loadSnapshot(code: string, playerId: string): Promise<Snapshot | null> {
   const { data, error } = await rpc<Snapshot>("room_snapshot", {
     _code: code,
@@ -133,7 +130,6 @@ async function loadSnapshot(code: string, playerId: string): Promise<Snapshot | 
 
 function toRoomState(snap: Snapshot): RoomState {
   const shared = { ...freshShared(), ...((snap.room.state ?? {}) as Partial<SharedState>) };
-  lastUpdatedAt = snap.room.updated_at;
   return {
     code: snap.room.code,
     caseId: snap.room.case_id,
@@ -350,7 +346,6 @@ async function flushMutations() {
         });
         if (error) console.error("[room] sync state failed:", error.message);
         saved = !!newTs;
-        if (saved) lastUpdatedAt = newTs;
       }
       mutationQueue.shift();
       if (!saved) scheduleRefresh();
@@ -508,7 +503,6 @@ export async function claimRole(playerId: string): Promise<boolean> {
     if (error) console.error("[room] claim role failed:", error.message);
     return false;
   }
-  lastUpdatedAt = newTs;
 
   await refresh();
   return true;
