@@ -281,8 +281,9 @@ export function startRealtime() {
           void channel.track({ playerId: session.playerId, onlineAt: new Date().toISOString() });
         }
       });
-    // Safety net for flaky mobile connections.
-    rtPoll = window.setInterval(() => void refresh(), 5000);
+    // الجداول مقفلة على العميل، فتحديثات postgres_changes ما توصل — نعتمد على
+    // الحضور + استقصاء سريع كمصدر للمزامنة اللحظية.
+    rtPoll = window.setInterval(() => void refresh(), 1500);
   }
 
   return () => {
