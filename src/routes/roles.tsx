@@ -118,7 +118,7 @@ const total = Math.max(
                   </>
                 )}
               </ActionButton>
-              {isHost && allReady && (
+              {isHost && allReady && allRolesAssigned && (
   <ActionButton
     className="mt-3 w-full py-3.5 text-base"
     onClick={() => actions.setPhase("intro")}
