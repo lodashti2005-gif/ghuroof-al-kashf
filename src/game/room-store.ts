@@ -626,16 +626,43 @@ export function remainingTime(runtime?: SuspectRuntime): number {
   return Math.max(0, runtime.timeLeft - Math.floor((Date.now() - runtime.timerStartedAt) / 1000));
 }
 
+/** يوقف عدّاد مشتبه ويخزن الوقت المتبقي بالضبط (بدون أي تصفير). */
+function bank(rt: SuspectRuntime, now: number) {
+  if (!rt.timerStartedAt) return;
+  rt.timeLeft = Math.max(0, rt.timeLeft - Math.floor((now - rt.timerStartedAt) / 1000));
+  rt.timerStartedAt = undefined;
+  if (rt.timeLeft === 0) rt.finished = true;
+}
+
+/**
+ * فتح جلسة استجواب: يوقف عدّادات باقي المشتبهين فوراً ويشغّل عدّاد هذا
+ * المشتبه من الوقت المتبقي له. لو خلص وقته سابقاً ما يرجع يبدأ أبداً.
+ */
 export const startInterrogationTimer = (suspectId: string) =>
   update((s) => {
+    const now = Date.now();
+    for (const [id, rt] of Object.entries(s.suspects)) {
+      if (id !== suspectId) bank(rt, now);
+    }
     const rt = s.suspects[suspectId];
-    if (rt && !rt.timerStartedAt && !rt.finished) rt.timerStartedAt = Date.now();
+    if (!rt || rt.finished || rt.timeLeft <= 0) return;
+    if (!rt.timerStartedAt) rt.timerStartedAt = now;
   });
 
+/** إيقاف مؤقت عند الخروج من غرفة المشتبه — الوقت المتبقي يبقى محفوظاً. */
+export const pauseInterrogationTimer = (suspectId: string) =>
+  update((s) => {
+    const rt = s.suspects[suspectId];
+    if (rt) bank(rt, Date.now());
+  });
+
+/** إنهاء نهائي — يُنفّذ مرة واحدة فقط حتى لو نادته عدة أجهزة. */
 export const endInterrogation = (suspectId: string) =>
   update((s) => {
     const rt = s.suspects[suspectId];
-    if (rt) rt.finished = true;
+    if (!rt || rt.finished) return;
+    bank(rt, Date.now());
+    rt.finished = true;
   });
 
 /** المضيف فقط يفتح مرحلة الاتهام النهائي — ما تبدأ تلقائياً. */
