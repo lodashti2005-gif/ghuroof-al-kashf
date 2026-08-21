@@ -102,22 +102,44 @@ export const getSnapshot = () => state;
 export const getServerSnapshot = () => null;
 export const getSession = () => session;
 
-/** Load a full room (row + players + votes) from the backend. */
-async function fetchRoom(code: string): Promise<RoomState | null> {
-  const [{ data: room }, { data: players }, { data: votes }] = await Promise.all([
-    supabase.from("rooms").select("*").eq("code", code).maybeSingle(),
-    supabase.from("room_players").select("*").eq("room_code", code).order("joined_at"),
-    supabase.from("room_votes").select("*").eq("room_code", code),
-  ]);
-  if (!room) return null;
+interface Snapshot {
+  room: {
+    code: string;
+    case_id: string;
+    phase: string;
+    host_player_id: string;
+    state: Partial<SharedState> | null;
+    created_at: string;
+    updated_at: string;
+  };
+  players: Array<{ player_id: string; name: string; is_host: boolean; joined_at: string }>;
+  votes: Array<{ player_id: string; suspect_id: string }>;
+}
 
-  const shared = { ...freshShared(), ...((room.state ?? {}) as Partial<SharedState>) };
+/** آخر `updated_at` معروف — نستخدمه للكتابة المتزامنة بدون قراءة الجدول مباشرة. */
+let lastUpdatedAt: string | null = null;
+
+async function loadSnapshot(code: string, playerId: string): Promise<Snapshot | null> {
+  const { data, error } = await rpc<Snapshot>("room_snapshot", {
+    _code: code,
+    _player_id: playerId,
+  });
+  if (error) {
+    console.error("[room] snapshot failed:", error.message);
+    return null;
+  }
+  return data ?? null;
+}
+
+function toRoomState(snap: Snapshot): RoomState {
+  const shared = { ...freshShared(), ...((snap.room.state ?? {}) as Partial<SharedState>) };
+  lastUpdatedAt = snap.room.updated_at;
   return {
-    code: room.code,
-    caseId: room.case_id,
-    phase: room.phase as RoomState["phase"],
-    createdAt: new Date(room.created_at).getTime(),
-    players: (players ?? []).map<Player>((p) => ({
+    code: snap.room.code,
+    caseId: snap.room.case_id,
+    phase: snap.room.phase as RoomState["phase"],
+    createdAt: new Date(snap.room.created_at).getTime(),
+    players: (snap.players ?? []).map<Player>((p) => ({
       id: p.player_id,
       name: p.name,
       isHost: p.is_host,
@@ -130,9 +152,20 @@ async function fetchRoom(code: string): Promise<RoomState | null> {
     suspects: { ...freshSuspects(), ...(shared.suspects ?? {}) },
     roles: shared.roles ?? {},
     ready: shared.ready ?? [],
-    votes: Object.fromEntries((votes ?? []).map((v) => [v.player_id, v.suspect_id])),
+    votes: Object.fromEntries(
+      (snap.votes ?? []).map((v) => [v.player_id, v.suspect_id]),
+    ),
   };
 }
+
+/** Load a full room (row + players + votes) for the current player. */
+async function fetchRoom(code: string, playerId?: string): Promise<RoomState | null> {
+  const id = playerId ?? session?.playerId;
+  if (!id) return null;
+  const snap = await loadSnapshot(code, id);
+  return snap ? toRoomState(snap) : null;
+}
+
 
 let refreshInFlight: Promise<void> | null = null;
 let refreshQueued = false;
