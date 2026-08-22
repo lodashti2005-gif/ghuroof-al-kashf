@@ -1,7 +1,7 @@
 /**
  * شريط الدور الحالي — يظهر لكل الأجهزة بنفس المعلومة: منو صاحب الدور الآن،
- * وكم باقي له، وزر «أنهيت دوري» لصاحب الدور، وزر «ابدأ الجولة التالية» للمضيف
- * بوقت النقاش.
+ * وكم باقي له، وزر «أنهيت دوري» لصاحب الدور، ووقت النقاش المشترك (٣ دقائق)
+ * مع «إنهاء النقاش» و«ابدأ الجولة التالية» للمضيف.
  */
 import { Hourglass, MessageSquare, Timer } from "lucide-react";
 
@@ -11,33 +11,63 @@ import { useTurn } from "@/game/use-turn";
 import { formatClock } from "@/game/use-room";
 
 export function TurnBanner() {
-  const { turn, activePlayer, activeRole, remaining, isMyTurn, discussion, isHost, endMyTurn, startNextRound } =
-    useTurn();
+  const {
+    turn,
+    activePlayer,
+    activeRole,
+    remaining,
+    isMyTurn,
+    discussion,
+    awaitingNextRound,
+    discussionRemaining,
+    isHost,
+    endMyTurn,
+    endDiscussion,
+    startNextRound,
+  } = useTurn();
 
   if (!turn) return null;
 
-  if (discussion) {
+  if (discussion || awaitingNextRound) {
     return (
       <Panel className="cine-in border-evidence/35">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <Eyebrow>الجولة {turn.round}</Eyebrow>
             <h2 className="mt-1 flex items-center gap-2 text-lg font-bold">
-              <MessageSquare className="size-4 text-evidence" /> وقت النقاش
+              <MessageSquare className="size-4 text-evidence" />{" "}
+              {discussion ? "وقت النقاش" : "جاهزين للجولة التالية؟"}
             </h2>
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-              كل اللاعبين خلصوا دورهم — راجعوا الأدلة وتناقشوا. أدوات الأدوار مقفلة حالياً.
+              {discussion
+                ? "كل اللاعبين خلصوا دورهم — راجعوا دفتر القضية والأدلة وحركات الجولة وتناقشوا. أدوات الأدوار والاستجواب واكتشاف الأدلة مقفلة حالياً."
+                : "خلص وقت النقاش — قائد الغرفة يبدأ الجولة التالية بنفس ترتيب اللاعبين."}
             </p>
           </div>
-          {isHost ? (
-            <ActionButton onClick={startNextRound}>ابدأ الجولة التالية</ActionButton>
-          ) : (
-            <CaseTag>بانتظار قائد الغرفة</CaseTag>
-          )}
+          <div className="flex shrink-0 items-center gap-3">
+            {discussion && (
+              <span className="flex items-center gap-1.5 font-mono text-lg font-bold tabular-nums">
+                <Timer className="size-4 text-muted-foreground" />
+                {formatClock(discussionRemaining)}
+              </span>
+            )}
+            {isHost ? (
+              discussion ? (
+                <ActionButton variant="outline" onClick={endDiscussion}>
+                  إنهاء النقاش
+                </ActionButton>
+              ) : (
+                <ActionButton onClick={startNextRound}>ابدأ الجولة التالية</ActionButton>
+              )
+            ) : (
+              <CaseTag>بانتظار قائد الغرفة</CaseTag>
+            )}
+          </div>
         </div>
       </Panel>
     );
   }
+
 
   return (
     <Panel className={`cine-in ${isMyTurn ? "border-primary/45" : "border-border"}`}>
