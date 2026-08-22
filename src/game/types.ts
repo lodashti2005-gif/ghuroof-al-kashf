@@ -165,6 +165,8 @@ export interface RoomState {
   turn: TurnState | null;
   /** سجل قدرات الأدوار المستخدمة (مشترك). */
   abilities: AbilityUse[];
+  /** حالة القرار الأخير (null قبل ما يفتح المضيف الاتهام النهائي). */
+  final: FinalDecision | null;
 }
 
 /** A magnified region of the master crime-scene photograph. */
