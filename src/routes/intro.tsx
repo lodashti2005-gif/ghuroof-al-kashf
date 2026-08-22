@@ -32,7 +32,7 @@ export const Route = createFileRoute("/intro")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: IntroSequence;
+  component: IntroSequence,
 });
 
 type Scene = {
