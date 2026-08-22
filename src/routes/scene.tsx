@@ -172,7 +172,7 @@ function SceneRoute() {
                       e.stopPropagation();
                       goTo(n.to);
                     }}
-                    className="absolute z-10 -translate-x-1/2 -translate-y-1/2 cursor-pointer bg-transparent focus:outline-none"
+                    className="absolute z-25 -translate-x-1/2 -translate-y-1/2 cursor-pointer bg-transparent focus:outline-none"
                     style={{
                       left: `${n.x}%`,
                       top: `${n.y}%`,
