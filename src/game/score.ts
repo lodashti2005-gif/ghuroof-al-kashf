@@ -17,7 +17,7 @@ export interface TeamScore {
   suspectReplies: number;
   /** مدة التحقيق بالثواني. */
   seconds: number;
-  accused?: string;
+  accused?: string | undefined;
   accusedName: string;
   correct: boolean;
 }
