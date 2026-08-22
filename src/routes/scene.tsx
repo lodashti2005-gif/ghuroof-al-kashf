@@ -142,7 +142,7 @@ function SceneRoute() {
           </div>
         </Panel>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
           <div className="surface-panel cine-in overflow-hidden p-0">
             <div className="relative w-full select-none overflow-hidden bg-black">
               <div
@@ -152,8 +152,9 @@ function SceneRoute() {
                   transform: `scale(${100 / view.size})`,
                   opacity: fade ? 0.35 : 1,
                 }}
-                onClick={() => setMiss("ما في شي مهم بهذا المكان")}
+                onClick={() => setMiss("ماكو شي مهم هنا")}
               >
+
                 <img
                   src={sceneImage}
                   alt="صورة مسرح الجريمة داخل الشاليه"
