@@ -457,3 +457,44 @@
     animation: none !important;
   }
 }
+
+/* ===== مقدمة القضية السينمائية ===== */
+@utility intro-kenburns {
+  animation: intro-kenburns 18s ease-out both;
+}
+@keyframes intro-kenburns {
+  from {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.16) translate3d(-1.5%, -1.5%, 0);
+  }
+}
+
+@utility intro-line {
+  animation: intro-line 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes intro-line {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@utility intro-veil {
+  animation: intro-veil 1.4s ease-out both;
+}
+@keyframes intro-veil {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}

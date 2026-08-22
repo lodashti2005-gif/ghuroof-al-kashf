@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccusationRouteImport } from './routes/accusation'
 import { Route as CaseRouteImport } from './routes/case'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as IntroRouteImport } from './routes/intro'
 import { Route as LobbyRouteImport } from './routes/lobby'
 import { Route as NotebookRouteImport } from './routes/notebook'
 import { Route as RevealRouteImport } from './routes/reveal'
@@ -38,6 +39,11 @@ const CaseRoute = CaseRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntroRoute = IntroRouteImport.update({
+  id: '/intro',
+  path: '/intro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LobbyRoute = LobbyRouteImport.update({
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/accusation': typeof AccusationRoute
   '/case': typeof CaseRoute
   '/dashboard': typeof DashboardRoute
+  '/intro': typeof IntroRoute
   '/lobby': typeof LobbyRoute
   '/notebook': typeof NotebookRoute
   '/reveal': typeof RevealRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/accusation': typeof AccusationRoute
   '/case': typeof CaseRoute
   '/dashboard': typeof DashboardRoute
+  '/intro': typeof IntroRoute
   '/lobby': typeof LobbyRoute
   '/notebook': typeof NotebookRoute
   '/reveal': typeof RevealRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/accusation': typeof AccusationRoute
   '/case': typeof CaseRoute
   '/dashboard': typeof DashboardRoute
+  '/intro': typeof IntroRoute
   '/lobby': typeof LobbyRoute
   '/notebook': typeof NotebookRoute
   '/reveal': typeof RevealRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/accusation'
     | '/case'
     | '/dashboard'
+    | '/intro'
     | '/lobby'
     | '/notebook'
     | '/reveal'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/accusation'
     | '/case'
     | '/dashboard'
+    | '/intro'
     | '/lobby'
     | '/notebook'
     | '/reveal'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/accusation'
     | '/case'
     | '/dashboard'
+    | '/intro'
     | '/lobby'
     | '/notebook'
     | '/reveal'
@@ -152,6 +164,7 @@ export interface RootRouteChildren {
   AccusationRoute: typeof AccusationRoute
   CaseRoute: typeof CaseRoute
   DashboardRoute: typeof DashboardRoute
+  IntroRoute: typeof IntroRoute
   LobbyRoute: typeof LobbyRoute
   NotebookRoute: typeof NotebookRoute
   RevealRoute: typeof RevealRoute
@@ -188,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/intro': {
+      id: '/intro'
+      path: '/intro'
+      fullPath: '/intro'
+      preLoaderRoute: typeof IntroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lobby': {
@@ -240,6 +260,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccusationRoute: AccusationRoute,
   CaseRoute: CaseRoute,
   DashboardRoute: DashboardRoute,
+  IntroRoute: IntroRoute,
   LobbyRoute: LobbyRoute,
   NotebookRoute: NotebookRoute,
   RevealRoute: RevealRoute,
