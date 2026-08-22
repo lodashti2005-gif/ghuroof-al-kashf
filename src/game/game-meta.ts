@@ -1,3 +1,6 @@
+import caseCoverChalet from "@/assets/scene-hero.jpg";
+import caseCoverSoon from "@/assets/case-cover-soon.jpg";
+
 import { caseFile } from "./case-data";
 
 /**
@@ -5,7 +8,7 @@ import { caseFile } from "./case-data";
  * تحت نفس اللعبة بدون تعديل شاشات اللعبة.
  */
 export const GAME_NAME = "ورا السالفة";
-export const GAME_TAGLINE = "الحقيقة ما تنقال... تنكشف";
+export const GAME_TAGLINE = "كل قضية لها سالفة... دوركم تعرفون وراها شنو.";
 export const GAME_SUBTITLE = "كل قضية لها سالفة... دوركم تعرفون وراها شنو.";
 
 export type CaseStatus = "available" | "soon";
@@ -19,7 +22,19 @@ export interface CaseSummary {
   status: CaseStatus;
   /** عدد المشتبهين (للعرض فقط). */
   suspects?: number;
+  /** صورة غلاف القضية بالمتجر. */
+  cover: string;
+  /** تشويق قصير يظهر بالمتجر. */
+  teaser: string;
+  difficulty: string;
+  players: string;
+  playTime: string;
+  /** السعر المعروض. بدون بوابة دفع حالياً. */
+  price: string;
+  /** قضية مفتوحة للجميع (ما تحتاج شراء) — تحقق الملكية النهائي يصير بالسيرفر. */
+  free: boolean;
 }
+
 
 /**
  * سجل القضايا المتوفرة داخل اللعبة.
@@ -36,17 +51,32 @@ export const caseRegistry: CaseSummary[] = [
     title: caseFile.title,
     code: caseFile.code,
     description: "ليلة عادية بين مجموعة أصدقاء انتهت بجريمة... وكل واحد عنده رواية.",
+    teaser: "ليلة عادية بين مجموعة أصدقاء انتهت بجريمة... وكل واحد عنده رواية.",
     status: "available",
     suspects: 4,
+    cover: caseCoverChalet,
+    difficulty: "متوسطة",
+    players: "٣ – ٦ لاعبين",
+    playTime: "٦٠ – ٧٥ دقيقة",
+    price: "د.ك —",
+    free: true,
   },
   {
     id: "coming-soon-1",
     title: "قضية جديدة",
     code: "K-????",
     description: "ملف جديد قيد التحضير... السالفة لِسِه مغلقة.",
+    teaser: "ملف جديد قيد التحضير... السالفة لِسِه مغلقة.",
     status: "soon",
+    cover: caseCoverSoon,
+    difficulty: "صعبة",
+    players: "٤ – ٦ لاعبين",
+    playTime: "٧٥ – ٩٠ دقيقة",
+    price: "د.ك —",
+    free: false,
   },
 ];
+
 
 /** القضية الحالية المفعّلة. */
 export const ACTIVE_CASE_ID = caseFile.id;

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccusationRouteImport } from './routes/accusation'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CaseRouteImport } from './routes/case'
 import { Route as CasesRouteImport } from './routes/cases'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -31,6 +32,11 @@ const IndexRoute = IndexRouteImport.update({
 const AccusationRoute = AccusationRouteImport.update({
   id: '/accusation',
   path: '/accusation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CaseRoute = CaseRouteImport.update({
@@ -92,6 +98,7 @@ const InterrogationSuspectIdRoute = InterrogationSuspectIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accusation': typeof AccusationRoute
+  '/auth': typeof AuthRoute
   '/case': typeof CaseRoute
   '/cases': typeof CasesRoute
   '/dashboard': typeof DashboardRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accusation': typeof AccusationRoute
+  '/auth': typeof AuthRoute
   '/case': typeof CaseRoute
   '/cases': typeof CasesRoute
   '/dashboard': typeof DashboardRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/accusation': typeof AccusationRoute
+  '/auth': typeof AuthRoute
   '/case': typeof CaseRoute
   '/cases': typeof CasesRoute
   '/dashboard': typeof DashboardRoute
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/accusation'
+    | '/auth'
     | '/case'
     | '/cases'
     | '/dashboard'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/accusation'
+    | '/auth'
     | '/case'
     | '/cases'
     | '/dashboard'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/accusation'
+    | '/auth'
     | '/case'
     | '/cases'
     | '/dashboard'
@@ -186,6 +198,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccusationRoute: typeof AccusationRoute
+  AuthRoute: typeof AuthRoute
   CaseRoute: typeof CaseRoute
   CasesRoute: typeof CasesRoute
   DashboardRoute: typeof DashboardRoute
@@ -213,6 +226,13 @@ declare module '@tanstack/react-router' {
       path: '/accusation'
       fullPath: '/accusation'
       preLoaderRoute: typeof AccusationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/case': {
@@ -298,6 +318,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccusationRoute: AccusationRoute,
+  AuthRoute: AuthRoute,
   CaseRoute: CaseRoute,
   CasesRoute: CasesRoute,
   DashboardRoute: DashboardRoute,

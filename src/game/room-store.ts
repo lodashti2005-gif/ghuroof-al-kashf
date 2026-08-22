@@ -414,7 +414,11 @@ export async function createRoom(hostName: string): Promise<{ ok: boolean; code?
     });
     if (error) return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
     if (result === "code_taken") continue; // code collision, retry
+    if (result === "not_entitled")
+      return { ok: false, error: "هذي القضية مقفلة — لازم تشتريها من متجر القضايا أول" };
+    if (result === "unknown_case") return { ok: false, error: "القضية غير متوفرة حالياً" };
     if (result !== "ok") return { ok: false, error: "تأكد من الاسم وجرب مرة ثانية" };
+
 
     session = { code, playerId };
     saveSession();
