@@ -28,7 +28,10 @@ export interface SceneDecoy {
   w: number;
   h: number;
   message: string;
+  /** Restrict this prop to specific views (defaults to any view containing it). */
+  views?: string[];
 }
+
 
 export const sceneImage = crimeScene;
 
