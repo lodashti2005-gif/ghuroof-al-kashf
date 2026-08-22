@@ -692,11 +692,62 @@ export const endInterrogation = (suspectId: string) =>
     rt.finished = true;
   });
 
-/** المضيف فقط يفتح مرحلة الاتهام النهائي — ما تبدأ تلقائياً. */
-export const startAccusation = () => setPhase("voting");
+/**
+ * المضيف فقط يفتح «القرار الأخير» — ما تبدأ تلقائياً أبداً. فتحها يقفل
+ * الاستجواب واكتشاف الأدلة وقدرات الأدوار والجولات الجديدة (دفتر القضية يبقى مفتوح).
+ */
+export const startAccusation = () =>
+  update((s) => {
+    s.phase = "voting";
+    if (!s.final) s.final = { round: 1, candidates: [], votes: {} };
+  });
 
-/** المضيف فقط يكشف الحقيقة بعد ما يخلص التصويت. */
-export const revealTruth = () => setPhase("reveal");
+/** مدة نقاش التعادل: ٦٠ ثانية مشتركة. */
+export const TIE_SECONDS = 60;
+
+/** الوقت المتبقي لنقاش التعادل — محسوب من الحالة المشتركة فالـ refresh ما يصفّره. */
+export function remainingTieTime(final?: FinalDecision | null): number {
+  if (!final?.tieAt) return 0;
+  return Math.max(0, TIE_SECONDS - Math.floor((Date.now() - final.tieAt) / 1000));
+}
+
+/** يبدأ جولة كسر تعادل جديدة بين المشتبهين المتعادلين (المضيف أو أول جهاز يرصد التعادل). */
+export const startTieBreak = (candidates: string[], fromRound: number) =>
+  update((s) => {
+    const final = s.final;
+    if (!final || final.round !== fromRound || final.accused) return;
+    if (candidates.length < 2) return;
+    s.final = {
+      ...final,
+      round: fromRound + 1,
+      candidates: [...candidates],
+      tieAt: Date.now(),
+    };
+  });
+
+/** صوت جولة كسر التعادل — يُكتب مرة واحدة فقط لكل لاعب بكل جولة. */
+export const castFinalVote = (playerId: string, suspectId: string, round: number) =>
+  update((s) => {
+    const final = s.final;
+    if (!final || final.round !== round || final.accused) return;
+    const key = `${round}:${playerId}`;
+    if (final.votes[key]) return;
+    s.final = { ...final, votes: { ...final.votes, [key]: suspectId } };
+  });
+
+/** تثبيت قرار الفريق النهائي (مرة واحدة). */
+export const setTeamAccusation = (suspectId: string) =>
+  update((s) => {
+    if (!s.final || s.final.accused) return;
+    s.final = { ...s.final, accused: suspectId };
+  });
+
+/** المضيف فقط يكشف الحقيقة بعد ما يثبت قرار الفريق. */
+export const revealTruth = () =>
+  update((s) => {
+    s.phase = "reveal";
+    if (s.final && !s.final.revealedAt) s.final = { ...s.final, revealedAt: Date.now() };
+  });
 
 /**
  * صوت واحد لكل لاعب محفوظ بالسيرفر. ما ينقدر يتغير بعد التأكيد ولا يتكرر
@@ -727,6 +778,7 @@ export function resetCase() {
     s.phase = "lobby";
     s.unlockedEvidence = [];
     s.notes = [];
+    s.deductions = [];
     s.contradictions = [];
     s.suspects = freshSuspects();
     s.roles = {};
@@ -734,6 +786,7 @@ export function resetCase() {
     s.votes = {};
     s.turn = null;
     s.abilities = [];
+    s.final = null;
   });
 }
 
