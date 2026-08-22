@@ -109,8 +109,6 @@ export const sceneViews: SceneView[] = [
     // Click the bedroom door itself to step inside.
     nav: [{ to: "room", x: 61, y: 48, w: 12, h: 34 }],
     evidence: ["camera"],
-    evidence: ["shoe"],
-    evidence: ["watch"],
   },
   {
     id: "room",
@@ -139,6 +137,7 @@ export const sceneViews: SceneView[] = [
     y: 60,
     size: 38,
     nav: [{ to: "room", x: 40, y: 44, w: 8, h: 8 }],
+    evidence: ["shoe"],
   },
   {
     id: "desk",
@@ -156,6 +155,7 @@ export const sceneViews: SceneView[] = [
     y: 76,
     size: 32,
     nav: [{ to: "room", x: 22, y: 64, w: 8, h: 8 }],
+    evidence: ["watch"],
   },
   {
     id: "outlet",
