@@ -51,8 +51,8 @@ export const sceneHotspots: SceneHotspot[] = [
   { evidenceId: "cup", x: 46, y: 36.2, w: 4, h: 5 },
   // Charger still plugged into the wall socket by the room entrance.
   { evidenceId: "phone", x: 74.4, y: 74.5, w: 5, h: 7 },
-  // Golden key on the floor tiles near the open door.
-  { evidenceId: "key", x: 53.4, y: 94, w: 5, h: 5.5 },
+  // Key still inserted in the bedroom door lock, seen from the hallway side.
+  { evidenceId: "key", x: 67.2, y: 55.5, w: 3.4, h: 4.4, hard: true },
   // Surveillance camera outside the room, upper right above the door.
   { evidenceId: "camera", x: 86.5, y: 9, w: 6, h: 7 },
 ];
@@ -62,17 +62,29 @@ export const SCENE_EVIDENCE_IDS = sceneHotspots.map((h) => h.evidenceId);
 
 /** Decoys are placed so they never overlap an evidence hotspot. */
 export const sceneDecoys: SceneDecoy[] = [
-  { id: "headboard", x: 14, y: 33, w: 14, h: 10, message: "ظهر السرير سليم، ما لقيت شي مهم" },
-  { id: "bed", x: 26, y: 52, w: 22, h: 14, message: "شرشف مرتب نص ترتيب… ما لقيت شي مهم" },
-  { id: "lamp-left", x: 28.5, y: 36, w: 5, h: 8, message: "أباجورة مضوية… ما لقيت شي مهم" },
-  { id: "window", x: 27, y: 20, w: 12, h: 12, message: "الدريشة مقفلة، ما لقيت شي مهم" },
-  { id: "mirror", x: 42, y: 22, w: 8, h: 12, message: "مراية نظيفة بدون أي أثر، ما لقيت شي مهم" },
-  { id: "dresser", x: 42, y: 45, w: 12, h: 8, message: "دواليب الكومدينة فاضية، ما لقيت شي مهم" },
-  { id: "rug", x: 42, y: 82, w: 16, h: 10, message: "سجادة نظيفة، ما لقيت شي مهم" },
-  { id: "plant", x: 92, y: 82, w: 8, h: 16, message: "نبتة بالزاوية، ما لقيت شي مهم" },
-  { id: "ceiling", x: 35, y: 4, w: 26, h: 6, message: "السقف والإضاءة بس، ما لقيت شي مهم" },
-  { id: "artwork", x: 11.5, y: 19, w: 9, h: 10, message: "لوحة معلقة على الطوفة، ما لقيت شي مهم" },
+  { id: "headboard", x: 14, y: 33, w: 14, h: 10, message: "ظهر السرير سليم، ماكو شي مهم هنا" },
+  { id: "bed", x: 26, y: 52, w: 22, h: 14, message: "شرشف مرتب نص ترتيب… ماكو شي مهم هنا" },
+  { id: "lamp-left", x: 28.5, y: 36, w: 5, h: 8, message: "أباجورة مضوية… ماكو شي مهم هنا" },
+  { id: "window", x: 27, y: 20, w: 12, h: 12, message: "الدريشة مقفلة، ماكو شي مهم هنا" },
+  { id: "mirror", x: 42, y: 22, w: 8, h: 12, message: "مراية نظيفة بدون أي أثر" },
+  { id: "dresser", x: 42, y: 45, w: 12, h: 8, message: "دواليب الكومدينة فاضية" },
+  { id: "rug", x: 42, y: 82, w: 16, h: 10, message: "سجادة نظيفة، ماكو شي مهم هنا" },
+  { id: "plant", x: 92, y: 82, w: 8, h: 16, message: "نبتة بالزاوية، ماكو شي مهم هنا" },
+  { id: "ceiling", x: 35, y: 4, w: 26, h: 6, message: "السقف والإضاءة بس" },
+  { id: "artwork", x: 11.5, y: 19, w: 9, h: 10, message: "لوحة معلقة على الطوفة، ماكو شي مهم هنا" },
+  // Hallway props: keeps the corridor from being "camera + door only".
+  { id: "hall-wall", x: 92, y: 40, w: 10, h: 24, message: "طوفة الممر نظيفة، ماكو شي مهم هنا" },
+  { id: "hall-floor", x: 74, y: 88, w: 16, h: 14, message: "أرضية الممر، ولا أثر واضح" },
+  { id: "door-handle", x: 64, y: 46, w: 4, h: 6, message: "مقبض الباب، ماكو شي مهم هنا", views: ["hallway"] },
+  // Close-up props so not every clickable thing is evidence.
+  { id: "pillow", x: 20, y: 44, w: 9, h: 8, message: "مخدة عادية، ماكو شي مهم هنا" },
+  { id: "bed-skirt", x: 22, y: 66, w: 12, h: 8, message: "تحت السرير مظلم وفاضي" },
+  { id: "drawer-knob", x: 48, y: 47, w: 4, h: 5, message: "الدرج مفتوح وفاضي" },
+  { id: "tissue-box", x: 39, y: 34, w: 4, h: 5, message: "علبة مناديل، ماكو شي مهم هنا" },
+  { id: "rug-edge", x: 26, y: 86, w: 10, h: 8, message: "حرف السجادة مرفوع بس ماكو شي تحته" },
+  { id: "socket-wall", x: 80, y: 62, w: 8, h: 10, message: "الطوفة سليمة، ماكو شي مهم هنا" },
 ];
+
 
 /**
  * First-person point-and-click views. The player never sees a menu: every move
