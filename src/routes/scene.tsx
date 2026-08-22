@@ -69,15 +69,13 @@ function SceneRoute() {
     if (history.length === 0) return;
     setMiss(null);
     setFade(true);
-    setHistory((prev) => {
-      const next = [...prev];
-      const previous = next.pop();
-      setTimeout(() => {
-        if (previous) setViewId(previous);
-        setFade(false);
-      }, 180);
-      return next;
-    });
+    const previous = history[history.length - 1];
+    const nextHistory = history.slice(0, -1);
+    setHistory(nextHistory);
+    setTimeout(() => {
+      setViewId(previous!);
+      setFade(false);
+    }, 180);
   };
 
   /** Guards against double counting from rapid clicks before the room syncs. */
