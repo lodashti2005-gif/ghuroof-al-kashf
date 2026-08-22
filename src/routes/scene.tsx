@@ -267,8 +267,20 @@ function SceneRoute() {
                   className="evidence-flash pointer-events-none absolute inset-0 z-40"
                 />
               )}
-              <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-end gap-2 bg-gradient-to-b from-black/70 to-transparent p-3">
-                <span className="rounded-lg bg-black/50 px-2.5 py-1 font-mono text-[11px] tracking-widest text-white/80">
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent p-3">
+                {history.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goBack();
+                    }}
+                    className="pointer-events-auto rounded-lg border border-white/20 bg-black/55 px-3 py-1.5 text-xs font-semibold text-white/90 backdrop-blur-sm transition-colors hover:bg-black/75 active:bg-black/90 sm:text-sm"
+                  >
+                    رجوع
+                  </button>
+                )}
+                <span className="pointer-events-auto rounded-lg bg-black/50 px-2.5 py-1 font-mono text-[11px] tracking-widest text-white/80">
                   {view.label}
                 </span>
               </div>
