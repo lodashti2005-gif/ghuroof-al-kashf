@@ -20,7 +20,7 @@ export const caseFile = {
   title: "قضية الشاليه",
   code: "K-2291",
   victim: {
-    name: "بدر العتيبي",
+    name: "بدر",
     age: 32,
     portrait: victimBader,
     timeOfDeath: "01:40 – 02:00 فجراً",
@@ -40,7 +40,7 @@ export const caseFile = {
 export const suspects: Suspect[] = [
   {
     id: "fahad",
-    name: "فهد المطيري",
+    name: "فهد",
     age: 34,
     role: "صديق بدر المقرب",
     personality: "هادي بس يدافع عن نفسه بسرعة",
@@ -62,7 +62,7 @@ export const suspects: Suspect[] = [
   },
   {
     id: "noura",
-    name: "نورة الشمري",
+    name: "نورة",
     age: 29,
     role: "خطيبة بدر السابقة",
     personality: "عاطفية وتخبي معلومات",
@@ -84,7 +84,7 @@ export const suspects: Suspect[] = [
   },
   {
     id: "yousef",
-    name: "يوسف العازمي",
+    name: "يوسف",
     age: 31,
     role: "شريك بدر بالشغل",
     personality: "واثق ويتنرفز بسرعة",
@@ -107,7 +107,7 @@ export const suspects: Suspect[] = [
   },
   {
     id: "dana",
-    name: "دانة الهاجري",
+    name: "دانة",
     age: 27,
     role: "من الحاضرين بالقعدة",
     personality: "ساكتة وتلاحظ كل شي",
@@ -216,7 +216,7 @@ export const evidence: EvidenceItem[] = [
 export const killerId = "yousef";
 
 export const solution = {
-  killer: "يوسف العازمي",
+  killer: "يوسف",
   motive:
     "يوسف كان يحوّل فلوس الشركة لحسابه الخاص. بدر جمّع الأدلة بتلفونه وقاله بصراحة إن باچر بيروحون للمحامي. فلوس ومستقبل يوسف كلها كانت على المحك.",
   method:
@@ -245,22 +245,22 @@ export const solution = {
   ],
   liars: [
     {
-      name: "فهد المطيري",
+      name: "فهد",
       lie: "قال إنه نام من الساعة 01:00",
       why: "كان صاحي، وخذ 400 دينار من محفظة بدر بعد ما لقاه، وخاف يتهمونه.",
     },
     {
-      name: "نورة الشمري",
+      name: "نورة",
       lie: "نكرت إنها رجعت للشاليه",
       why: "رجعت ترد الخاتم، وشافت يوسف ياخذ التلفون، بس سكتت لأنه يعرف سر عن عائلتها.",
     },
     {
-      name: "يوسف العازمي",
+      name: "يوسف",
       lie: "قال إنه طلع قبل 12 وما رجع",
       why: "هو القاتل. رجع بالمفتاح الاحتياطي وأخفى التلفون.",
     },
     {
-      name: "دانة الهاجري",
+      name: "دانة",
       lie: "قالت إن ذاكرتها ضعيفة بالأوقات",
       why: "عندها تسجيل صوتي دقيق للساعة 01:47، وخافت تتورط لو سلّمته.",
     },

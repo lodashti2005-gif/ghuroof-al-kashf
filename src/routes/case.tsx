@@ -12,7 +12,7 @@ export const Route = createFileRoute("/case")({
       { title: "قضية الشاليه — ورا السالفة" },
       {
         name: "description",
-        content: "ملف القضية: بدر العتيبي، 32 سنة، انلقى ميت داخل غرفة مقفلة بشاليه خاص.",
+        content: "ملف القضية: بدر، 32 سنة، انلقى ميت داخل غرفة مقفلة بشاليه خاص.",
       },
       { property: "og:title", content: "قضية الشاليه" },
       { property: "og:description", content: "الباب ما كان مكسور، والتلفون اختفى. منو يكذب؟" },
