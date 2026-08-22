@@ -146,14 +146,13 @@ function SceneRoute() {
           <div className="surface-panel cine-in overflow-hidden p-0">
             <div className="relative w-full select-none overflow-hidden bg-black">
               <div
-                className="relative w-full transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+                className="relative w-full transition-[transform,opacity] duration-[340ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
                 style={{
-                  transformOrigin: zone ? `${zone.x}% ${zone.y}%` : "50% 50%",
-                  transform: `scale(${zone ? 100 / zone.size : 1})`,
+                  transformOrigin: `${view.x}% ${view.y}%`,
+                  transform: `scale(${100 / view.size})`,
+                  opacity: fade ? 0.35 : 1,
                 }}
-                onClick={() =>
-                  setMiss(zone ? "ما في شي مهم بهذا المكان" : "اختر منطقة وقرّب عليها عشان تفحصها")
-                }
+                onClick={() => setMiss("ما في شي مهم بهذا المكان")}
               >
                 <img
                   src={sceneImage}
@@ -163,47 +162,72 @@ function SceneRoute() {
                   className="block w-full cursor-crosshair"
                   style={{ filter: "brightness(1.12) contrast(1.03) saturate(1.04)" }}
                 />
-                {/* Decoy props: clickable, but nothing useful. Rendered under the hotspots. */}
-                {sceneDecoys.map((d) => (
+                {/* Navigation hotspots: invisible, placed over real objects. */}
+                {view.nav.map((n) => (
                   <button
-                    key={d.id}
+                    key={`${view.id}-${n.to}`}
                     type="button"
-                    aria-label="فحص تفصيلة في مسرح الجريمة"
-                    disabled={!zone}
+                    aria-label="التحرك داخل مسرح الجريمة"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setMiss(d.message);
+                      goTo(n.to);
                     }}
-                    className="absolute z-10 -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none disabled:pointer-events-none"
+                    className="absolute z-10 -translate-x-1/2 -translate-y-1/2 cursor-pointer bg-transparent focus:outline-none"
                     style={{
-                      left: `${d.x}%`,
-                      top: `${d.y}%`,
-                      width: `${d.w}%`,
-                      height: `${d.h}%`,
+                      left: `${n.x}%`,
+                      top: `${n.y}%`,
+                      width: `${n.w}%`,
+                      height: `${n.h}%`,
+                      minWidth: 44 / (100 / view.size) + "px",
+                      minHeight: 44 / (100 / view.size) + "px",
                     }}
                   />
                 ))}
-                {/* Hidden hotspots: no rings, no markers, nothing that hints location. */}
-                {sceneHotspots.map((h) => (
-                  <button
-                    key={h.evidenceId}
-                    type="button"
-                    aria-label="فحص تفصيلة في مسرح الجريمة"
-                    data-evidence-hotspot={h.evidenceId}
-                    disabled={!zone}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      inspect(h.evidenceId, { x: h.x, y: h.y });
-                    }}
-                    className="absolute z-20 -translate-x-1/2 -translate-y-1/2 cursor-crosshair rounded-full bg-transparent focus:outline-none disabled:pointer-events-none"
-                    style={{
-                      left: `${h.x}%`,
-                      top: `${h.y}%`,
-                      width: `${h.w}%`,
-                      height: `${h.h}%`,
-                    }}
-                  />
-                ))}
+                {/* Decoy props: clickable, but nothing useful. */}
+                {sceneDecoys
+                  .filter((d) => inView(view, d.x, d.y, 0))
+                  .map((d) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      aria-label="فحص تفصيلة في مسرح الجريمة"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMiss(d.message);
+                      }}
+                      className="absolute z-20 -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none"
+                      style={{
+                        left: `${d.x}%`,
+                        top: `${d.y}%`,
+                        width: `${d.w}%`,
+                        height: `${d.h}%`,
+                      }}
+                    />
+                  ))}
+                {/* Hidden evidence hotspots: only inside close-up views, never markers. */}
+                {sceneHotspots
+                  .filter((h) => view.id !== "room" && inView(view, h.x, h.y, 0))
+                  .map((h) => (
+                    <button
+                      key={h.evidenceId}
+                      type="button"
+                      aria-label="فحص تفصيلة في مسرح الجريمة"
+                      data-evidence-hotspot={h.evidenceId}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        inspect(h.evidenceId, { x: h.x, y: h.y });
+                      }}
+                      className="absolute z-30 -translate-x-1/2 -translate-y-1/2 cursor-crosshair rounded-full bg-transparent focus:outline-none"
+                      style={{
+                        left: `${h.x}%`,
+                        top: `${h.y}%`,
+                        width: `${h.w}%`,
+                        height: `${h.h}%`,
+                        minWidth: 40 / (100 / view.size) + "px",
+                        minHeight: 40 / (100 / view.size) + "px",
+                      }}
+                    />
+                  ))}
 
                 {spark && (
                   <span
@@ -230,18 +254,23 @@ function SceneRoute() {
                   className="evidence-flash pointer-events-none absolute inset-0 z-40"
                 />
               )}
-              {zone && (
-                <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent p-3">
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent p-3">
+                {viewId !== SCENE_START_VIEW ? (
                   <span className="pointer-events-auto">
-                    <ActionButton variant="outline" onClick={() => setZoneId(null)}>
-                      <ArrowRight className="size-4" /> رجوع لعرض الغرفة
+                    <ActionButton
+                      variant="outline"
+                      onClick={() => goTo(viewId === "room" ? "hallway" : "room")}
+                    >
+                      <ArrowRight className="size-4" /> رجوع
                     </ActionButton>
                   </span>
-                  <span className="rounded-lg bg-black/50 px-2.5 py-1 font-mono text-[11px] tracking-widest text-white/80">
-                    {zone.label}
-                  </span>
-                </div>
-              )}
+                ) : (
+                  <span />
+                )}
+                <span className="rounded-lg bg-black/50 px-2.5 py-1 font-mono text-[11px] tracking-widest text-white/80">
+                  {view.label}
+                </span>
+              </div>
               {miss && (
                 <div className="pointer-events-none absolute bottom-3 right-1/2 z-40 translate-x-1/2 rounded-lg border border-border bg-card/90 px-3 py-1.5 text-xs text-muted-foreground">
                   {miss}
@@ -249,34 +278,11 @@ function SceneRoute() {
               )}
             </div>
 
-            {/* Zone selector */}
-            <div className="border-t border-border/70 p-3">
-              <Eyebrow>مناطق الغرفة</Eyebrow>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {sceneZones.map((z) => (
-                  <button
-                    key={z.id}
-                    type="button"
-                    onClick={() => {
-                      setZoneId(z.id);
-                      setMiss(null);
-                    }}
-                    className={`rounded-lg border px-3 py-2 text-right text-xs transition-colors ${
-                      zone?.id === z.id
-                        ? "border-evidence bg-evidence/10 text-foreground"
-                        : "border-border bg-card text-muted-foreground hover:border-evidence/60 hover:text-foreground"
-                    }`}
-                  >
-                    <span className="block font-bold">{z.label}</span>
-                    <span className="block text-[11px] opacity-70">{z.hint}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
             <div className="flex items-center gap-2 border-t border-border/70 px-4 py-3 text-xs text-muted-foreground">
               <Search className="size-3.5 shrink-0" />
-              قرّب على أي منطقة وفتّش بنفسك — الأدلة تتشارك بين الفريق مباشرة.
+              تحرّك بالضغط على الأشياء نفسها داخل الصورة — الأدلة تتشارك بين الفريق مباشرة.
             </div>
+
           </div>
 
 
