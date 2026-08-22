@@ -712,11 +712,12 @@ function InterrogationRoom() {
                     void send(draft);
                   }
                 }}
-                rows={2}
+                rows={3}
                 disabled={locked || busy}
                 placeholder={locked ? "انتهى وقت هذا المشتبه" : "اكتب سؤالك بأسلوبك..."}
-                className="min-w-0 flex-1 resize-none rounded-xl border border-input bg-surface-2 px-3.5 py-3 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-primary/60 disabled:opacity-50"
+                className="min-h-[4.5rem] min-w-0 flex-1 resize-none rounded-xl border border-input bg-surface-2 px-3.5 py-3 text-base leading-relaxed outline-none placeholder:text-muted-foreground/70 focus:border-primary/60 disabled:opacity-50 sm:text-sm"
               />
+
 
 
 
