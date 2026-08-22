@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccusationRouteImport } from './routes/accusation'
 import { Route as CaseRouteImport } from './routes/case'
+import { Route as CasesRouteImport } from './routes/cases'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IntroRouteImport } from './routes/intro'
 import { Route as LobbyRouteImport } from './routes/lobby'
@@ -35,6 +36,11 @@ const AccusationRoute = AccusationRouteImport.update({
 const CaseRoute = CaseRouteImport.update({
   id: '/case',
   path: '/case',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CasesRoute = CasesRouteImport.update({
+  id: '/cases',
+  path: '/cases',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accusation': typeof AccusationRoute
   '/case': typeof CaseRoute
+  '/cases': typeof CasesRoute
   '/dashboard': typeof DashboardRoute
   '/intro': typeof IntroRoute
   '/lobby': typeof LobbyRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accusation': typeof AccusationRoute
   '/case': typeof CaseRoute
+  '/cases': typeof CasesRoute
   '/dashboard': typeof DashboardRoute
   '/intro': typeof IntroRoute
   '/lobby': typeof LobbyRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/accusation': typeof AccusationRoute
   '/case': typeof CaseRoute
+  '/cases': typeof CasesRoute
   '/dashboard': typeof DashboardRoute
   '/intro': typeof IntroRoute
   '/lobby': typeof LobbyRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accusation'
     | '/case'
+    | '/cases'
     | '/dashboard'
     | '/intro'
     | '/lobby'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accusation'
     | '/case'
+    | '/cases'
     | '/dashboard'
     | '/intro'
     | '/lobby'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accusation'
     | '/case'
+    | '/cases'
     | '/dashboard'
     | '/intro'
     | '/lobby'
@@ -175,6 +187,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccusationRoute: typeof AccusationRoute
   CaseRoute: typeof CaseRoute
+  CasesRoute: typeof CasesRoute
   DashboardRoute: typeof DashboardRoute
   IntroRoute: typeof IntroRoute
   LobbyRoute: typeof LobbyRoute
@@ -207,6 +220,13 @@ declare module '@tanstack/react-router' {
       path: '/case'
       fullPath: '/case'
       preLoaderRoute: typeof CaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cases': {
+      id: '/cases'
+      path: '/cases'
+      fullPath: '/cases'
+      preLoaderRoute: typeof CasesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -279,6 +299,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccusationRoute: AccusationRoute,
   CaseRoute: CaseRoute,
+  CasesRoute: CasesRoute,
   DashboardRoute: DashboardRoute,
   IntroRoute: IntroRoute,
   LobbyRoute: LobbyRoute,
