@@ -167,6 +167,8 @@ export interface RoomState {
   abilities: AbilityUse[];
   /** حالة القرار الأخير (null قبل ما يفتح المضيف الاتهام النهائي). */
   final: FinalDecision | null;
+  /** مشهد المقدمة السينمائية الحالي (null قبل بدايتها أو بعد انتهائها). */
+  intro: number | null;
 }
 
 /** A magnified region of the master crime-scene photograph. */
