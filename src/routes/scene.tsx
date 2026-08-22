@@ -55,8 +55,10 @@ function SceneRoute() {
     if (id === viewId) return;
     setMiss(null);
     setFade(true);
-    setViewId(id);
-    setTimeout(() => setFade(false), 60);
+    setTimeout(() => {
+      setViewId(id);
+      setFade(false);
+    }, 180);
   };
 
   /** Guards against double counting from rapid clicks before the room syncs. */
