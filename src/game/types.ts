@@ -119,6 +119,8 @@ export interface RoomState {
   /** أرقام اللاعبين اللي ضغطوا «فهمت دوري». */
   ready: string[];
   votes: Record<string, string>; // playerId -> suspectId
+  /** دور اللاعب الحالي بالتناوب (null قبل بداية أول جولة). */
+  turn: TurnState | null;
 }
 
 /** A magnified region of the master crime-scene photograph. */
