@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Check, Fingerprint, Search, Unlock, Users, X } from "lucide-react";
+import { ArrowRight, Check, Fingerprint, Search, Unlock, Users, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { SceneCrop } from "@/components/game/scene-crop";
