@@ -103,6 +103,26 @@ export interface TurnState {
   startedAt: number;
 }
 
+/**
+ * استخدام قدرة دور واحدة — محفوظ بالحالة المشتركة عشان كل الفريق يشوف منو سوى
+ * شنو، ومعرّفه ثابت (جولة + لاعب + نوع) فما ينسجل مرتين مع الـ refresh.
+ */
+export interface AbilityUse {
+  /** `${round}:${playerId}:${kind}` — ثابت ويمنع التكرار. */
+  id: string;
+  round: number;
+  playerId: string;
+  playerName: string;
+  roleTitle: string;
+  kind: "forensic" | "question" | "link" | "timeline";
+  label: string;
+  /** وصف الحركة اللي شافها الفريق (بدون أي معلومة مخفية). */
+  summary: string;
+  /** نتيجة القدرة الظاهرة للفريق (اختياري). */
+  result?: string;
+  createdAt: number;
+}
+
 export interface RoomState {
   code: string;
   caseId: string;
@@ -121,6 +141,8 @@ export interface RoomState {
   votes: Record<string, string>; // playerId -> suspectId
   /** دور اللاعب الحالي بالتناوب (null قبل بداية أول جولة). */
   turn: TurnState | null;
+  /** سجل قدرات الأدوار المستخدمة (مشترك). */
+  abilities: AbilityUse[];
 }
 
 /** A magnified region of the master crime-scene photograph. */
