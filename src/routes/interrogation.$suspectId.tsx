@@ -39,6 +39,7 @@ import { questionsForSuspect } from "@/game/evidence-questions";
 
 import * as store from "@/game/room-store";
 import { formatClock, useRoom } from "@/game/use-room";
+import { useTurn } from "@/game/use-turn";
 import { askSuspect } from "@/lib/interrogation.functions";
 
 
@@ -93,6 +94,7 @@ function InterrogationRoom() {
   const { suspectId } = Route.useParams();
   const { confront: confrontParam, ask: askParam } = Route.useSearch();
   const { room, me, actions } = useRoom();
+  const { canAct: myTurnActive } = useTurn();
   const navigate = useNavigate();
   const ask = useServerFn(askSuspect);
   const suspect = getSuspect(suspectId);
@@ -223,7 +225,10 @@ function InterrogationRoom() {
   void clockTick;
   // مرحلة الاتهام تقفل التحقيق نهائياً: ما ينرسل أي سؤال جديد.
   const accusationPhase = room?.phase === "voting" || room?.phase === "reveal";
-  const locked = !runtime || runtime.finished || displayedTime <= 0 || accusationPhase;
+  // مو دورك بالتناوب → تشاهد الجلسة بس ما تقدر تسأل.
+  const waitingTurn = !myTurnActive;
+  const locked =
+    !runtime || runtime.finished || displayedTime <= 0 || accusationPhase || waitingTurn;
   // While a reply is generating, the session stays open but input is blocked so
   // the same question can't be sent twice.
   const busy = typing;
@@ -492,7 +497,7 @@ function InterrogationRoom() {
             </div>
             <div className="flex items-center gap-2">
               <CaseTag tone={locked ? "muted" : "danger"}>
-                {locked ? "الجلسة مغلقة" : "جارية"}
+                {waitingTurn ? "انتظر دورك" : locked ? "الجلسة مغلقة" : "جارية"}
               </CaseTag>
             </div>
 
@@ -714,7 +719,13 @@ function InterrogationRoom() {
                 }}
                 rows={3}
                 disabled={locked || busy}
-                placeholder={locked ? "انتهى وقت هذا المشتبه" : "اكتب سؤالك بأسلوبك..."}
+                placeholder={
+                  waitingTurn
+                    ? "انتظر دورك — الدور الحالي عند لاعب ثاني"
+                    : locked
+                      ? "انتهى وقت هذا المشتبه"
+                      : "اكتب سؤالك بأسلوبك..."
+                }
                 className="min-h-[4.5rem] min-w-0 flex-1 resize-none rounded-xl border border-input bg-surface-2 px-3.5 py-3 text-base leading-relaxed outline-none placeholder:text-muted-foreground/70 focus:border-primary/60 disabled:opacity-50 sm:text-sm"
               />
 
