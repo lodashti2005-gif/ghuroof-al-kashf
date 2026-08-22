@@ -51,12 +51,29 @@ function SceneRoute() {
   const view = getSceneView(viewId);
   /** Drives the quick cinematic fade between views. */
   const [fade, setFade] = useState(false);
+  /** Simple history stack for the back button. */
+  const [history, setHistory] = useState<string[]>([]);
+
   const goTo = (id: string) => {
     if (id === viewId) return;
     setMiss(null);
     setFade(true);
+    setHistory((prev) => [...prev, viewId]);
     setTimeout(() => {
       setViewId(id);
+      setFade(false);
+    }, 180);
+  };
+
+  const goBack = () => {
+    if (history.length === 0) return;
+    setMiss(null);
+    setFade(true);
+    const previous = history[history.length - 1];
+    const nextHistory = history.slice(0, -1);
+    setHistory(nextHistory);
+    setTimeout(() => {
+      setViewId(previous!);
       setFade(false);
     }, 180);
   };
@@ -248,8 +265,20 @@ function SceneRoute() {
                   className="evidence-flash pointer-events-none absolute inset-0 z-40"
                 />
               )}
-              <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-end gap-2 bg-gradient-to-b from-black/70 to-transparent p-3">
-                <span className="rounded-lg bg-black/50 px-2.5 py-1 font-mono text-[11px] tracking-widest text-white/80">
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent p-3">
+                {history.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goBack();
+                    }}
+                    className="pointer-events-auto rounded-lg border border-white/20 bg-black/55 px-3 py-1.5 text-xs font-semibold text-white/90 backdrop-blur-sm transition-colors hover:bg-black/75 active:bg-black/90 sm:text-sm"
+                  >
+                    رجوع
+                  </button>
+                )}
+                <span className="pointer-events-auto rounded-lg bg-black/50 px-2.5 py-1 font-mono text-[11px] tracking-widest text-white/80">
                   {view.label}
                 </span>
               </div>
