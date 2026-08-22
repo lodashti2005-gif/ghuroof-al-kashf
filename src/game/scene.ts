@@ -65,10 +65,37 @@ export const sceneDecoys: SceneDecoy[] = [
   { id: "window", x: 27, y: 20, w: 12, h: 12, message: "الدريشة مقفلة، ما لقيت شي مهم" },
   { id: "mirror", x: 42, y: 22, w: 8, h: 12, message: "مراية نظيفة بدون أي أثر، ما لقيت شي مهم" },
   { id: "dresser", x: 42, y: 45, w: 12, h: 8, message: "دواليب الكومدينة فاضية، ما لقيت شي مهم" },
-  { id: "door-open", x: 60, y: 45, w: 8, h: 30, message: "باب مفتوح على ممر، ما لقيت شي مهم" },
+  { id: "door-open", x: 60, y: 45, w: 8, h: 30, message: "الباب مردود على الممر، ما لقيت شي مهم" },
   { id: "rug", x: 42, y: 82, w: 16, h: 10, message: "سجادة نظيفة، ما لقيت شي مهم" },
   { id: "plant", x: 92, y: 82, w: 8, h: 16, message: "نبتة بالزاوية، ما لقيت شي مهم" },
   { id: "ceiling", x: 35, y: 4, w: 26, h: 6, message: "السقف والإضاءة بس، ما لقيت شي مهم" },
   { id: "artwork", x: 11.5, y: 19, w: 9, h: 10, message: "لوحة معلقة على الطوفة، ما لقيت شي مهم" },
 ];
+
+/**
+ * Exploration zones. The player moves the camera between areas of the room
+ * instead of staring at one static frame. `size` is the visible width of the
+ * frame as a percentage of the photo width (smaller = closer).
+ * Zones never reveal what they contain.
+ */
+export interface SceneZone {
+  id: string;
+  label: string;
+  hint: string;
+  /** Camera center in % of image width/height. */
+  x: number;
+  y: number;
+  /** Visible frame width in % of image width. */
+  size: number;
+}
+
+export const sceneZones: SceneZone[] = [
+  { id: "door", label: "المدخل والباب", hint: "الباب مردود على الممر", x: 57, y: 82, size: 32 },
+  { id: "bed", label: "منطقة السرير", hint: "السرير والجهة اليسرى", x: 25, y: 60, size: 36 },
+  { id: "desk", label: "الكومدينة والطاولة", hint: "سطح الخشب والمراية", x: 44, y: 38, size: 30 },
+  { id: "rug", label: "وسط الغرفة والسجادة", hint: "الأرضية والسجادة", x: 33, y: 76, size: 30 },
+  { id: "outlet", label: "الطوفة والكهرباء", hint: "الجهة اليمنى والمقبس", x: 76, y: 72, size: 30 },
+  { id: "hallway", label: "الممر الخارجي", hint: "برا الغرفة فوق الباب", x: 85, y: 14, size: 30 },
+];
+
 
