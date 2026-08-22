@@ -832,7 +832,7 @@ function InterrogationRoom() {
                     setDraft(text);
                     return;
                   }
-                  voice.stopSpeaking();
+                  
                   navigate({
                     to: "/interrogation/$suspectId",
                     params: { suspectId: targetId },
@@ -846,7 +846,6 @@ function InterrogationRoom() {
                     confront(evidenceId);
                     return;
                   }
-                  voice.stopSpeaking();
                   navigate({
                     to: "/interrogation/$suspectId",
                     params: { suspectId: targetId },
