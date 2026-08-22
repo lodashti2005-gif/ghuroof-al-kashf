@@ -9,7 +9,7 @@ import { GAME_NAME, GAME_TAGLINE, activeCase } from "@/game/game-meta";
 import { useRoom } from "@/game/use-room";
 
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/play")({
   head: () => ({
     meta: [
       { title: "ورا السالفة — الحقيقة ما تنقال... تنكشف" },
