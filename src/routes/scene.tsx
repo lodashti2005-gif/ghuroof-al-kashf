@@ -9,12 +9,15 @@ import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { caseFile, evidence, getEvidence } from "@/game/case-data";
 import {
   SCENE_EVIDENCE_IDS,
+  SCENE_START_VIEW,
+  getSceneView,
+  inView,
   sceneDecoys,
   sceneHotspots,
   sceneImage,
   sceneImageSize,
-  sceneZones,
 } from "@/game/scene";
+
 import { playDiscoverySting } from "@/game/discovery-fx";
 import { useRoom } from "@/game/use-room";
 
