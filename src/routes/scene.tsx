@@ -17,6 +17,8 @@ import {
 
 import { playDiscoverySting } from "@/game/discovery-fx";
 import { useRoom } from "@/game/use-room";
+import { useTurn } from "@/game/use-turn";
+
 
 export const Route = createFileRoute("/scene")({
   head: () => ({
