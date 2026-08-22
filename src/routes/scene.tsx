@@ -206,7 +206,7 @@ function SceneRoute() {
                   ))}
                 {/* Hidden evidence hotspots: only inside close-up views, never markers. */}
                 {sceneHotspots
-                  .filter((h) => view.id !== "room" && inView(view, h.x, h.y, 0))
+                  .filter((h) => view.evidence.includes(h.evidenceId))
                   .map((h) => (
                     <button
                       key={h.evidenceId}

@@ -93,6 +93,8 @@ export interface SceneView {
   y: number;
   size: number;
   nav: SceneNavHotspot[];
+  /** Evidence ids that can be found from this view only. */
+  evidence: string[];
 }
 
 export const SCENE_START_VIEW = "hallway";
@@ -106,6 +108,9 @@ export const sceneViews: SceneView[] = [
     size: 58,
     // Click the bedroom door itself to step inside.
     nav: [{ to: "room", x: 61, y: 48, w: 12, h: 34 }],
+    evidence: ["camera"],
+    evidence: ["shoe"],
+    evidence: ["watch"],
   },
   {
     id: "room",
@@ -125,6 +130,7 @@ export const sceneViews: SceneView[] = [
       // Doorway seen from inside → back to the hallway.
       { to: "door", x: 60, y: 60, w: 10, h: 26 },
     ],
+    evidence: [],
   },
   {
     id: "bed",
@@ -141,6 +147,7 @@ export const sceneViews: SceneView[] = [
     y: 38,
     size: 32,
     nav: [{ to: "room", x: 55, y: 50, w: 8, h: 8 }],
+    evidence: ["cup"],
   },
   {
     id: "rug",
@@ -157,6 +164,7 @@ export const sceneViews: SceneView[] = [
     y: 72,
     size: 32,
     nav: [{ to: "room", x: 64, y: 60, w: 8, h: 8 }],
+    evidence: ["phone"],
   },
   {
     id: "door",
@@ -169,6 +177,7 @@ export const sceneViews: SceneView[] = [
       { to: "hallway", x: 66, y: 70, w: 10, h: 14 },
       { to: "room", x: 46, y: 74, w: 10, h: 12 },
     ],
+    evidence: ["key"],
   },
 ];
 
