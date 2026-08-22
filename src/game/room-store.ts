@@ -738,10 +738,19 @@ export function resetCase() {
 /** مدة دور اللاعب الواحد: دقيقتان. */
 export const TURN_SECONDS = 120;
 
+/** مدة وقت النقاش المشترك: ٣ دقائق. */
+export const DISCUSSION_SECONDS = 180;
+
 /** الوقت المتبقي لدور اللاعب الحالي — محسوب من الحالة المشتركة، فالـ refresh ما يعيده. */
 export function remainingTurnTime(turn?: TurnState | null): number {
   if (!turn || turn.mode !== "action") return 0;
   return Math.max(0, TURN_SECONDS - Math.floor((Date.now() - turn.startedAt) / 1000));
+}
+
+/** الوقت المتبقي لوقت النقاش — نفس الحساب المشترك، فالـ refresh ما يصفّره. */
+export function remainingDiscussionTime(turn?: TurnState | null): number {
+  if (!turn || turn.mode !== "discussion") return 0;
+  return Math.max(0, DISCUSSION_SECONDS - Math.floor((Date.now() - turn.startedAt) / 1000));
 }
 
 /** اللاعب صاحب الدور الفعّال حالياً (null بوقت النقاش). */
@@ -749,6 +758,15 @@ export function activeTurnPlayerId(turn?: TurnState | null): string | null {
   if (!turn || turn.mode !== "action") return null;
   return turn.order[turn.index] ?? null;
 }
+
+/** إنهاء النقاش (المضيف أو انتهاء العدّاد) → «جاهزين للجولة التالية؟». */
+export const endDiscussion = () =>
+  update((s) => {
+    const turn = s.turn;
+    if (!turn || turn.mode !== "discussion") return;
+    s.turn = { ...turn, mode: "ready", startedAt: Date.now() };
+  });
+
 
 const turnOrderFor = (s: RoomState) =>
   [...s.players].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => p.id);

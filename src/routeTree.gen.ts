@@ -14,6 +14,7 @@ import { Route as AccusationRouteImport } from './routes/accusation'
 import { Route as CaseRouteImport } from './routes/case'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as LobbyRouteImport } from './routes/lobby'
+import { Route as NotebookRouteImport } from './routes/notebook'
 import { Route as RevealRouteImport } from './routes/reveal'
 import { Route as RolesRouteImport } from './routes/roles'
 import { Route as SceneRouteImport } from './routes/scene'
@@ -44,6 +45,11 @@ const LobbyRoute = LobbyRouteImport.update({
   path: '/lobby',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotebookRoute = NotebookRouteImport.update({
+  id: '/notebook',
+  path: '/notebook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RevealRoute = RevealRouteImport.update({
   id: '/reveal',
   path: '/reveal',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/case': typeof CaseRoute
   '/dashboard': typeof DashboardRoute
   '/lobby': typeof LobbyRoute
+  '/notebook': typeof NotebookRoute
   '/reveal': typeof RevealRoute
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/case': typeof CaseRoute
   '/dashboard': typeof DashboardRoute
   '/lobby': typeof LobbyRoute
+  '/notebook': typeof NotebookRoute
   '/reveal': typeof RevealRoute
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/case': typeof CaseRoute
   '/dashboard': typeof DashboardRoute
   '/lobby': typeof LobbyRoute
+  '/notebook': typeof NotebookRoute
   '/reveal': typeof RevealRoute
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/case'
     | '/dashboard'
     | '/lobby'
+    | '/notebook'
     | '/reveal'
     | '/roles'
     | '/scene'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/case'
     | '/dashboard'
     | '/lobby'
+    | '/notebook'
     | '/reveal'
     | '/roles'
     | '/scene'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/case'
     | '/dashboard'
     | '/lobby'
+    | '/notebook'
     | '/reveal'
     | '/roles'
     | '/scene'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   CaseRoute: typeof CaseRoute
   DashboardRoute: typeof DashboardRoute
   LobbyRoute: typeof LobbyRoute
+  NotebookRoute: typeof NotebookRoute
   RevealRoute: typeof RevealRoute
   RolesRoute: typeof RolesRoute
   SceneRoute: typeof SceneRoute
@@ -184,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LobbyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notebook': {
+      id: '/notebook'
+      path: '/notebook'
+      fullPath: '/notebook'
+      preLoaderRoute: typeof NotebookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reveal': {
       id: '/reveal'
       path: '/reveal'
@@ -221,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   CaseRoute: CaseRoute,
   DashboardRoute: DashboardRoute,
   LobbyRoute: LobbyRoute,
+  NotebookRoute: NotebookRoute,
   RevealRoute: RevealRoute,
   RolesRoute: RolesRoute,
   SceneRoute: SceneRoute,

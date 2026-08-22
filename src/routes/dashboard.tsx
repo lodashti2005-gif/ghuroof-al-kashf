@@ -232,7 +232,24 @@ function Dashboard() {
 
           <RoundActionsPanel />
 
+          <Panel className="cine-in">
+            <Eyebrow>مرجع مشترك</Eyebrow>
+            <h2 className="mt-1.5 text-base font-bold">دفتر القضية</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              كل ما اكتشفه الفريق: الأدلة، أقوال المشتبه فيهم، التناقضات، التسلسل الزمني
+              وملاحظاتكم — متزامن لحظياً.
+            </p>
+            <ActionButton
+              variant="outline"
+              className="mt-4 w-full"
+              onClick={() => navigate({ to: "/notebook" })}
+            >
+              <NotebookPen className="size-4" /> افتح دفتر القضية
+            </ActionButton>
+          </Panel>
+
           <TeamIntelPanel notes={room?.notes ?? []} />
+
 
           <NotesPanel />
 

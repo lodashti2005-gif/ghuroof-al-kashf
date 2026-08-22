@@ -97,8 +97,9 @@ export interface TurnState {
   index: number;
   /** رقم الجولة (يبدأ من 1). */
   round: number;
-  /** "action" = دور لاعب فعّال، "discussion" = وقت النقاش بين الجولات. */
-  mode: "action" | "discussion";
+  /** "action" = دور لاعب فعّال، "discussion" = وقت النقاش، "ready" = بانتظار بدء الجولة التالية. */
+  mode: "action" | "discussion" | "ready";
+
   /** لحظة بداية الدور/النقاش الحالي (epoch ms مشترك). */
   startedAt: number;
 }

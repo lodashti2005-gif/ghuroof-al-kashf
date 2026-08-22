@@ -17,6 +17,8 @@ import {
 
 import { playDiscoverySting } from "@/game/discovery-fx";
 import { useRoom } from "@/game/use-room";
+import { useTurn } from "@/game/use-turn";
+
 
 export const Route = createFileRoute("/scene")({
   head: () => ({
@@ -39,6 +41,10 @@ function SceneRoute() {
   const { room, me, actions } = useRoom();
   const navigate = useNavigate();
   const unlockedIds = room?.unlockedEvidence ?? [];
+  // وقت النقاش: المشاهدة مفتوحة للجميع، بس ما ينكتشف دليل جديد.
+  const { discussion, awaitingNextRound } = useTurn();
+  const discoveryPaused = discussion || awaitingNextRound;
+
 
   const [found, setFound] = useState<string | null>(null);
   const [miss, setMiss] = useState<string | null>(null);
@@ -109,8 +115,13 @@ function SceneRoute() {
     const item = getEvidence(evidenceId);
     if (!item) return;
     const isNew = !unlockedIds.includes(evidenceId) && !claimed.current.has(evidenceId);
+    if (isNew && discoveryPaused) {
+      setToast("وقت النقاش — ما ينكتشف دليل جديد الآن، راجعوا دفتر القضية");
+      return;
+    }
     setFound(evidenceId);
     if (!isNew) return;
+
     // Count each discovery exactly once, even on rapid repeat clicks.
     claimed.current.add(evidenceId);
     actions.unlockEvidence(evidenceId);

@@ -1,7 +1,7 @@
 /**
  * دور اللاعب بالتناوب — قراءة الحالة المشتركة من الغرفة وحسابها لكل جهاز.
  * ما يغيّر توزيع الأدوار ولا الأدلة ولا الاستجواب: بس يحدد منو يقدر يستخدم
- * أدوات دوره الآن.
+ * أدوات دوره الآن، ووقت النقاش المشترك بين الجولات.
  */
 import { useEffect, useState } from "react";
 
@@ -33,6 +33,8 @@ export function useTurn() {
   const remaining = store.remainingTurnTime(turn);
   const isMyTurn = !!me && !!activeId && activeId === me.id;
   const discussion = turn?.mode === "discussion";
+  const awaitingNextRound = turn?.mode === "ready";
+  const discussionRemaining = store.remainingDiscussionTime(turn);
   // قبل ما تبدأ الجولة (أو بمراحل ثانية) ما نقفل شي — نفس السلوك السابق.
   const canAct = !turn || !investigating ? true : isMyTurn;
 
@@ -46,6 +48,12 @@ export function useTurn() {
     }
   }, [turn, remaining, isMyTurn, isHost, activePlayer, actions]);
 
+  // انتهى وقت النقاش → «جاهزين للجولة التالية؟» (المضيف يكتب الحالة المشتركة).
+  useEffect(() => {
+    if (!turn || turn.mode !== "discussion" || discussionRemaining > 0) return;
+    if (isHost) actions.endDiscussion();
+  }, [turn, discussionRemaining, isHost, actions]);
+
   const endMyTurn = () => {
     if (!turn || turn.mode !== "action") return;
     actions.advanceTurn({ round: turn.round, index: turn.index });
@@ -58,9 +66,12 @@ export function useTurn() {
     remaining,
     isMyTurn,
     discussion,
+    awaitingNextRound,
+    discussionRemaining,
     canAct,
     isHost,
     endMyTurn,
+    endDiscussion: actions.endDiscussion,
     startNextRound: actions.startNextRound,
   };
 }
