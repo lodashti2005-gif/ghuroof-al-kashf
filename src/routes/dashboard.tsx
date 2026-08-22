@@ -52,6 +52,8 @@ function Dashboard() {
   const { canAct } = useTurn();
   // تأكيد قائد الغرفة قبل فتح «القرار الأخير» — ما يبدأ تلقائياً أبداً.
   const [confirmFinal, setConfirmFinal] = useState(false);
+  // تأكيد قائد الغرفة قبل فتح «القرار الأخير» — ما يبدأ تلقائياً أبداً.
+  const [confirmFinal, setConfirmFinal] = useState(false);
   const myRoleId = me ? room?.roles?.[me.id] : undefined;
   const roleAccess = accessFor(myRoleId);
   // أدوات الدور تنفتح فقط لصاحب الدور الحالي بالتناوب — المشاهدة تبقى للجميع.
