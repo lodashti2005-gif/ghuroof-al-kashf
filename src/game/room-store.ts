@@ -15,6 +15,7 @@ import { assignRoles, playerRoles } from "./roles";
 import type {
   AbilityUse,
   Contradiction,
+  FinalDecision,
   Deduction,
   Note,
   Player,
