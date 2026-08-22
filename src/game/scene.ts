@@ -194,7 +194,7 @@ export const sceneViews: SceneView[] = [
       { to: "hallway", x: 66, y: 70, w: 10, h: 14 },
       { to: "room", x: 46, y: 74, w: 10, h: 12 },
     ],
-    evidence: ["key"],
+    evidence: [],
   },
 ];
 
@@ -207,6 +207,14 @@ export function inView(view: SceneView, x: number, y: number, pad = 1) {
   const half = view.size / 2 + pad;
   return Math.abs(x - view.x) <= half && Math.abs(y - view.y) <= half;
 }
+
+/** Ordinary props clickable inside a given view. */
+export function decoysInView(view: SceneView) {
+  return sceneDecoys.filter((d) =>
+    d.views ? d.views.includes(view.id) : inView(view, d.x, d.y, 0),
+  );
+}
+
 
 
 
