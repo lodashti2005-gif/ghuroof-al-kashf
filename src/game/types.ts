@@ -141,6 +141,8 @@ export interface RoomState {
   votes: Record<string, string>; // playerId -> suspectId
   /** دور اللاعب الحالي بالتناوب (null قبل بداية أول جولة). */
   turn: TurnState | null;
+  /** سجل قدرات الأدوار المستخدمة (مشترك). */
+  abilities: AbilityUse[];
 }
 
 /** A magnified region of the master crime-scene photograph. */
