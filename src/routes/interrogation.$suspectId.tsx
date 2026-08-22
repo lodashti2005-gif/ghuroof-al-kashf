@@ -398,8 +398,8 @@ function InterrogationRoom() {
               suspect={suspect}
               state={state}
               stress={runtime?.stress ?? 0}
-              />
             />
+
             <div className="border-t border-border p-4">
               <StressMeter value={runtime?.stress ?? 0} />
             </div>
