@@ -73,29 +73,115 @@ export const sceneDecoys: SceneDecoy[] = [
 ];
 
 /**
- * Exploration zones. The player moves the camera between areas of the room
- * instead of staring at one static frame. `size` is the visible width of the
- * frame as a percentage of the photo width (smaller = closer).
- * Zones never reveal what they contain.
+ * First-person point-and-click views. The player never sees a menu: every move
+ * happens by clicking a real object inside the photo. `size` is the visible
+ * width/height of the frame as a percentage of the photo (smaller = closer).
  */
-export interface SceneZone {
-  id: string;
-  label: string;
-  hint: string;
-  /** Camera center in % of image width/height. */
+export interface SceneNavHotspot {
+  /** Target view id. */
+  to: string;
   x: number;
   y: number;
-  /** Visible frame width in % of image width. */
-  size: number;
+  w: number;
+  h: number;
 }
 
-export const sceneZones: SceneZone[] = [
-  { id: "door", label: "المدخل والباب", hint: "الباب مردود على الممر", x: 57, y: 82, size: 32 },
-  { id: "bed", label: "منطقة السرير", hint: "السرير والجهة اليسرى", x: 25, y: 60, size: 36 },
-  { id: "desk", label: "الكومدينة والطاولة", hint: "سطح الخشب والمراية", x: 44, y: 38, size: 30 },
-  { id: "rug", label: "وسط الغرفة والسجادة", hint: "الأرضية والسجادة", x: 33, y: 76, size: 30 },
-  { id: "outlet", label: "الطوفة والكهرباء", hint: "الجهة اليمنى والمقبس", x: 76, y: 72, size: 30 },
-  { id: "hallway", label: "الممر الخارجي", hint: "برا الغرفة فوق الباب", x: 85, y: 14, size: 30 },
+export interface SceneView {
+  id: string;
+  /** Internal label only (small overlay caption), never a navigation menu. */
+  label: string;
+  x: number;
+  y: number;
+  size: number;
+  nav: SceneNavHotspot[];
+}
+
+export const SCENE_START_VIEW = "hallway";
+
+export const sceneViews: SceneView[] = [
+  {
+    id: "hallway",
+    label: "الممر الخارجي",
+    x: 75,
+    y: 30,
+    size: 58,
+    // Click the bedroom door itself to step inside.
+    nav: [{ to: "room", x: 61, y: 48, w: 12, h: 34 }],
+  },
+  {
+    id: "room",
+    label: "داخل الغرفة",
+    x: 45,
+    y: 55,
+    size: 88,
+    nav: [
+      // The bed itself.
+      { to: "bed", x: 26, y: 52, w: 24, h: 18 },
+      // The dresser / mirror surface.
+      { to: "desk", x: 43, y: 40, w: 16, h: 16 },
+      // Center of the room / rug.
+      { to: "rug", x: 34, y: 80, w: 22, h: 14 },
+      // Right wall and power outlet.
+      { to: "outlet", x: 78, y: 70, w: 18, h: 22 },
+      // Doorway seen from inside → back to the hallway.
+      { to: "door", x: 60, y: 60, w: 10, h: 26 },
+    ],
+  },
+  {
+    id: "bed",
+    label: "منطقة السرير",
+    x: 25,
+    y: 60,
+    size: 38,
+    nav: [{ to: "room", x: 40, y: 44, w: 8, h: 8 }],
+  },
+  {
+    id: "desk",
+    label: "الكومدينة والمراية",
+    x: 44,
+    y: 38,
+    size: 32,
+    nav: [{ to: "room", x: 55, y: 50, w: 8, h: 8 }],
+  },
+  {
+    id: "rug",
+    label: "وسط الغرفة",
+    x: 33,
+    y: 76,
+    size: 32,
+    nav: [{ to: "room", x: 22, y: 64, w: 8, h: 8 }],
+  },
+  {
+    id: "outlet",
+    label: "الطوفة والكهرباء",
+    x: 76,
+    y: 72,
+    size: 32,
+    nav: [{ to: "room", x: 64, y: 60, w: 8, h: 8 }],
+  },
+  {
+    id: "door",
+    label: "عند الباب",
+    x: 57,
+    y: 82,
+    size: 34,
+    nav: [
+      // Step back out to the hallway through the partially closed door.
+      { to: "hallway", x: 66, y: 70, w: 10, h: 14 },
+      { to: "room", x: 46, y: 74, w: 10, h: 12 },
+    ],
+  },
 ];
+
+export function getSceneView(id: string): SceneView {
+  return sceneViews.find((v) => v.id === id) ?? sceneViews[0]!;
+}
+
+/** True when a point (in image %) falls inside the visible frame of a view. */
+export function inView(view: SceneView, x: number, y: number, pad = 1) {
+  const half = view.size / 2 + pad;
+  return Math.abs(x - view.x) <= half && Math.abs(y - view.y) <= half;
+}
+
 
 
