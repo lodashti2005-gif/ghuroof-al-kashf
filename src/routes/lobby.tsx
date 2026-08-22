@@ -26,7 +26,8 @@ function Lobby() {
 
   useEffect(() => {
     if (!room) return;
-    if (room.phase === "roles") navigate({ to: "/roles" });
+    if (room.phase === "intro") navigate({ to: "/intro" });
+    else if (room.phase === "roles") navigate({ to: "/roles" });
     else if (room.phase !== "lobby") navigate({ to: "/case" });
   }, [room, navigate]);
 
@@ -71,8 +72,8 @@ function Lobby() {
             <ActionButton
               className="mt-6 w-full py-3.5 text-base"
               onClick={() => {
-                void actions.startRoles(room?.players.map((p) => p.id) ?? []);
-                navigate({ to: "/roles" });
+                actions.startIntro();
+                navigate({ to: "/intro" });
               }}
 
             >
@@ -80,7 +81,7 @@ function Lobby() {
             </ActionButton>
           ) : (
             <p className="mt-6 rounded-xl border border-border bg-secondary/60 px-4 py-3 text-center text-sm text-muted-foreground">
-              انتظر المضيف يبدأ القضية وتوزيع الأدوار
+              انتظر المضيف يبدأ القضية
             </p>
           )}
         </Panel>
