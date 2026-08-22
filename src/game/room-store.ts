@@ -46,6 +46,7 @@ type SharedState = Pick<
   | "turn"
   | "abilities"
   | "final"
+  | "intro"
 >;
 
 let state: RoomState | null = null;
@@ -94,6 +95,7 @@ const freshShared = (): SharedState => ({
   turn: null,
   abilities: [],
   final: null,
+  intro: null,
 });
 
 function saveSession() {
@@ -176,6 +178,7 @@ function toRoomState(snap: Snapshot): RoomState {
     turn: shared.turn ?? null,
     abilities: shared.abilities ?? [],
     final: shared.final ?? null,
+    intro: shared.intro ?? null,
   };
 }
 
@@ -345,6 +348,7 @@ function sharedPayload(next: RoomState) {
     turn: next.turn,
     abilities: next.abilities,
     final: next.final,
+    intro: next.intro,
   };
 }
 
@@ -455,6 +459,23 @@ export function leaveRoom() {
   emit();
 }
 
+/**
+ * المقدمة السينمائية: حالة مشتركة (رقم المشهد) عشان كل الأجهزة تشوف نفس
+ * المشهد، والتحديث/إعادة الاتصال ترجع اللاعب لنفس المشهد بدون ما تعيدها من
+ * البداية. ما تلمس الأدوار ولا الأدلة ولا أي نظام ثاني.
+ */
+export const startIntro = () =>
+  update((s) => {
+    s.phase = "intro";
+    if (s.intro === null) s.intro = 0;
+  });
+
+export const setIntroStep = (step: number) =>
+  update((s) => {
+    if (s.phase !== "intro") return;
+    s.intro = Math.max(0, step);
+  });
+
 export const setPhase = (phase: RoomState["phase"]) => update((s) => void (s.phase = phase));
 
 /** إعادة مزامنة يدوية (زر «إعادة المزامنة»). */
@@ -487,6 +508,7 @@ export async function startRoles(playerIds: string[] = []) {
     // توزيع مرة واحدة: أي دور محفوظ مسبقاً يبقى ثابت لنفس player_id.
     s.roles = assignRoles(ids, s.roles ?? {});
     if (!hadRoles) s.ready = [];
+    s.intro = null;
     s.phase = "roles";
   });
 
