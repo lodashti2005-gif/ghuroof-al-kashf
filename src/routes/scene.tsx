@@ -185,24 +185,24 @@ function SceneRoute() {
                 ))}
                 {/* Decoy props: clickable, but nothing useful. */}
                 {decoysInView(view).map((d) => (
+                  <button
+                    key={d.id}
+                    type="button"
+                    aria-label="فحص تفصيلة في مسرح الجريمة"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMiss(d.message);
+                    }}
+                    className="absolute z-10 -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none"
+                    style={{
+                      left: `${d.x}%`,
+                      top: `${d.y}%`,
+                      width: `${d.w}%`,
+                      height: `${d.h}%`,
+                    }}
+                  />
+                ))}
 
-                    <button
-                      key={d.id}
-                      type="button"
-                      aria-label="فحص تفصيلة في مسرح الجريمة"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMiss(d.message);
-                      }}
-                      className="absolute z-10 -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none"
-                      style={{
-                        left: `${d.x}%`,
-                        top: `${d.y}%`,
-                        width: `${d.w}%`,
-                        height: `${d.h}%`,
-                      }}
-                    />
-                  ))}
                 {/* Hidden evidence hotspots: only inside close-up views, never markers. */}
                 {sceneHotspots
                   .filter((h) => view.evidence.includes(h.evidenceId))
