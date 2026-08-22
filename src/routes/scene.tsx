@@ -172,7 +172,7 @@ function SceneRoute() {
                       e.stopPropagation();
                       goTo(n.to);
                     }}
-                    className="absolute z-25 -translate-x-1/2 -translate-y-1/2 cursor-pointer bg-transparent focus:outline-none"
+                    className="absolute z-20 -translate-x-1/2 -translate-y-1/2 cursor-pointer bg-transparent focus:outline-none"
                     style={{
                       left: `${n.x}%`,
                       top: `${n.y}%`,
@@ -195,7 +195,7 @@ function SceneRoute() {
                         e.stopPropagation();
                         setMiss(d.message);
                       }}
-                      className="absolute z-20 -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none"
+                      className="absolute z-10 -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none"
                       style={{
                         left: `${d.x}%`,
                         top: `${d.y}%`,
