@@ -10,13 +10,13 @@ import { caseFile, evidence, getEvidence } from "@/game/case-data";
 import {
   SCENE_EVIDENCE_IDS,
   SCENE_START_VIEW,
+  decoysInView,
   getSceneView,
-  inView,
-  sceneDecoys,
   sceneHotspots,
   sceneImage,
   sceneImageSize,
 } from "@/game/scene";
+
 
 import { playDiscoverySting } from "@/game/discovery-fx";
 import { useRoom } from "@/game/use-room";
@@ -142,7 +142,7 @@ function SceneRoute() {
           </div>
         </Panel>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
           <div className="surface-panel cine-in overflow-hidden p-0">
             <div className="relative w-full select-none overflow-hidden bg-black">
               <div
@@ -152,8 +152,9 @@ function SceneRoute() {
                   transform: `scale(${100 / view.size})`,
                   opacity: fade ? 0.35 : 1,
                 }}
-                onClick={() => setMiss("ما في شي مهم بهذا المكان")}
+                onClick={() => setMiss("ماكو شي مهم هنا")}
               >
+
                 <img
                   src={sceneImage}
                   alt="صورة مسرح الجريمة داخل الشاليه"
@@ -184,26 +185,25 @@ function SceneRoute() {
                   />
                 ))}
                 {/* Decoy props: clickable, but nothing useful. */}
-                {sceneDecoys
-                  .filter((d) => inView(view, d.x, d.y, 0))
-                  .map((d) => (
-                    <button
-                      key={d.id}
-                      type="button"
-                      aria-label="فحص تفصيلة في مسرح الجريمة"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMiss(d.message);
-                      }}
-                      className="absolute z-10 -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none"
-                      style={{
-                        left: `${d.x}%`,
-                        top: `${d.y}%`,
-                        width: `${d.w}%`,
-                        height: `${d.h}%`,
-                      }}
-                    />
-                  ))}
+                {decoysInView(view).map((d) => (
+                  <button
+                    key={d.id}
+                    type="button"
+                    aria-label="فحص تفصيلة في مسرح الجريمة"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMiss(d.message);
+                    }}
+                    className="absolute z-10 -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none"
+                    style={{
+                      left: `${d.x}%`,
+                      top: `${d.y}%`,
+                      width: `${d.w}%`,
+                      height: `${d.h}%`,
+                    }}
+                  />
+                ))}
+
                 {/* Hidden evidence hotspots: only inside close-up views, never markers. */}
                 {sceneHotspots
                   .filter((h) => view.evidence.includes(h.evidenceId))
