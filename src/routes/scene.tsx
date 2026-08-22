@@ -115,8 +115,13 @@ function SceneRoute() {
     const item = getEvidence(evidenceId);
     if (!item) return;
     const isNew = !unlockedIds.includes(evidenceId) && !claimed.current.has(evidenceId);
+    if (isNew && discoveryPaused) {
+      setToast("وقت النقاش — ما ينكتشف دليل جديد الآن، راجعوا دفتر القضية");
+      return;
+    }
     setFound(evidenceId);
     if (!isNew) return;
+
     // Count each discovery exactly once, even on rapid repeat clicks.
     claimed.current.add(evidenceId);
     actions.unlockEvidence(evidenceId);
