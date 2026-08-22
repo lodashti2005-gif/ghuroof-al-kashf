@@ -87,7 +87,7 @@ function SceneRoute() {
     actions.unlockEvidence(evidenceId);
     setSpark({ x: at.x, y: at.y, k: Date.now() });
     setFlash(Date.now());
-    setToast("🔎 انضاف الدليل للوحة الأدلة");
+    setToast("🔎 تم اكتشاف دليل — انضاف للوحة الأدلة");
     playDiscoverySting();
   };
 
