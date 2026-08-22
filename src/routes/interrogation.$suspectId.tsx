@@ -4,19 +4,15 @@ import {
   ArrowLeft,
   FileSearch,
   Loader2,
-  Mic,
-  MicOff,
   RotateCcw,
   Search,
   Send,
-  Square,
   Timer,
   Unlock,
   Users,
-  Volume2,
-  VolumeX,
   X,
 } from "lucide-react";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { EvidenceBoard } from "@/components/game/evidence-board";
