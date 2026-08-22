@@ -129,15 +129,18 @@ function InterrogationRoom() {
    * الردود الموجودة قبل ما تفتح الشاشة تظهر كاملة، والردود الجديدة فقط
    * تنكتب حرف حرف. (نص فقط — ما فيه أي صوت.)
    */
-  const seenRef = useRef<Set<string> | null>(null);
+  const seenRef = useRef<{ suspect: string; ids: Set<string> } | null>(null);
   const freshRef = useRef<Set<string>>(new Set());
-  if (!seenRef.current) seenRef.current = new Set(transcript.map((m) => m.id));
+  if (!seenRef.current || seenRef.current.suspect !== suspectId) {
+    seenRef.current = { suspect: suspectId, ids: new Set(transcript.map((m) => m.id)) };
+  }
   for (const m of transcript) {
-    if (!seenRef.current.has(m.id)) {
-      seenRef.current.add(m.id);
+    if (!seenRef.current.ids.has(m.id)) {
+      seenRef.current.ids.add(m.id);
       freshRef.current.add(m.id);
     }
   }
+
 
   const unlocked = useMemo(
     () => allEvidence.filter((e) => room?.unlockedEvidence.includes(e.id)),
