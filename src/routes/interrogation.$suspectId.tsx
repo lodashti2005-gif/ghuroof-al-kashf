@@ -124,6 +124,21 @@ function InterrogationRoom() {
   const busyRef = useRef(false);
 
   const transcript = useMemo(() => runtime?.transcript ?? [], [runtime?.transcript]);
+
+  /**
+   * الردود الموجودة قبل ما تفتح الشاشة تظهر كاملة، والردود الجديدة فقط
+   * تنكتب حرف حرف. (نص فقط — ما فيه أي صوت.)
+   */
+  const seenRef = useRef<Set<string> | null>(null);
+  const freshRef = useRef<Set<string>>(new Set());
+  if (!seenRef.current) seenRef.current = new Set(transcript.map((m) => m.id));
+  for (const m of transcript) {
+    if (!seenRef.current.has(m.id)) {
+      seenRef.current.add(m.id);
+      freshRef.current.add(m.id);
+    }
+  }
+
   const unlocked = useMemo(
     () => allEvidence.filter((e) => room?.unlockedEvidence.includes(e.id)),
     [room?.unlockedEvidence],
