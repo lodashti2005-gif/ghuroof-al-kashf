@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Check, Fingerprint, Search, Unlock, Users, X } from "lucide-react";
+import { Check, Fingerprint, Search, Unlock, Users, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { SceneCrop } from "@/components/game/scene-crop";
@@ -10,10 +10,7 @@ import { caseFile, evidence, getEvidence } from "@/game/case-data";
 import {
   SCENE_EVIDENCE_IDS,
   SCENE_START_VIEW,
-  decoysInView,
   getSceneView,
-  sceneHotspots,
-  sceneImage,
   sceneImageSize,
 } from "@/game/scene";
 
@@ -58,8 +55,10 @@ function SceneRoute() {
     if (id === viewId) return;
     setMiss(null);
     setFade(true);
-    setViewId(id);
-    setTimeout(() => setFade(false), 60);
+    setTimeout(() => {
+      setViewId(id);
+      setFade(false);
+    }, 180);
   };
 
   /** Guards against double counting from rapid clicks before the room syncs. */
@@ -146,18 +145,14 @@ function SceneRoute() {
           <div className="surface-panel cine-in overflow-hidden p-0">
             <div className="relative w-full select-none overflow-hidden bg-black">
               <div
-                className="relative w-full transition-[transform,opacity] duration-[340ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
-                style={{
-                  transformOrigin: `${view.x}% ${view.y}%`,
-                  transform: `scale(${100 / view.size})`,
-                  opacity: fade ? 0.35 : 1,
-                }}
+                className="relative w-full transition-opacity duration-[280ms] ease-out"
+                style={{ opacity: fade ? 0 : 1 }}
                 onClick={() => setMiss("ماكو شي مهم هنا")}
               >
-
                 <img
-                  src={sceneImage}
-                  alt="صورة مسرح الجريمة داخل الشاليه"
+                  key={view.id}
+                  src={view.image}
+                  alt="مشهد داخل مسرح الجريمة"
                   width={sceneImageSize.width}
                   height={sceneImageSize.height}
                   className="block w-full cursor-crosshair"
@@ -169,6 +164,7 @@ function SceneRoute() {
                     key={`${view.id}-${n.to}`}
                     type="button"
                     aria-label="التحرك داخل مسرح الجريمة"
+                    data-nav-hotspot={n.to}
                     onClick={(e) => {
                       e.stopPropagation();
                       goTo(n.to);
@@ -179,15 +175,15 @@ function SceneRoute() {
                       top: `${n.y}%`,
                       width: `${n.w}%`,
                       height: `${n.h}%`,
-                      minWidth: 44 / (100 / view.size) + "px",
-                      minHeight: 44 / (100 / view.size) + "px",
+                      minWidth: "44px",
+                      minHeight: "44px",
                     }}
                   />
                 ))}
                 {/* Decoy props: clickable, but nothing useful. */}
-                {decoysInView(view).map((d) => (
+                {view.decoys.map((d) => (
                   <button
-                    key={d.id}
+                    key={`${view.id}-${d.id}`}
                     type="button"
                     aria-label="فحص تفصيلة في مسرح الجريمة"
                     onClick={(e) => {
@@ -204,30 +200,28 @@ function SceneRoute() {
                   />
                 ))}
 
-                {/* Hidden evidence hotspots: only inside close-up views, never markers. */}
-                {sceneHotspots
-                  .filter((h) => view.evidence.includes(h.evidenceId))
-                  .map((h) => (
-                    <button
-                      key={h.evidenceId}
-                      type="button"
-                      aria-label="فحص تفصيلة في مسرح الجريمة"
-                      data-evidence-hotspot={h.evidenceId}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        inspect(h.evidenceId, { x: h.x, y: h.y });
-                      }}
-                      className="absolute z-30 -translate-x-1/2 -translate-y-1/2 cursor-crosshair rounded-full bg-transparent focus:outline-none"
-                      style={{
-                        left: `${h.x}%`,
-                        top: `${h.y}%`,
-                        width: `${h.w}%`,
-                        height: `${h.h}%`,
-                        minWidth: 40 / (100 / view.size) + "px",
-                        minHeight: 40 / (100 / view.size) + "px",
-                      }}
-                    />
-                  ))}
+                {/* Hidden evidence hotspots: no markers, never triggered by navigation. */}
+                {view.evidence.map((h) => (
+                  <button
+                    key={h.evidenceId}
+                    type="button"
+                    aria-label="فحص تفصيلة في مسرح الجريمة"
+                    data-evidence-hotspot={h.evidenceId}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      inspect(h.evidenceId, { x: h.x, y: h.y });
+                    }}
+                    className="absolute z-30 -translate-x-1/2 -translate-y-1/2 cursor-crosshair rounded-full bg-transparent focus:outline-none"
+                    style={{
+                      left: `${h.x}%`,
+                      top: `${h.y}%`,
+                      width: `${h.w}%`,
+                      height: `${h.h}%`,
+                      minWidth: "40px",
+                      minHeight: "40px",
+                    }}
+                  />
+                ))}
 
                 {spark && (
                   <span
@@ -254,23 +248,12 @@ function SceneRoute() {
                   className="evidence-flash pointer-events-none absolute inset-0 z-40"
                 />
               )}
-              <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent p-3">
-                {viewId !== SCENE_START_VIEW ? (
-                  <span className="pointer-events-auto">
-                    <ActionButton
-                      variant="outline"
-                      onClick={() => goTo(viewId === "room" ? "hallway" : "room")}
-                    >
-                      <ArrowRight className="size-4" /> رجوع
-                    </ActionButton>
-                  </span>
-                ) : (
-                  <span />
-                )}
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-end gap-2 bg-gradient-to-b from-black/70 to-transparent p-3">
                 <span className="rounded-lg bg-black/50 px-2.5 py-1 font-mono text-[11px] tracking-widest text-white/80">
                   {view.label}
                 </span>
               </div>
+
               {miss && (
                 <div className="pointer-events-none absolute bottom-3 right-1/2 z-40 translate-x-1/2 rounded-lg border border-border bg-card/90 px-3 py-1.5 text-xs text-muted-foreground">
                   {miss}

@@ -1,116 +1,54 @@
 import crimeScene from "@/assets/crime-scene.jpg";
+import hallwayImg from "@/assets/scene/hallway.jpg";
+import bedImg from "@/assets/scene/bed.jpg";
+import deskImg from "@/assets/scene/desk.jpg";
+import centerImg from "@/assets/scene/center.jpg";
+import outletImg from "@/assets/scene/outlet.jpg";
 
 /**
- * Interactive crime-scene hotspots. Coordinates are percentages of the scene
- * image, so the overlay scales with any viewport. Hotspots are intentionally
- * invisible in the UI: the players must inspect the photo themselves.
+ * True point-and-click scene graph. Each view is its OWN full-size photograph
+ * (no CSS zooming into a single master image). Hotspots are invisible
+ * rectangles positioned in percentages of that view's photo, so they scale to
+ * any viewport.
  *
- * `hard` marks spots hidden inside fine detail (smaller target).
+ * Three kinds of hotspots, always kept separate:
+ *  - nav      → replaces the current photo with another view's photo
+ *  - evidence → discovers a hidden evidence item (never triggered by nav)
+ *  - decoy    → ordinary prop, answers with a short line
  */
-export interface SceneHotspot {
-  evidenceId: string;
-  /** Center X in % of image width. */
-  x: number;
-  /** Center Y in % of image height. */
-  y: number;
-  /** Hit-area width in % of image width. */
-  w: number;
-  /** Hit-area height in % of image height. */
-  h: number;
-  hard?: boolean;
-}
-
-/** Clickable props that are NOT evidence. Clicking them returns a short line. */
-export interface SceneDecoy {
-  id: string;
+export interface SceneRect {
   x: number;
   y: number;
   w: number;
   h: number;
-  message: string;
-  /** Restrict this prop to specific views (defaults to any view containing it). */
-  views?: string[];
 }
 
-
-export const sceneImage = crimeScene;
-
-/** Natural pixel size of the scene photograph. */
-export const sceneImageSize = { width: 1536, height: 1024 };
-
-/**
- * The six hidden evidence spots inside the chalet bedroom photo. The scene
- * phase is complete once all six are discovered.
- */
-export const sceneHotspots: SceneHotspot[] = [
-  // Cracked wristwatch in the middle of the patterned rug.
-  { evidenceId: "watch", x: 33.4, y: 77.8, w: 5, h: 6 },
-  // Black high heel on the floor tiles left of the bed.
-  { evidenceId: "shoe", x: 15.4, y: 72.5, w: 5, h: 6.5 },
-  // Turkish coffee cup on the wooden dresser.
-  { evidenceId: "cup", x: 46, y: 36.2, w: 4, h: 5 },
-  // Charger still plugged into the wall socket by the room entrance.
-  { evidenceId: "phone", x: 74.4, y: 74.5, w: 5, h: 7 },
-  // Key still inserted in the bedroom door lock, seen from the hallway side.
-  { evidenceId: "key", x: 67.2, y: 55.5, w: 3.4, h: 4.4, hard: true },
-  // Surveillance camera outside the room, upper right above the door.
-  { evidenceId: "camera", x: 86.5, y: 9, w: 6, h: 7 },
-];
-
-/** Evidence that can be discovered inside the crime-scene photo. */
-export const SCENE_EVIDENCE_IDS = sceneHotspots.map((h) => h.evidenceId);
-
-/** Decoys are placed so they never overlap an evidence hotspot. */
-export const sceneDecoys: SceneDecoy[] = [
-  { id: "headboard", x: 14, y: 33, w: 14, h: 10, message: "ظهر السرير سليم، ماكو شي مهم هنا" },
-  { id: "bed", x: 26, y: 52, w: 22, h: 14, message: "شرشف مرتب نص ترتيب… ماكو شي مهم هنا" },
-  { id: "lamp-left", x: 28.5, y: 36, w: 5, h: 8, message: "أباجورة مضوية… ماكو شي مهم هنا" },
-  { id: "window", x: 27, y: 20, w: 12, h: 12, message: "الدريشة مقفلة، ماكو شي مهم هنا" },
-  { id: "mirror", x: 42, y: 22, w: 8, h: 12, message: "مراية نظيفة بدون أي أثر" },
-  { id: "dresser", x: 42, y: 45, w: 12, h: 8, message: "دواليب الكومدينة فاضية" },
-  { id: "rug", x: 42, y: 82, w: 16, h: 10, message: "سجادة نظيفة، ماكو شي مهم هنا" },
-  { id: "plant", x: 92, y: 82, w: 8, h: 16, message: "نبتة بالزاوية، ماكو شي مهم هنا" },
-  { id: "ceiling", x: 35, y: 4, w: 26, h: 6, message: "السقف والإضاءة بس" },
-  { id: "artwork", x: 11.5, y: 19, w: 9, h: 10, message: "لوحة معلقة على الطوفة، ماكو شي مهم هنا" },
-  // Hallway props: keeps the corridor from being "camera + door only".
-  { id: "hall-wall", x: 92, y: 40, w: 10, h: 24, message: "طوفة الممر نظيفة، ماكو شي مهم هنا" },
-  { id: "hall-floor", x: 74, y: 88, w: 16, h: 14, message: "أرضية الممر، ولا أثر واضح" },
-  { id: "door-handle", x: 64, y: 46, w: 4, h: 6, message: "مقبض الباب، ماكو شي مهم هنا", views: ["hallway"] },
-  // Close-up props so not every clickable thing is evidence.
-  { id: "pillow", x: 20, y: 44, w: 9, h: 8, message: "مخدة عادية، ماكو شي مهم هنا" },
-  { id: "bed-skirt", x: 22, y: 66, w: 12, h: 8, message: "تحت السرير مظلم وفاضي" },
-  { id: "drawer-knob", x: 48, y: 47, w: 4, h: 5, message: "الدرج مفتوح وفاضي" },
-  { id: "tissue-box", x: 39, y: 34, w: 4, h: 5, message: "علبة مناديل، ماكو شي مهم هنا" },
-  { id: "rug-edge", x: 26, y: 86, w: 10, h: 8, message: "حرف السجادة مرفوع بس ماكو شي تحته" },
-  { id: "socket-wall", x: 80, y: 62, w: 8, h: 10, message: "الطوفة سليمة، ماكو شي مهم هنا" },
-];
-
-
-/**
- * First-person point-and-click views. The player never sees a menu: every move
- * happens by clicking a real object inside the photo. `size` is the visible
- * width/height of the frame as a percentage of the photo (smaller = closer).
- */
-export interface SceneNavHotspot {
-  /** Target view id. */
+export interface SceneNavHotspot extends SceneRect {
   to: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+}
+
+export interface SceneEvidenceHotspot extends SceneRect {
+  evidenceId: string;
+}
+
+export interface SceneDecoyHotspot extends SceneRect {
+  id: string;
+  message: string;
 }
 
 export interface SceneView {
   id: string;
-  /** Internal label only (small overlay caption), never a navigation menu. */
+  /** Small ambient caption only — never a navigation control. */
   label: string;
-  x: number;
-  y: number;
-  size: number;
+  image: string;
   nav: SceneNavHotspot[];
-  /** Evidence ids that can be found from this view only. */
-  evidence: string[];
+  evidence: SceneEvidenceHotspot[];
+  decoys: SceneDecoyHotspot[];
 }
+
+/** Master photo kept for evidence close-up crops. */
+export const sceneImage = crimeScene;
+export const sceneImageSize = { width: 1536, height: 1024 };
 
 export const SCENE_START_VIEW = "hallway";
 
@@ -118,103 +56,104 @@ export const sceneViews: SceneView[] = [
   {
     id: "hallway",
     label: "الممر الخارجي",
-    x: 75,
-    y: 30,
-    size: 58,
-    // Click the bedroom door itself to step inside.
-    nav: [{ to: "room", x: 61, y: 48, w: 12, h: 34 }],
-    // Camera above the corridor + the key still in the door lock.
-    evidence: ["camera", "key"],
-
+    image: hallwayImg,
+    // The bedroom door itself, standing ajar.
+    nav: [{ to: "bedroomWide", x: 64, y: 55, w: 15, h: 66 }],
+    evidence: [
+      // Surveillance camera above the door, in the hallway.
+      { evidenceId: "camera", x: 76.5, y: 7, w: 8, h: 9 },
+      // Key still in the bedroom door lock, hallway side.
+      { evidenceId: "key", x: 57.5, y: 57, w: 5, h: 8 },
+    ],
+    decoys: [
+      { id: "sconce", x: 39, y: 27, w: 8, h: 12, message: "أباجورة الممر مضوية… ماكو شي مهم هنا" },
+      { id: "hall-wall", x: 20, y: 55, w: 22, h: 30, message: "طوفة الممر نظيفة، ماكو شي مهم هنا" },
+      { id: "hall-floor", x: 55, y: 96, w: 40, h: 8, message: "أرضية الممر، ولا أثر واضح" },
+      { id: "hall-end", x: 90, y: 55, w: 12, h: 40, message: "نهاية الممر مظلمة وفاضية" },
+    ],
   },
   {
-    id: "room",
+    id: "bedroomWide",
     label: "داخل الغرفة",
-    x: 45,
-    y: 55,
-    size: 88,
+    image: crimeScene,
     nav: [
-      // The bed itself.
-      { to: "bed", x: 26, y: 52, w: 24, h: 18 },
-      // The dresser / mirror surface.
-      { to: "desk", x: 43, y: 40, w: 16, h: 16 },
-      // Center of the room / rug.
-      { to: "rug", x: 34, y: 80, w: 22, h: 14 },
-      // Right wall and power outlet.
-      { to: "outlet", x: 78, y: 70, w: 18, h: 22 },
-      // Doorway seen from inside → back to the hallway.
-      { to: "door", x: 60, y: 60, w: 10, h: 26 },
+      { to: "bedCloseup", x: 26, y: 52, w: 24, h: 18 },
+      { to: "deskCloseup", x: 43, y: 40, w: 16, h: 16 },
+      { to: "centerCloseup", x: 34, y: 80, w: 22, h: 14 },
+      { to: "outletCloseup", x: 78, y: 70, w: 18, h: 22 },
+      // The doorway back out to the hallway.
+      { to: "hallway", x: 62, y: 52, w: 10, h: 30 },
     ],
     evidence: [],
+    decoys: [
+      { id: "headboard", x: 14, y: 33, w: 14, h: 10, message: "ظهر السرير سليم، ماكو شي مهم هنا" },
+      { id: "window", x: 27, y: 20, w: 12, h: 12, message: "الدريشة مقفلة، ماكو شي مهم هنا" },
+      { id: "mirror", x: 42, y: 22, w: 8, h: 12, message: "مراية نظيفة بدون أي أثر" },
+      { id: "artwork", x: 11.5, y: 19, w: 9, h: 10, message: "لوحة معلقة على الطوفة، ماكو شي مهم هنا" },
+      { id: "ceiling", x: 35, y: 4, w: 26, h: 6, message: "السقف والإضاءة بس" },
+      { id: "plant", x: 92, y: 82, w: 8, h: 16, message: "نبتة بالزاوية، ماكو شي مهم هنا" },
+    ],
   },
   {
-    id: "bed",
+    id: "bedCloseup",
     label: "منطقة السرير",
-    x: 25,
-    y: 60,
-    size: 38,
-    nav: [{ to: "room", x: 40, y: 44, w: 8, h: 8 }],
-    evidence: ["shoe"],
-  },
-  {
-    id: "desk",
-    label: "الكومدينة والمراية",
-    x: 44,
-    y: 38,
-    size: 32,
-    nav: [{ to: "room", x: 55, y: 50, w: 8, h: 8 }],
-    evidence: ["cup"],
-  },
-  {
-    id: "rug",
-    label: "وسط الغرفة",
-    x: 33,
-    y: 76,
-    size: 32,
-    nav: [{ to: "room", x: 22, y: 64, w: 8, h: 8 }],
-    evidence: ["watch"],
-  },
-  {
-    id: "outlet",
-    label: "الطوفة والكهرباء",
-    x: 76,
-    y: 72,
-    size: 32,
-    nav: [{ to: "room", x: 64, y: 60, w: 8, h: 8 }],
-    evidence: ["phone"],
-  },
-  {
-    id: "door",
-    label: "عند الباب",
-    x: 57,
-    y: 82,
-    size: 34,
-    nav: [
-      // Step back out to the hallway through the partially closed door.
-      { to: "hallway", x: 66, y: 70, w: 10, h: 14 },
-      { to: "room", x: 46, y: 74, w: 10, h: 12 },
+    image: bedImg,
+    // Step back toward the middle of the room.
+    nav: [{ to: "bedroomWide", x: 25, y: 95, w: 50, h: 10 }],
+    evidence: [{ evidenceId: "shoe", x: 67, y: 78, w: 12, h: 13 }],
+    decoys: [
+      { id: "pillow", x: 43, y: 22, w: 16, h: 14, message: "مخدة عادية، ماكو شي مهم هنا" },
+      { id: "sheet", x: 25, y: 55, w: 26, h: 25, message: "شرشف مرتب نص ترتيب… ماكو شي مهم هنا" },
+      { id: "lamp", x: 85, y: 12, w: 14, h: 18, message: "أباجورة مضوية… ماكو شي مهم هنا" },
+      { id: "nightstand", x: 82, y: 48, w: 16, h: 18, message: "دواليب الكومدينة فاضية" },
+      { id: "tissue-box", x: 93, y: 28, w: 10, h: 8, message: "علبة مناديل، ماكو شي مهم هنا" },
     ],
-    evidence: [],
+  },
+  {
+    id: "deskCloseup",
+    label: "الكومدينة والمراية",
+    image: deskImg,
+    nav: [{ to: "bedroomWide", x: 25, y: 95, w: 50, h: 10 }],
+    evidence: [{ evidenceId: "cup", x: 33, y: 58, w: 12, h: 14 }],
+    decoys: [
+      { id: "mirror", x: 22, y: 20, w: 30, h: 26, message: "مراية نظيفة بدون أي أثر" },
+      { id: "tissue-box", x: 57, y: 24, w: 14, h: 14, message: "علبة مناديل، ماكو شي مهم هنا" },
+      { id: "drawer", x: 74, y: 66, w: 22, h: 20, message: "الدرج مفتوح وفاضي" },
+      { id: "wood", x: 55, y: 48, w: 14, h: 10, message: "سطح الكومدينة نظيف" },
+    ],
+  },
+  {
+    id: "centerCloseup",
+    label: "وسط الغرفة",
+    image: centerImg,
+    nav: [{ to: "bedroomWide", x: 82, y: 94, w: 34, h: 12 }],
+    evidence: [{ evidenceId: "watch", x: 47, y: 57, w: 13, h: 14 }],
+    decoys: [
+      { id: "rug", x: 25, y: 30, w: 26, h: 24, message: "سجادة نظيفة، ماكو شي مهم هنا" },
+      { id: "rug-edge", x: 75, y: 30, w: 20, h: 22, message: "حرف السجادة مرفوع بس ماكو شي تحته" },
+      { id: "tiles", x: 88, y: 65, w: 20, h: 20, message: "بلاط نظيف، ولا أثر واضح" },
+      { id: "under-bed", x: 15, y: 8, w: 26, h: 14, message: "تحت السرير مظلم وفاضي" },
+    ],
+  },
+  {
+    id: "outletCloseup",
+    label: "الطوفة والكهرباء",
+    image: outletImg,
+    nav: [{ to: "bedroomWide", x: 18, y: 40, w: 26, h: 40 }],
+    evidence: [{ evidenceId: "phone", x: 74, y: 40, w: 14, h: 20 }],
+    decoys: [
+      { id: "socket-wall", x: 92, y: 20, w: 16, h: 24, message: "الطوفة سليمة، ماكو شي مهم هنا" },
+      { id: "skirting", x: 60, y: 72, w: 26, h: 10, message: "وزرة البلاط نظيفة" },
+      { id: "floor", x: 45, y: 92, w: 30, h: 12, message: "أرضية نظيفة، ولا أثر واضح" },
+    ],
   },
 ];
+
+/** Evidence that can be discovered inside the crime scene. */
+export const SCENE_EVIDENCE_IDS = sceneViews.flatMap((v) =>
+  v.evidence.map((e) => e.evidenceId),
+);
 
 export function getSceneView(id: string): SceneView {
   return sceneViews.find((v) => v.id === id) ?? sceneViews[0]!;
 }
-
-/** True when a point (in image %) falls inside the visible frame of a view. */
-export function inView(view: SceneView, x: number, y: number, pad = 1) {
-  const half = view.size / 2 + pad;
-  return Math.abs(x - view.x) <= half && Math.abs(y - view.y) <= half;
-}
-
-/** Ordinary props clickable inside a given view. */
-export function decoysInView(view: SceneView) {
-  return sceneDecoys.filter((d) =>
-    d.views ? d.views.includes(view.id) : inView(view, d.x, d.y, 0),
-  );
-}
-
-
-
-
