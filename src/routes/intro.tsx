@@ -52,7 +52,7 @@ const SCENES: Scene[] = [
     id: "title",
     kind: "title",
     image: chaletHero,
-    dim: 0.78,
+    dim: 0.42,
     lines: ["ورا السالفة", "قضية الشاليه", "ليلة كان المفروض تنتهي بشكل عادي..."],
     cta: "ابدأ القضية",
   },
@@ -60,7 +60,7 @@ const SCENES: Scene[] = [
     id: "day",
     kind: "people",
     image: chaletHero,
-    dim: 0.62,
+    dim: 0.34,
     lines: ["بدأ اليوم مثل أي تجمع عادي.", "خمسة أشخاص اجتمعوا في الشاليه..."],
     cta: "كمل",
   },
@@ -68,7 +68,7 @@ const SCENES: Scene[] = [
     id: "timeline",
     kind: "timeline",
     image: chaletHero,
-    dim: 0.8,
+    dim: 0.48,
     lines: ["أحداث الليلة"],
     beats: [
       { time: "10:30 م", text: "الكل كان مجتمع بالصالة." },
@@ -80,14 +80,14 @@ const SCENES: Scene[] = [
   {
     id: "shift",
     image: chaletHero,
-    dim: 0.92,
+    dim: 0.58,
     lines: ["لكن الليلة ما كملت مثل ما بدأت.", "صار شي داخل إحدى غرف الشاليه."],
     cta: "كمل",
   },
   {
     id: "discovery",
     image: hallway,
-    dim: 0.72,
+    dim: 0.4,
     lines: ["بعد فترة...", "انفتح باب الغرفة.", "ومن هني... بدأت القضية."],
     cta: "كمل",
   },
@@ -187,6 +187,7 @@ function IntroSequence() {
             alt=""
             aria-hidden="true"
             className="intro-kenburns size-full object-cover"
+            style={{ filter: "brightness(1.45) contrast(1.05) saturate(0.95)" }}
           />
           <div
             className="absolute inset-0"
