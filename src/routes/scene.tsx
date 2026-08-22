@@ -39,6 +39,10 @@ function SceneRoute() {
   const { room, me, actions } = useRoom();
   const navigate = useNavigate();
   const unlockedIds = room?.unlockedEvidence ?? [];
+  // وقت النقاش: المشاهدة مفتوحة للجميع، بس ما ينكتشف دليل جديد.
+  const { discussion, awaitingNextRound } = useTurn();
+  const discoveryPaused = discussion || awaitingNextRound;
+
 
   const [found, setFound] = useState<string | null>(null);
   const [miss, setMiss] = useState<string | null>(null);
