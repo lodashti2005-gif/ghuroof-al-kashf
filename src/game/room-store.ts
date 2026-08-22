@@ -44,6 +44,7 @@ type SharedState = Pick<
   | "ready"
   | "turn"
   | "abilities"
+  | "final"
 >;
 
 let state: RoomState | null = null;
@@ -91,6 +92,7 @@ const freshShared = (): SharedState => ({
   ready: [],
   turn: null,
   abilities: [],
+  final: null,
 });
 
 function saveSession() {
@@ -172,6 +174,7 @@ function toRoomState(snap: Snapshot): RoomState {
     ),
     turn: shared.turn ?? null,
     abilities: shared.abilities ?? [],
+    final: shared.final ?? null,
   };
 }
 
@@ -340,6 +343,7 @@ function sharedPayload(next: RoomState) {
     ready: next.ready,
     turn: next.turn,
     abilities: next.abilities,
+    final: next.final,
   };
 }
 
