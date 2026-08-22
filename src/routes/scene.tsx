@@ -51,14 +51,33 @@ function SceneRoute() {
   const view = getSceneView(viewId);
   /** Drives the quick cinematic fade between views. */
   const [fade, setFade] = useState(false);
+  /** Simple history stack for the back button. */
+  const [history, setHistory] = useState<string[]>([]);
+
   const goTo = (id: string) => {
     if (id === viewId) return;
     setMiss(null);
     setFade(true);
+    setHistory((prev) => [...prev, viewId]);
     setTimeout(() => {
       setViewId(id);
       setFade(false);
     }, 180);
+  };
+
+  const goBack = () => {
+    if (history.length === 0) return;
+    setMiss(null);
+    setFade(true);
+    setHistory((prev) => {
+      const next = [...prev];
+      const previous = next.pop();
+      setTimeout(() => {
+        if (previous) setViewId(previous);
+        setFade(false);
+      }, 180);
+      return next;
+    });
   };
 
   /** Guards against double counting from rapid clicks before the room syncs. */
