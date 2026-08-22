@@ -85,6 +85,24 @@ export interface Contradiction {
   confronted?: boolean;
 }
 
+/**
+ * نظام الأدوار بالتناوب: لاعب واحد فقط يقدر يستخدم أدوات دوره في نفس الوقت.
+ * الحالة كلها مشتركة بالسيرفر، والوقت محسوب من `startedAt` عشان الـ refresh
+ * ما يعيد تشغيل العدّاد.
+ */
+export interface TurnState {
+  /** ترتيب اللاعبين بالتناوب (playerId). */
+  order: string[];
+  /** موقع اللاعب الحالي داخل `order`. */
+  index: number;
+  /** رقم الجولة (يبدأ من 1). */
+  round: number;
+  /** "action" = دور لاعب فعّال، "discussion" = وقت النقاش بين الجولات. */
+  mode: "action" | "discussion";
+  /** لحظة بداية الدور/النقاش الحالي (epoch ms مشترك). */
+  startedAt: number;
+}
+
 export interface RoomState {
   code: string;
   caseId: string;
