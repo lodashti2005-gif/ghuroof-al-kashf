@@ -184,9 +184,8 @@ function SceneRoute() {
                   />
                 ))}
                 {/* Decoy props: clickable, but nothing useful. */}
-                {sceneDecoys
-                  .filter((d) => inView(view, d.x, d.y, 0))
-                  .map((d) => (
+                {decoysInView(view).map((d) => (
+
                     <button
                       key={d.id}
                       type="button"
