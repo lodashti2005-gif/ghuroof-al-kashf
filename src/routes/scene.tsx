@@ -46,6 +46,9 @@ function SceneRoute() {
   const [toast, setToast] = useState<string | null>(null);
   const [spark, setSpark] = useState<{ x: number; y: number; k: number } | null>(null);
   const [flash, setFlash] = useState<number | null>(null);
+  /** Active exploration zone (null = wide room view). */
+  const [zoneId, setZoneId] = useState<string | null>(null);
+  const zone = sceneZones.find((z) => z.id === zoneId) ?? null;
   /** Guards against double counting from rapid clicks before the room syncs. */
   const claimed = useRef<Set<string>>(new Set());
 
