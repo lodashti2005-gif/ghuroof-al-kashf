@@ -10,13 +10,13 @@ import { caseFile, evidence, getEvidence } from "@/game/case-data";
 import {
   SCENE_EVIDENCE_IDS,
   SCENE_START_VIEW,
+  decoysInView,
   getSceneView,
-  inView,
-  sceneDecoys,
   sceneHotspots,
   sceneImage,
   sceneImageSize,
 } from "@/game/scene";
+
 
 import { playDiscoverySting } from "@/game/discovery-fx";
 import { useRoom } from "@/game/use-room";
