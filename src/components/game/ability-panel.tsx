@@ -23,7 +23,7 @@ const chipOn = "border-primary/70 ring-1 ring-primary/40";
 export function AbilityPanel() {
   const { room, me, actions } = useRoom();
   const navigate = useNavigate();
-  const { turn, isMyTurn, discussion } = useTurn();
+  const { turn, canAct, discussion } = useTurn();
 
   const roleId = me ? room?.roles?.[me.id] : undefined;
   const role = roleById(roleId);
@@ -75,7 +75,7 @@ export function AbilityPanel() {
   );
 
   // مقفلة: وقت النقاش أو مو دورك.
-  if (discussion || !isMyTurn) {
+  if (discussion || !canAct) {
     return (
       <Panel className="cine-in border-dashed">
         {header}
