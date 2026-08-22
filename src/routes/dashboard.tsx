@@ -22,9 +22,11 @@ import {
   TimelinePanel,
 } from "@/components/game/role-panels";
 import { INTERROGATION_SECONDS, caseFile, evidence, suspects } from "@/game/case-data";
+import { TurnBanner, WaitYourTurnNote } from "@/components/game/turn-banner";
 import { accessFor } from "@/game/role-access";
 import { roleById } from "@/game/roles";
 import { useRoom } from "@/game/use-room";
+import { useTurn } from "@/game/use-turn";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -46,8 +48,11 @@ function Dashboard() {
   const { room, me, isHost, actions } = useRoom();
   const navigate = useNavigate();
 
+  const { canAct } = useTurn();
   const myRoleId = me ? room?.roles?.[me.id] : undefined;
-  const access = accessFor(myRoleId);
+  const roleAccess = accessFor(myRoleId);
+  // أدوات الدور تنفتح فقط لصاحب الدور الحالي بالتناوب — المشاهدة تبقى للجميع.
+  const access = { ...roleAccess, interrogate: roleAccess.interrogate && canAct };
   const myRole = roleById(myRoleId);
   const share = (text: string) => {
     if (!me) return;
@@ -75,6 +80,7 @@ function Dashboard() {
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="min-w-0 space-y-6">
           <RoleBanner roleId={myRoleId} />
+          <TurnBanner />
           <Panel className="cine-in grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <div className="flex min-w-0 items-center gap-4">
               <img
@@ -135,6 +141,8 @@ function Dashboard() {
               ))}
             </div>
           </section>
+          ) : roleAccess.interrogate ? (
+            <WaitYourTurnNote />
           ) : (
             <RoleLockedNote text="استجواب المشتبه فيهم مسؤولية «محقق الاستجواب» بالفريق." />
           )}
@@ -167,7 +175,7 @@ function Dashboard() {
                   search: { ask: text },
                 })
               }
-              canLink={access.linkEvidence}
+              canLink={access.linkEvidence && canAct}
               canConfront={access.interrogate}
               forensics={access.forensics}
               onConfront={(evidenceId, suspectId) =>
@@ -181,10 +189,14 @@ function Dashboard() {
           </section>
           )}
 
-          {access.forensics && <ForensicsPanel unlockedIds={unlocked} onShare={share} />}
-          {access.surveillance && <SurveillancePanel unlockedIds={unlocked} onShare={share} />}
-          {access.timeline && <TimelinePanel unlockedIds={unlocked} onShare={share} />}
-          {access.records && <RecordsPanel room={room} onShare={share} />}
+          {access.forensics &&
+            (canAct ? <ForensicsPanel unlockedIds={unlocked} onShare={share} /> : <WaitYourTurnNote />)}
+          {access.surveillance &&
+            (canAct ? <SurveillancePanel unlockedIds={unlocked} onShare={share} /> : <WaitYourTurnNote />)}
+          {access.timeline &&
+            (canAct ? <TimelinePanel unlockedIds={unlocked} onShare={share} /> : <WaitYourTurnNote />)}
+          {access.records &&
+            (canAct ? <RecordsPanel room={room} onShare={share} /> : <WaitYourTurnNote />)}
           {access.contradictions && !access.records && <ContradictionsPanel room={room} />}
 
         </div>

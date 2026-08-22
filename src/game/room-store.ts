@@ -12,7 +12,15 @@
 import { supabase } from "@/integrations/supabase/client";
 import { INTERROGATION_SECONDS, caseFile, suspects } from "./case-data";
 import { assignRoles, playerRoles } from "./roles";
-import type { Contradiction, Deduction, Note, Player, RoomState, SuspectRuntime } from "./types";
+import type {
+  Contradiction,
+  Deduction,
+  Note,
+  Player,
+  RoomState,
+  SuspectRuntime,
+  TurnState,
+} from "./types";
 
 const SESSION_KEY = "ghurfa:session";
 
@@ -26,7 +34,14 @@ type Listener = () => void;
 /** Portion of RoomState persisted inside `rooms.state`. */
 type SharedState = Pick<
   RoomState,
-  "unlockedEvidence" | "notes" | "deductions" | "contradictions" | "suspects" | "roles" | "ready"
+  | "unlockedEvidence"
+  | "notes"
+  | "deductions"
+  | "contradictions"
+  | "suspects"
+  | "roles"
+  | "ready"
+  | "turn"
 >;
 
 let state: RoomState | null = null;
@@ -72,6 +87,7 @@ const freshShared = (): SharedState => ({
   suspects: freshSuspects(),
   roles: {},
   ready: [],
+  turn: null,
 });
 
 function saveSession() {
@@ -151,6 +167,7 @@ function toRoomState(snap: Snapshot): RoomState {
     votes: Object.fromEntries(
       (snap.votes ?? []).map((v) => [v.player_id, v.suspect_id]),
     ),
+    turn: shared.turn ?? null,
   };
 }
 
@@ -317,6 +334,7 @@ function sharedPayload(next: RoomState) {
     suspects: next.suspects,
     roles: next.roles,
     ready: next.ready,
+    turn: next.turn,
   };
 }
 
@@ -705,8 +723,71 @@ export function resetCase() {
     s.roles = {};
     s.ready = [];
     s.votes = {};
+    s.turn = null;
   });
 }
+
+/* ==================== أدوار بالتناوب (turn-based role actions) ==================== */
+
+/** مدة دور اللاعب الواحد: دقيقتان. */
+export const TURN_SECONDS = 120;
+
+/** الوقت المتبقي لدور اللاعب الحالي — محسوب من الحالة المشتركة، فالـ refresh ما يعيده. */
+export function remainingTurnTime(turn?: TurnState | null): number {
+  if (!turn || turn.mode !== "action") return 0;
+  return Math.max(0, TURN_SECONDS - Math.floor((Date.now() - turn.startedAt) / 1000));
+}
+
+/** اللاعب صاحب الدور الفعّال حالياً (null بوقت النقاش). */
+export function activeTurnPlayerId(turn?: TurnState | null): string | null {
+  if (!turn || turn.mode !== "action") return null;
+  return turn.order[turn.index] ?? null;
+}
+
+const turnOrderFor = (s: RoomState) =>
+  [...s.players].sort((a, b) => a.joinedAt - b.joinedAt).map((p) => p.id);
+
+/** يبدأ أول جولة تناوب لو ما بدأت (المضيف فقط). */
+export const ensureTurns = () =>
+  update((s) => {
+    if (s.turn) return;
+    const order = turnOrderFor(s);
+    if (order.length === 0) return;
+    s.turn = { order, index: 0, round: 1, mode: "action", startedAt: Date.now() };
+  });
+
+/**
+ * ينقل الدور للاعب اللي بعده. `expected` يمنع تقديم الدور مرتين لو ضغط زر
+ * «أنهيت دوري» ونفس الوقت خلص العدّاد على جهاز ثاني.
+ */
+export const advanceTurn = (expected: { round: number; index: number }) =>
+  update((s) => {
+    const turn = s.turn;
+    if (!turn || turn.mode !== "action") return;
+    if (turn.round !== expected.round || turn.index !== expected.index) return;
+    const present = new Set(s.players.map((p) => p.id));
+    let next = turn.index + 1;
+    while (next < turn.order.length && !present.has(turn.order[next]!)) next++;
+    if (next >= turn.order.length) {
+      // خلّص الجميع دورهم → وقت النقاش المشترك.
+      s.turn = { ...turn, mode: "discussion", startedAt: Date.now() };
+      return;
+    }
+    s.turn = { ...turn, index: next, startedAt: Date.now() };
+  });
+
+/** المضيف يبدأ جولة جديدة بنفس ترتيب اللاعبين. */
+export const startNextRound = () =>
+  update((s) => {
+    const turn = s.turn;
+    if (!turn) return;
+    const present = new Set(s.players.map((p) => p.id));
+    const kept = turn.order.filter((id) => present.has(id));
+    const added = turnOrderFor(s).filter((id) => !kept.includes(id));
+    const order = [...kept, ...added];
+    if (order.length === 0) return;
+    s.turn = { order, index: 0, round: turn.round + 1, mode: "action", startedAt: Date.now() };
+  });
 
 export function findPlayer(room: RoomState | null, playerId?: string): Player | undefined {
   return room?.players.find((p) => p.id === playerId);
