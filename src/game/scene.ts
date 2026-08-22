@@ -123,7 +123,9 @@ export const sceneViews: SceneView[] = [
     size: 58,
     // Click the bedroom door itself to step inside.
     nav: [{ to: "room", x: 61, y: 48, w: 12, h: 34 }],
-    evidence: ["camera"],
+    // Camera above the corridor + the key still in the door lock.
+    evidence: ["camera", "key"],
+
   },
   {
     id: "room",
