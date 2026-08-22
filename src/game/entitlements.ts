@@ -34,20 +34,23 @@ export function useCaseStore() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const { data: auth } = await supabase.auth.getSession();
-    const uid = auth.session?.user.id ?? null;
-    setUserId(uid);
-    if (!uid) {
-      setPurchases([]);
+    try {
+      const { data: auth } = await supabase.auth.getSession();
+      const uid = auth.session?.user.id ?? null;
+      setUserId(uid);
+      if (!uid) {
+        setPurchases([]);
+        return;
+      }
+      const { data } = await supabase
+        .from("case_purchases")
+        .select("case_id, status, purchased_at");
+      setPurchases((data as PurchaseRow[] | null) ?? []);
+    } finally {
       setLoading(false);
-      return;
     }
-    const { data } = await supabase
-      .from("case_purchases")
-      .select("case_id, status, purchased_at");
-    setPurchases((data as PurchaseRow[] | null) ?? []);
-    setLoading(false);
   }, []);
+
 
   useEffect(() => {
     void load();
