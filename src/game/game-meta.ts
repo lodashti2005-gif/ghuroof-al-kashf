@@ -1,3 +1,6 @@
+import caseCoverChalet from "@/assets/scene-hero.jpg";
+import caseCoverSoon from "@/assets/case-cover-soon.jpg";
+
 import { caseFile } from "./case-data";
 
 /**
@@ -5,7 +8,7 @@ import { caseFile } from "./case-data";
  * تحت نفس اللعبة بدون تعديل شاشات اللعبة.
  */
 export const GAME_NAME = "ورا السالفة";
-export const GAME_TAGLINE = "الحقيقة ما تنقال... تنكشف";
+export const GAME_TAGLINE = "كل قضية لها سالفة... دوركم تعرفون وراها شنو.";
 export const GAME_SUBTITLE = "كل قضية لها سالفة... دوركم تعرفون وراها شنو.";
 
 export type CaseStatus = "available" | "soon";
@@ -19,7 +22,19 @@ export interface CaseSummary {
   status: CaseStatus;
   /** عدد المشتبهين (للعرض فقط). */
   suspects?: number;
+  /** صورة غلاف القضية بالمتجر. */
+  cover: string;
+  /** تشويق قصير يظهر بالمتجر. */
+  teaser: string;
+  difficulty: string;
+  players: string;
+  playTime: string;
+  /** السعر المعروض. بدون بوابة دفع حالياً. */
+  price: string;
+  /** قضية مفتوحة للجميع (ما تحتاج شراء) — تحقق الملكية النهائي يصير بالسيرفر. */
+  free: boolean;
 }
+
 
 /**
  * سجل القضايا المتوفرة داخل اللعبة.
