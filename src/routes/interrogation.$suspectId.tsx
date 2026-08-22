@@ -71,6 +71,26 @@ export const Route = createFileRoute("/interrogation/$suspectId")({
   component: InterrogationRoom,
 });
 
+/** ردّ المشتبه يظهر بحركة كتابة خفيفة — نص فقط، بدون أي صوت. */
+function TypedText({ text, animate }: { text: string; animate: boolean }) {
+  const [shown, setShown] = useState(animate ? 0 : text.length);
+  useEffect(() => {
+    if (!animate) {
+      setShown(text.length);
+      return;
+    }
+    let i = 0;
+    const id = window.setInterval(() => {
+      i += 2;
+      setShown(Math.min(i, text.length));
+      if (i >= text.length) window.clearInterval(id);
+    }, 22);
+    return () => window.clearInterval(id);
+  }, [text, animate]);
+  return <span className="min-w-0 flex-1">{text.slice(0, shown)}</span>;
+}
+
+
 // كل مشتبه له صوت بشري مستقل عبر ElevenLabs — التفاصيل في `@/game/voices`.
 
 
