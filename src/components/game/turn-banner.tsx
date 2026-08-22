@@ -20,12 +20,14 @@ export function TurnBanner() {
     discussion,
     awaitingNextRound,
     discussionRemaining,
+    finalPhase,
     isHost,
     endMyTurn,
     endDiscussion,
     startNextRound,
   } = useTurn();
 
+  if (finalPhase) return null;
   if (!turn) return null;
 
   if (discussion || awaitingNextRound) {
