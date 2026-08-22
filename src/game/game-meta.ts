@@ -51,17 +51,32 @@ export const caseRegistry: CaseSummary[] = [
     title: caseFile.title,
     code: caseFile.code,
     description: "ليلة عادية بين مجموعة أصدقاء انتهت بجريمة... وكل واحد عنده رواية.",
+    teaser: "ليلة عادية بين مجموعة أصدقاء انتهت بجريمة... وكل واحد عنده رواية.",
     status: "available",
     suspects: 4,
+    cover: caseCoverChalet,
+    difficulty: "متوسطة",
+    players: "٣ – ٦ لاعبين",
+    playTime: "٦٠ – ٧٥ دقيقة",
+    price: "د.ك —",
+    free: true,
   },
   {
     id: "coming-soon-1",
     title: "قضية جديدة",
     code: "K-????",
     description: "ملف جديد قيد التحضير... السالفة لِسِه مغلقة.",
+    teaser: "ملف جديد قيد التحضير... السالفة لِسِه مغلقة.",
     status: "soon",
+    cover: caseCoverSoon,
+    difficulty: "صعبة",
+    players: "٤ – ٦ لاعبين",
+    playTime: "٧٥ – ٩٠ دقيقة",
+    price: "د.ك —",
+    free: false,
   },
 ];
+
 
 /** القضية الحالية المفعّلة. */
 export const ACTIVE_CASE_ID = caseFile.id;
