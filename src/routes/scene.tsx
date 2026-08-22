@@ -10,10 +10,7 @@ import { caseFile, evidence, getEvidence } from "@/game/case-data";
 import {
   SCENE_EVIDENCE_IDS,
   SCENE_START_VIEW,
-  decoysInView,
   getSceneView,
-  sceneHotspots,
-  sceneImage,
   sceneImageSize,
 } from "@/game/scene";
 
