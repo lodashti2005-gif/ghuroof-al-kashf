@@ -510,6 +510,11 @@ function InterrogationRoom() {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              {bonusMode && (
+                <CaseTag tone="evidence">
+                  {bonusUsed ? "خلص السؤال الإضافي" : "سؤال إضافي · بدون خصم وقت"}
+                </CaseTag>
+              )}
               <CaseTag tone={locked ? "muted" : "danger"}>
                 {waitingTurn ? "انتظر دورك" : locked ? "الجلسة مغلقة" : "جارية"}
               </CaseTag>
