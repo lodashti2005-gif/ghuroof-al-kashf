@@ -12,7 +12,7 @@ import { useRoom } from "@/game/use-room";
 export const Route = createFileRoute("/play")({
   head: () => ({
     meta: [
-      { title: "ورا السالفة — الحقيقة ما تنقال... تنكشف" },
+      { title: "قضية الشاليه — ابدأ التحقيق | ورا السالفة" },
       {
         name: "description",
         content:
@@ -23,12 +23,12 @@ export const Route = createFileRoute("/play")({
       { property: "og:description", content: "الحقيقة ما تنقال... تنكشف. لعبة تحقيق جماعية." },
     ],
   }),
-  component: Landing,
+  component: PlayCase,
 });
 
 type Mode = null | "create" | "join";
 
-function Landing() {
+function PlayCase() {
   const [mode, setMode] = useState<Mode>(null);
 
   return (
