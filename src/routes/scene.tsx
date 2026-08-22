@@ -13,6 +13,7 @@ import {
   sceneHotspots,
   sceneImage,
   sceneImageSize,
+  sceneZones,
 } from "@/game/scene";
 import { playDiscoverySting } from "@/game/discovery-fx";
 import { useRoom } from "@/game/use-room";
