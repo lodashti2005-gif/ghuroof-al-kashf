@@ -14,6 +14,119 @@ export type Database = {
   }
   public: {
     Tables: {
+      case_purchases: {
+        Row: {
+          amount_kwd: number | null
+          case_id: string
+          created_at: string
+          id: string
+          provider: string | null
+          provider_ref: string | null
+          purchased_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount_kwd?: number | null
+          case_id: string
+          created_at?: string
+          id?: string
+          provider?: string | null
+          provider_ref?: string | null
+          purchased_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount_kwd?: number | null
+          case_id?: string
+          created_at?: string
+          id?: string
+          provider?: string | null
+          provider_ref?: string | null
+          purchased_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_purchases_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cases: {
+        Row: {
+          code: string
+          created_at: string
+          difficulty: string
+          id: string
+          is_free: boolean
+          max_players: number
+          min_players: number
+          play_minutes: number
+          price_kwd: number | null
+          sort_order: number
+          status: string
+          teaser: string
+          title: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          difficulty?: string
+          id: string
+          is_free?: boolean
+          max_players?: number
+          min_players?: number
+          play_minutes?: number
+          price_kwd?: number | null
+          sort_order?: number
+          status?: string
+          teaser: string
+          title: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          difficulty?: string
+          id?: string
+          is_free?: boolean
+          max_players?: number
+          min_players?: number
+          play_minutes?: number
+          price_kwd?: number | null
+          sort_order?: number
+          status?: string
+          teaser?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       room_players: {
         Row: {
           id: string
@@ -87,6 +200,7 @@ export type Database = {
           code: string
           created_at: string
           host_player_id: string
+          owner_user_id: string | null
           phase: string
           state: Json
           updated_at: string
@@ -96,6 +210,7 @@ export type Database = {
           code: string
           created_at?: string
           host_player_id: string
+          owner_user_id?: string | null
           phase?: string
           state?: Json
           updated_at?: string
@@ -105,6 +220,7 @@ export type Database = {
           code?: string
           created_at?: string
           host_player_id?: string
+          owner_user_id?: string | null
           phase?: string
           state?: Json
           updated_at?: string
@@ -116,6 +232,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_case_entitlement: {
+        Args: { _case_id: string; _user_id: string }
+        Returns: boolean
+      }
       room_cast_vote: {
         Args: { _code: string; _player_id: string; _suspect_id: string }
         Returns: boolean
