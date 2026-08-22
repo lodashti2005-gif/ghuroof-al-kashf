@@ -96,7 +96,10 @@ function TypedText({ text, animate }: { text: string; animate: boolean }) {
 
 function InterrogationRoom() {
   const { suspectId } = Route.useParams();
-  const { confront: confrontParam, ask: askParam } = Route.useSearch();
+  const { confront: confrontParam, ask: askParam, bonus: bonusParam } = Route.useSearch();
+  /** «سؤال إضافي» (قدرة الدور): سؤال واحد بدون أي خصم من وقت الاستجواب. */
+  const bonusMode = bonusParam === "1";
+  const [bonusUsed, setBonusUsed] = useState(false);
   const { room, me, actions } = useRoom();
   const { canAct: myTurnActive } = useTurn();
   const navigate = useNavigate();
@@ -163,6 +166,11 @@ function InterrogationRoom() {
   const endedRef = useRef(false);
   useEffect(() => {
     endedRef.current = false;
+    if (bonusMode) {
+      // القدرة ما تصرف وقت: نتأكد إن عدّاد المشتبه موقوف ومحفوظ.
+      actions.pauseInterrogationTimer(suspectId);
+      return;
+    }
     actions.startInterrogationTimer(suspectId);
     const id = setInterval(() => {
       setClockTick((tick) => tick + 1);
@@ -176,7 +184,7 @@ function InterrogationRoom() {
       clearInterval(id);
       actions.pauseInterrogationTimer(suspectId);
     };
-  }, [suspectId, actions]);
+  }, [suspectId, actions, bonusMode]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -231,8 +239,9 @@ function InterrogationRoom() {
   const accusationPhase = room?.phase === "voting" || room?.phase === "reveal";
   // مو دورك بالتناوب → تشاهد الجلسة بس ما تقدر تسأل.
   const waitingTurn = !myTurnActive;
-  const locked =
-    !runtime || runtime.finished || displayedTime <= 0 || accusationPhase || waitingTurn;
+  const locked = bonusMode
+    ? !runtime || bonusUsed || accusationPhase || waitingTurn
+    : !runtime || runtime.finished || displayedTime <= 0 || accusationPhase || waitingTurn;
   // While a reply is generating, the session stays open but input is blocked so
   // the same question can't be sent twice.
   const busy = typing;
@@ -266,6 +275,7 @@ function InterrogationRoom() {
   ) => {
     const text = value.trim();
     if (!text || locked || !me || busyRef.current) return;
+    if (bonusMode) setBonusUsed(true);
     // الدليل المطروح على الطاولة ينضم لهذا السؤال.
     const confrontId = evidenceId ?? pendingRef.current ?? undefined;
     busyRef.current = true;
