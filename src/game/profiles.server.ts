@@ -5,7 +5,7 @@
  * client bundle, so the player can never read a suspect's secret, planned lie
  * or contradiction from the browser. Only the AI handler imports it.
  *
- * The case solution is fixed: the killer is يوسف العازمي. Every profile below
+ * The case solution is fixed: the killer is يوسف. Every profile below
  * must stay logically consistent with `solution` in `case-data.ts`.
  */
 
@@ -41,7 +41,7 @@ export interface SuspectProfile {
 
 export const profiles: Record<string, SuspectProfile> = {
   fahad: {
-    name: "فهد المطيري",
+    name: "فهد",
     age: 34,
     role: "صديق بدر المقرب",
     personality:
@@ -103,7 +103,7 @@ export const profiles: Record<string, SuspectProfile> = {
   },
 
   noura: {
-    name: "نورة الشمري",
+    name: "نورة",
     age: 29,
     role: "خطيبة بدر السابقة",
     personality:
@@ -163,7 +163,7 @@ export const profiles: Record<string, SuspectProfile> = {
   },
 
   yousef: {
-    name: "يوسف العازمي",
+    name: "يوسف",
     age: 31,
     role: "شريك بدر بالشغل",
     personality:
@@ -230,7 +230,7 @@ export const profiles: Record<string, SuspectProfile> = {
   },
 
   dana: {
-    name: "دانة الهاجري",
+    name: "دانة",
     age: 27,
     role: "من الحاضرين بالقعدة",
     personality:
