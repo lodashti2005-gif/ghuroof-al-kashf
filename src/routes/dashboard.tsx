@@ -23,6 +23,7 @@ import {
 } from "@/components/game/role-panels";
 import { INTERROGATION_SECONDS, caseFile, evidence, suspects } from "@/game/case-data";
 import { TurnBanner, WaitYourTurnNote } from "@/components/game/turn-banner";
+import { AbilityPanel, RoundActionsPanel } from "@/components/game/ability-panel";
 import { accessFor } from "@/game/role-access";
 import { roleById } from "@/game/roles";
 import { useRoom } from "@/game/use-room";
@@ -81,6 +82,7 @@ function Dashboard() {
         <div className="min-w-0 space-y-6">
           <RoleBanner roleId={myRoleId} />
           <TurnBanner />
+          <AbilityPanel />
           <Panel className="cine-in grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <div className="flex min-w-0 items-center gap-4">
               <img
@@ -227,6 +229,8 @@ function Dashboard() {
               ))}
             </ul>
           </Panel>
+
+          <RoundActionsPanel />
 
           <TeamIntelPanel notes={room?.notes ?? []} />
 
