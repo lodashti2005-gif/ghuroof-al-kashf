@@ -4,19 +4,15 @@ import {
   ArrowLeft,
   FileSearch,
   Loader2,
-  Mic,
-  MicOff,
   RotateCcw,
   Search,
   Send,
-  Square,
   Timer,
   Unlock,
   Users,
-  Volume2,
-  VolumeX,
   X,
 } from "lucide-react";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { EvidenceBoard } from "@/components/game/evidence-board";
@@ -43,7 +39,6 @@ import { questionsForSuspect } from "@/game/evidence-questions";
 
 import * as store from "@/game/room-store";
 import { formatClock, useRoom } from "@/game/use-room";
-import { useVoice } from "@/game/use-voice";
 import { askSuspect } from "@/lib/interrogation.functions";
 
 
@@ -70,6 +65,26 @@ export const Route = createFileRoute("/interrogation/$suspectId")({
   }),
   component: InterrogationRoom,
 });
+
+/** ردّ المشتبه يظهر بحركة كتابة خفيفة — نص فقط، بدون أي صوت. */
+function TypedText({ text, animate }: { text: string; animate: boolean }) {
+  const [shown, setShown] = useState(animate ? 0 : text.length);
+  useEffect(() => {
+    if (!animate) {
+      setShown(text.length);
+      return;
+    }
+    let i = 0;
+    const id = window.setInterval(() => {
+      i += 2;
+      setShown(Math.min(i, text.length));
+      if (i >= text.length) window.clearInterval(id);
+    }, 22);
+    return () => window.clearInterval(id);
+  }, [text, animate]);
+  return <span className="min-w-0 flex-1">{text.slice(0, shown)}</span>;
+}
+
 
 // كل مشتبه له صوت بشري مستقل عبر ElevenLabs — التفاصيل في `@/game/voices`.
 
@@ -104,6 +119,24 @@ function InterrogationRoom() {
   const busyRef = useRef(false);
 
   const transcript = useMemo(() => runtime?.transcript ?? [], [runtime?.transcript]);
+
+  /**
+   * الردود الموجودة قبل ما تفتح الشاشة تظهر كاملة، والردود الجديدة فقط
+   * تنكتب حرف حرف. (نص فقط — ما فيه أي صوت.)
+   */
+  const seenRef = useRef<{ suspect: string; ids: Set<string> } | null>(null);
+  const freshRef = useRef<Set<string>>(new Set());
+  if (!seenRef.current || seenRef.current.suspect !== suspectId) {
+    seenRef.current = { suspect: suspectId, ids: new Set(transcript.map((m) => m.id)) };
+  }
+  for (const m of transcript) {
+    if (!seenRef.current.ids.has(m.id)) {
+      seenRef.current.ids.add(m.id);
+      freshRef.current.add(m.id);
+    }
+  }
+
+
   const unlocked = useMemo(
     () => allEvidence.filter((e) => room?.unlockedEvidence.includes(e.id)),
     [room?.unlockedEvidence],
@@ -115,12 +148,8 @@ function InterrogationRoom() {
     [suspectId, room?.unlockedEvidence],
   );
 
-  const voice = useVoice({
-    onTranscript: (text) => sendRef.current?.(text),
-    suspectId,
-  });
-
   const sendRef = useRef<((text: string, evidenceId?: string) => void) | null>(null);
+
 
   // العدّاد المشترك مبني على وقت البداية المحفوظ بالغرفة: كل جهاز يعرضه محلياً
   // بدون ما يكتب بقاعدة البيانات كل ثانية. فتح المشتبه يشغّل عدّاده ويوقف غيره،
@@ -303,10 +332,6 @@ function InterrogationRoom() {
       actions.bumpStress(suspectId, delta);
       actions.setSuspectState(suspectId, reply.state, reply.level);
       if (reply.unlock) announceUnlock(reply.unlock);
-      voice.speak(line, {
-        state: reply.state,
-        stress: Math.min(100, (runtime?.stress ?? 0) + delta),
-      });
     } catch (error) {
       console.error(error);
       // Technical failure stays local to this player and always releases input.
@@ -378,7 +403,6 @@ function InterrogationRoom() {
   const switchTo = (id: string) => {
     setSuspectsOpen(false);
     if (id === suspectId) return;
-    voice.stopSpeaking();
     navigate({ to: "/interrogation/$suspectId", params: { suspectId: id } });
   };
 
@@ -407,8 +431,8 @@ function InterrogationRoom() {
               suspect={suspect}
               state={state}
               stress={runtime?.stress ?? 0}
-              speaking={voice.speaking}
             />
+
             <div className="border-t border-border p-4">
               <StressMeter value={runtime?.stress ?? 0} />
             </div>
@@ -467,49 +491,11 @@ function InterrogationRoom() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-
-
-
-
-              {(voice.speaking || voice.loadingVoice) && (
-                <button
-                  type="button"
-                  onClick={voice.stopSpeaking}
-                  aria-label="إيقاف الصوت"
-                  className="grid size-9 place-items-center rounded-lg border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  {voice.loadingVoice ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <Square className="size-4" />
-                  )}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={voice.replay}
-                disabled={!voice.hasLast || voice.muted}
-                aria-label="إعادة تشغيل آخر رد"
-                className="grid size-9 place-items-center rounded-lg border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
-              >
-                <RotateCcw className="size-4" />
-              </button>
-              <button
-                type="button"
-                onClick={voice.toggleMute}
-                aria-label={voice.muted ? "تشغيل صوت المشتبه" : "كتم صوت المشتبه"}
-                className={`grid size-9 place-items-center rounded-lg border bg-secondary transition-colors hover:text-foreground ${
-                  voice.muted
-                    ? "border-primary/50 text-primary"
-                    : "border-border text-muted-foreground"
-                }`}
-              >
-                {voice.muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
-              </button>
               <CaseTag tone={locked ? "muted" : "danger"}>
                 {locked ? "الجلسة مغلقة" : "جارية"}
               </CaseTag>
             </div>
+
           </div>
 
           {/* فشل الصوت لا يوقف المحادثة؛ تفاصيله تُسجّل في console والسيرفر. */}
@@ -543,23 +529,12 @@ function InterrogationRoom() {
                             : "flex items-start gap-2 rounded-2xl rounded-tl-sm border border-border bg-surface-2 px-4 py-2.5 text-sm leading-relaxed"
                         }
                       >
-                        <span className="min-w-0 flex-1">{m.text}</span>
-                        {m.role === "suspect" && (
-                          <button
-                            type="button"
-                            onClick={() => voice.speak(m.text, { state, stress: runtime?.stress ?? 0 })}
-                            disabled={voice.loadingVoice}
-                            aria-label={`تشغيل رد ${m.author}`}
-                            title="تشغيل الرد"
-                            className="grid size-7 shrink-0 place-items-center rounded-md border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
-                          >
-                            {voice.loadingVoice ? (
-                              <Loader2 className="size-3.5 animate-spin" />
-                            ) : (
-                              <Volume2 className="size-3.5" />
-                            )}
-                          </button>
+                        {m.role === "suspect" ? (
+                          <TypedText text={m.text} animate={freshRef.current.has(m.id)} />
+                        ) : (
+                          <span className="min-w-0 flex-1">{m.text}</span>
                         )}
+
                       </div>
                     )}
                     {m.role === "suspect" && m.flagged && (
@@ -717,31 +692,8 @@ function InterrogationRoom() {
               </div>
             )}
 
-            {(voice.micStatus !== "idle" || voice.micError) && (
-              <div className="mb-2 flex items-center gap-2 text-xs">
-                {voice.micStatus === "listening" && (
-                  <span className="flex items-center gap-1.5 rounded-lg border border-primary/45 bg-primary/10 px-2.5 py-1.5 text-primary">
-                    <span className="size-2 animate-pulse rounded-full bg-primary" />
-                    جاري الاستماع… اضغط المايك لما تخلص
-                  </span>
-                )}
-                {voice.micStatus === "transcribing" && (
-                  <span className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-muted-foreground">
-                    <Loader2 className="size-3.5 animate-spin" />
-                    جاري تحويل الصوت…
-                  </span>
-                )}
-                {voice.micError && voice.micStatus === "idle" && (
-                  <button
-                    type="button"
-                    onClick={voice.clearMicError}
-                    className="rounded-lg border border-evidence/40 bg-evidence/10 px-2.5 py-1.5 text-evidence"
-                  >
-                    {voice.micError}
-                  </button>
-                )}
-              </div>
-            )}
+
+
 
             <form
 
@@ -760,38 +712,14 @@ function InterrogationRoom() {
                     void send(draft);
                   }
                 }}
-                rows={2}
+                rows={3}
                 disabled={locked || busy}
                 placeholder={locked ? "انتهى وقت هذا المشتبه" : "اكتب سؤالك بأسلوبك..."}
-                className="min-w-0 flex-1 resize-none rounded-xl border border-input bg-surface-2 px-3.5 py-3 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-primary/60 disabled:opacity-50"
+                className="min-h-[4.5rem] min-w-0 flex-1 resize-none rounded-xl border border-input bg-surface-2 px-3.5 py-3 text-base leading-relaxed outline-none placeholder:text-muted-foreground/70 focus:border-primary/60 disabled:opacity-50 sm:text-sm"
               />
-              {voice.micSupported && (
-                <button
-                  type="button"
-                  disabled={locked || busy || voice.micStatus === "transcribing"}
-                  onClick={() => {
-                    if (voice.micStatus === "listening") voice.stopListening();
-                    else void voice.startListening();
-                  }}
-                  aria-label={
-                    voice.micStatus === "listening" ? "إيقاف التسجيل وإرسال" : "تكلم بالمايك"
-                  }
-                  title={voice.micStatus === "listening" ? "خلصت — أرسل" : "اسأل بصوتك"}
-                  className={`grid size-11 shrink-0 place-items-center rounded-xl border transition-colors disabled:opacity-45 ${
-                    voice.micStatus === "listening"
-                      ? "border-primary/55 bg-primary/15 text-primary"
-                      : "border-border bg-secondary text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {voice.micStatus === "transcribing" ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : voice.micStatus === "listening" ? (
-                    <MicOff className="size-4" />
-                  ) : (
-                    <Mic className="size-4" />
-                  )}
-                </button>
-              )}
+
+
+
 
               <button
                 type="button"
@@ -938,7 +866,7 @@ function InterrogationRoom() {
                     setDraft(text);
                     return;
                   }
-                  voice.stopSpeaking();
+                  
                   navigate({
                     to: "/interrogation/$suspectId",
                     params: { suspectId: targetId },
@@ -952,7 +880,6 @@ function InterrogationRoom() {
                     confront(evidenceId);
                     return;
                   }
-                  voice.stopSpeaking();
                   navigate({
                     to: "/interrogation/$suspectId",
                     params: { suspectId: targetId },
