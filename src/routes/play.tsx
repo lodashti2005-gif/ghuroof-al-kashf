@@ -55,17 +55,26 @@ function PlayCase() {
       />
 
       <div className="relative z-10 mx-auto flex min-h-screen max-w-5xl flex-col justify-between px-5 py-8 sm:px-8">
-        <header className="flex items-center justify-between">
+        <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <span className="grid size-9 place-items-center rounded-lg file-tape">
               <ShieldAlert className="size-4.5" />
             </span>
             <span className="font-display text-sm font-bold">إدارة التحقيقات</span>
           </div>
-          <span className="hidden font-mono text-xs text-muted-foreground sm:block">
-            ملف K-2291 · سري
-          </span>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/cases"
+              className="font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              القضايا
+            </Link>
+            <span className="hidden font-mono text-xs text-muted-foreground sm:block">
+              ملف {activeCase.code} · سري
+            </span>
+          </div>
         </header>
+
 
         <div className="cine-in max-w-2xl py-14">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3.5 py-1.5">
