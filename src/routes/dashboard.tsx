@@ -50,6 +50,8 @@ function Dashboard() {
   const navigate = useNavigate();
 
   const { canAct } = useTurn();
+  // تأكيد قائد الغرفة قبل فتح «القرار الأخير» — ما يبدأ تلقائياً أبداً.
+  const [confirmFinal, setConfirmFinal] = useState(false);
   const myRoleId = me ? room?.roles?.[me.id] : undefined;
   const roleAccess = accessFor(myRoleId);
   // أدوات الدور تنفتح فقط لصاحب الدور الحالي بالتناوب — المشاهدة تبقى للجميع.
@@ -255,32 +257,47 @@ function Dashboard() {
 
           <Panel className="cine-in">
             <Eyebrow>المرحلة الأخيرة</Eyebrow>
-            <h2 className="mt-1.5 text-base font-bold">الاتهام النهائي</h2>
+            <h2 className="mt-1.5 text-base font-bold">القرار الأخير</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               {accusationOpen
                 ? "التصويت مفتوح — كل واحد يصوت من جهازه بشكل سري."
-                : allInterrogated
-                  ? isHost
-                    ? "خلصتوا التحقيق مع كل المشتبهين. أنت قائد الغرفة، تقدر تبدأ الاتهام."
-                    : "خلصتوا التحقيق. انتظروا قائد الغرفة يبدأ الاتهام النهائي."
-                  : `باقي ${suspects.length - interrogated} استجواب قبل ما تفتح مرحلة الاتهام.`}
+                : confirmFinal
+                  ? "متأكدين إنكم جاهزين للقرار الأخير؟ بعد هالخطوة ما تقدرون ترجعون للتحقيق."
+                  : isHost
+                    ? allInterrogated
+                      ? "خلصتوا التحقيق مع كل المشتبهين. أنت قائد الغرفة، تقدر تفتح القرار الأخير."
+                      : `باقي ${suspects.length - interrogated} استجواب — وأنت قائد الغرفة تقدر تقرر متى تفتحون القرار الأخير.`
+                    : "انتظروا قائد الغرفة يفتح القرار الأخير."}
             </p>
             {accusationOpen ? (
               <ActionButton className="mt-4 w-full" onClick={() => navigate({ to: "/accusation" })}>
                 <Gavel className="size-4" /> روح للتصويت
               </ActionButton>
+            ) : confirmFinal ? (
+              <div className="mt-4 flex flex-col gap-2">
+                <ActionButton variant="outline" onClick={() => setConfirmFinal(false)}>
+                  نرجع نحقق
+                </ActionButton>
+                <ActionButton
+                  variant="danger"
+                  onClick={() => {
+                    setConfirmFinal(false);
+                    actions.startAccusation();
+                    navigate({ to: "/accusation" });
+                  }}
+                >
+                  <Gavel className="size-4" /> إي، جاهزين
+                </ActionButton>
+              </div>
             ) : (
               <ActionButton
                 variant={isHost ? "primary" : "outline"}
                 className="mt-4 w-full"
-                disabled={!isHost || !allInterrogated}
-                onClick={() => {
-                  actions.startAccusation();
-                  navigate({ to: "/accusation" });
-                }}
+                disabled={!isHost}
+                onClick={() => setConfirmFinal(true)}
               >
                 <Gavel className="size-4" />{" "}
-                {isHost ? "الانتقال إلى الاتهام النهائي" : "بانتظار قائد الغرفة"}
+                {isHost ? "الانتقال للاتهام النهائي" : "بانتظار قائد الغرفة"}
               </ActionButton>
             )}
           </Panel>

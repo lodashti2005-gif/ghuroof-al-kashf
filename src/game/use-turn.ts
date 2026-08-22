@@ -21,11 +21,13 @@ export function useTurn() {
 
   const turn = room?.turn ?? null;
   const investigating = room?.phase === "investigation";
+  // «القرار الأخير» يقفل التحقيق نهائياً: ما في دور فعّال ولا جولات جديدة.
+  const finalPhase = room?.phase === "voting" || room?.phase === "reveal";
 
   // المضيف يفتح أول جولة تناوب أول ما يبدأ التحقيق.
   useEffect(() => {
-    if (isHost && investigating && !turn) store.ensureTurns();
-  }, [isHost, investigating, turn]);
+    if (isHost && investigating && !turn && !finalPhase) store.ensureTurns();
+  }, [isHost, investigating, turn, finalPhase]);
 
   const activeId = store.activeTurnPlayerId(turn);
   const activePlayer = room?.players.find((p) => p.id === activeId) ?? null;
@@ -36,23 +38,25 @@ export function useTurn() {
   const awaitingNextRound = turn?.mode === "ready";
   const discussionRemaining = store.remainingDiscussionTime(turn);
   // قبل ما تبدأ الجولة (أو بمراحل ثانية) ما نقفل شي — نفس السلوك السابق.
-  const canAct = !turn || !investigating ? true : isMyTurn;
+  const canAct = finalPhase ? false : !turn || !investigating ? true : isMyTurn;
 
   // انتهى الوقت → ننقل الدور تلقائياً. جهاز اللاعب الحالي يقدّم الدور، ولو
   // كان مفصول يتكفّل المضيف — والتحديث محمي ضد التنفيذ مرتين.
   useEffect(() => {
+    if (finalPhase) return;
     if (!turn || turn.mode !== "action" || remaining > 0) return;
     const activePresent = !!activePlayer;
     if (isMyTurn || (isHost && !activePresent)) {
       actions.advanceTurn({ round: turn.round, index: turn.index });
     }
-  }, [turn, remaining, isMyTurn, isHost, activePlayer, actions]);
+  }, [turn, remaining, isMyTurn, isHost, activePlayer, actions, finalPhase]);
 
   // انتهى وقت النقاش → «جاهزين للجولة التالية؟» (المضيف يكتب الحالة المشتركة).
   useEffect(() => {
+    if (finalPhase) return;
     if (!turn || turn.mode !== "discussion" || discussionRemaining > 0) return;
     if (isHost) actions.endDiscussion();
-  }, [turn, discussionRemaining, isHost, actions]);
+  }, [turn, discussionRemaining, isHost, actions, finalPhase]);
 
   const endMyTurn = () => {
     if (!turn || turn.mode !== "action") return;
@@ -60,6 +64,7 @@ export function useTurn() {
   };
 
   return {
+    finalPhase,
     turn,
     activePlayer,
     activeRole,

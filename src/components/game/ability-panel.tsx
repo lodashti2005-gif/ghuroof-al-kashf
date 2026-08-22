@@ -23,7 +23,7 @@ const chipOn = "border-primary/70 ring-1 ring-primary/40";
 export function AbilityPanel() {
   const { room, me, actions } = useRoom();
   const navigate = useNavigate();
-  const { turn, canAct, discussion } = useTurn();
+  const { turn, canAct, discussion, finalPhase } = useTurn();
 
   const roleId = me ? room?.roles?.[me.id] : undefined;
   const role = roleById(roleId);
@@ -75,13 +75,17 @@ export function AbilityPanel() {
   );
 
   // مقفلة: وقت النقاش أو مو دورك.
-  if (discussion || !canAct) {
+  if (finalPhase || discussion || !canAct) {
     return (
       <Panel className="cine-in border-dashed">
         {header}
         <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
           <Hourglass className="size-3.5" />
-          {discussion ? "وقت النقاش — قدرات الأدوار مقفلة." : "انتظر دورك لتستخدم قدرتك."}
+          {finalPhase
+            ? "القرار الأخير — قدرات الأدوار مقفلة."
+            : discussion
+              ? "وقت النقاش — قدرات الأدوار مقفلة."
+              : "انتظر دورك لتستخدم قدرتك."}
         </p>
       </Panel>
     );

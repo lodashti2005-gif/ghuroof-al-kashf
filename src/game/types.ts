@@ -124,6 +124,27 @@ export interface AbilityUse {
   createdAt: number;
 }
 
+/**
+ * القرار الأخير — حالة مشتركة لمرحلة الاتهام النهائي: جولة التصويت الحالية،
+ * أصوات جولات التعادل، نقاش التعادل (٦٠ ثانية)، ثم قرار الفريق النهائي.
+ * الجولة ١ أصواتها محفوظة بقاعدة البيانات (`votes`)، والجولات التالية هنا.
+ */
+export interface FinalDecision {
+  /** ١ = التصويت الأول، ٢ وأكثر = جولات كسر التعادل. */
+  round: number;
+  /** المشتبهون المسموح التصويت لهم بهذه الجولة (فاضي = الكل). */
+  candidates: string[];
+  /** `${round}:${playerId}` -> suspectId لجولات التعادل. */
+  votes: Record<string, string>;
+  /** بداية نقاش التعادل (epoch ms مشترك). */
+  tieAt?: number;
+  /** قرار الفريق النهائي (suspectId) بعد ما يفوز مشتبه واحد. */
+  accused?: string;
+  /** لحظة كشف الحقيقة — تستخدم لحساب زمن التحقيق. */
+  revealedAt?: number;
+}
+
+
 export interface RoomState {
   code: string;
   caseId: string;
@@ -144,6 +165,8 @@ export interface RoomState {
   turn: TurnState | null;
   /** سجل قدرات الأدوار المستخدمة (مشترك). */
   abilities: AbilityUse[];
+  /** حالة القرار الأخير (null قبل ما يفتح المضيف الاتهام النهائي). */
+  final: FinalDecision | null;
 }
 
 /** A magnified region of the master crime-scene photograph. */
