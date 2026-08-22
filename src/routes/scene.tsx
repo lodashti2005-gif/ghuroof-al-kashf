@@ -49,9 +49,19 @@ function SceneRoute() {
   const [toast, setToast] = useState<string | null>(null);
   const [spark, setSpark] = useState<{ x: number; y: number; k: number } | null>(null);
   const [flash, setFlash] = useState<number | null>(null);
-  /** Active exploration zone (null = wide room view). */
-  const [zoneId, setZoneId] = useState<string | null>(null);
-  const zone = sceneZones.find((z) => z.id === zoneId) ?? null;
+  /** Current first-person view; the player starts outside in the hallway. */
+  const [viewId, setViewId] = useState<string>(SCENE_START_VIEW);
+  const view = getSceneView(viewId);
+  /** Drives the quick cinematic fade between views. */
+  const [fade, setFade] = useState(false);
+  const goTo = (id: string) => {
+    if (id === viewId) return;
+    setMiss(null);
+    setFade(true);
+    setViewId(id);
+    setTimeout(() => setFade(false), 60);
+  };
+
   /** Guards against double counting from rapid clicks before the room syncs. */
   const claimed = useRef<Set<string>>(new Set());
 
