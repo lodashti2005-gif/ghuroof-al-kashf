@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { ArrowLeft, Fingerprint, KeyRound, ShieldAlert, X } from "lucide-react";
 import { useState } from "react";
 
