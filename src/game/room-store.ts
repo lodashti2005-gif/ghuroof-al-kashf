@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { INTERROGATION_SECONDS, caseFile, suspects } from "./case-data";
 import { assignRoles, playerRoles } from "./roles";
 import type {
+  AbilityUse,
   Contradiction,
   Deduction,
   Note,
@@ -42,6 +43,7 @@ type SharedState = Pick<
   | "roles"
   | "ready"
   | "turn"
+  | "abilities"
 >;
 
 let state: RoomState | null = null;
@@ -88,6 +90,7 @@ const freshShared = (): SharedState => ({
   roles: {},
   ready: [],
   turn: null,
+  abilities: [],
 });
 
 function saveSession() {
@@ -168,6 +171,7 @@ function toRoomState(snap: Snapshot): RoomState {
       (snap.votes ?? []).map((v) => [v.player_id, v.suspect_id]),
     ),
     turn: shared.turn ?? null,
+    abilities: shared.abilities ?? [],
   };
 }
 
@@ -335,6 +339,7 @@ function sharedPayload(next: RoomState) {
     roles: next.roles,
     ready: next.ready,
     turn: next.turn,
+    abilities: next.abilities,
   };
 }
 
@@ -724,6 +729,7 @@ export function resetCase() {
     s.ready = [];
     s.votes = {};
     s.turn = null;
+    s.abilities = [];
   });
 }
 
@@ -787,6 +793,17 @@ export const startNextRound = () =>
     const order = [...kept, ...added];
     if (order.length === 0) return;
     s.turn = { order, index: 0, round: turn.round + 1, mode: "action", startedAt: Date.now() };
+  });
+
+/**
+ * تسجيل استخدام قدرة دور. المعرّف ثابت (جولة + لاعب + نوع) فالتسجيل يصير مرة
+ * واحدة فقط — إعادة التحميل أو إعادة الاتصال ما تعيد تشغيل القدرة.
+ */
+export const recordAbility = (entry: Omit<AbilityUse, "createdAt">) =>
+  update((s) => {
+    if (!s.abilities) s.abilities = [];
+    if (s.abilities.some((a) => a.id === entry.id)) return;
+    s.abilities.unshift({ ...entry, createdAt: Date.now() });
   });
 
 export function findPlayer(room: RoomState | null, playerId?: string): Player | undefined {
