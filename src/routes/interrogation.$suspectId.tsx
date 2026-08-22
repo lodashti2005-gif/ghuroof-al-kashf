@@ -44,12 +44,16 @@ import { askSuspect } from "@/lib/interrogation.functions";
 
 
 export const Route = createFileRoute("/interrogation/$suspectId")({
-  validateSearch: (search: Record<string, unknown>): { confront?: string; ask?: string } => {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { confront?: string; ask?: string; bonus?: string } => {
     const raw = search["confront"];
     const ask = search["ask"];
+    const bonus = search["bonus"];
     return {
       ...(typeof raw === "string" && raw ? { confront: raw } : {}),
       ...(typeof ask === "string" && ask ? { ask } : {}),
+      ...(bonus === "1" ? { bonus: "1" } : {}),
     };
   },
 
