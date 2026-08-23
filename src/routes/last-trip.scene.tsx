@@ -326,6 +326,32 @@ function LastTripSceneRoute() {
             <p className="leading-relaxed">{view.mood}</p>
           </div>
         </div>
+
+        {/* ملف عبدالله — سجل المكالمات ما ينلقى بالصور، ينفتح من بيانات التحقيق. */}
+        <Panel className="cine-in space-y-3">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <Eyebrow>ملف التحقيق — عبدالله</Eyebrow>
+              <h2 className="mt-1 text-base font-bold sm:text-lg">بيانات جهاز عبدالله</h2>
+            </div>
+            <ActionButton variant="outline" onClick={() => setShowCallLog((v) => !v)}>
+              <Phone className="size-4" /> فحص سجل المكالمات
+            </ActionButton>
+          </div>
+          {showCallLog && (
+            <div className="space-y-2 rounded-lg border border-border bg-secondary/25 p-3 text-sm">
+              <ul className="space-y-1.5 font-mono text-xs leading-relaxed sm:text-sm">
+                <li>01:12 — مكالمة صادرة (٢٦ دقيقة) — تبدأ بشكل طبيعي</li>
+                <li>01:31 — انقطاع قصير (٤ دقائق) — بدون سبب مسجّل</li>
+                <li>01:35 — رجوع نفس المكالمة (١٢ دقيقة)</li>
+                <li>01:47 — نهاية المكالمة</li>
+              </ul>
+              <p className="text-xs text-muted-foreground">
+                المكالمة طويلة… بس فيها انقطاع قصير ما له تفسير حتى الآن.
+              </p>
+            </div>
+          )}
+        </Panel>
       </div>
     </div>
   );
