@@ -12,6 +12,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { INTERROGATION_SECONDS, caseFile, suspects } from "./case-data";
 import { assignRoles, playerRoles } from "./roles";
+import { assignLastTripRoles } from "./cases/last-trip-roles";
 import type {
   AbilityUse,
   Contradiction,
@@ -47,6 +48,9 @@ type SharedState = Pick<
   | "abilities"
   | "final"
   | "intro"
+  | "ltRoles"
+  | "ltRoleReady"
+  | "ltAnalyzed"
 >;
 
 let state: RoomState | null = null;
@@ -96,6 +100,9 @@ const freshShared = (): SharedState => ({
   abilities: [],
   final: null,
   intro: null,
+  ltRoles: {},
+  ltRoleReady: [],
+  ltAnalyzed: [],
 });
 
 function saveSession() {
@@ -179,6 +186,9 @@ function toRoomState(snap: Snapshot): RoomState {
     abilities: shared.abilities ?? [],
     final: shared.final ?? null,
     intro: shared.intro ?? null,
+    ltRoles: shared.ltRoles ?? {},
+    ltRoleReady: shared.ltRoleReady ?? [],
+    ltAnalyzed: shared.ltAnalyzed ?? [],
   };
 }
 
@@ -349,6 +359,9 @@ function sharedPayload(next: RoomState) {
     abilities: next.abilities,
     final: next.final,
     intro: next.intro,
+    ltRoles: next.ltRoles,
+    ltRoleReady: next.ltRoleReady,
+    ltAnalyzed: next.ltAnalyzed,
   };
 }
 
@@ -824,6 +837,9 @@ export function resetCase() {
     s.turn = null;
     s.abilities = [];
     s.final = null;
+    s.ltRoles = {};
+    s.ltRoleReady = [];
+    s.ltAnalyzed = [];
   });
 }
 
@@ -916,6 +932,45 @@ export const recordAbility = (entry: Omit<AbilityUse, "createdAt">) =>
     if (!s.abilities) s.abilities = [];
     if (s.abilities.some((a) => a.id === entry.id)) return;
     s.abilities.unshift({ ...entry, createdAt: Date.now() });
+  });
+
+/* ==================== أدوار قضية «آخر رحلة» فقط ==================== */
+
+/**
+ * قرعة أدوار «آخر رحلة»: تنفّذ مرة واحدة فقط. أي دور محفوظ يبقى ثابت، فالـ
+ * refresh أو الخروج والرجوع ما يعيد القرعة ولا يغيّر الدور.
+ */
+export function startLastTripRoles() {
+  update((s) => {
+    const ids = s.players.map((p) => p.id);
+    if (ids.length === 0) return;
+    s.ltRoles = assignLastTripRoles(ids, s.ltRoles ?? {});
+  });
+}
+
+/** لاعب انضم متأخر: يعطي نفسه دور ناقص فقط بدون ما يمس أدوار الباقين. */
+export function claimLastTripRole(playerId: string) {
+  update((s) => {
+    if (!playerId) return;
+    if (s.ltRoles?.[playerId]) return;
+    s.ltRoles = assignLastTripRoles(
+      [...s.players.map((p) => p.id), playerId],
+      s.ltRoles ?? {},
+    );
+  });
+}
+
+export const markLastTripRoleReady = (playerId: string) =>
+  update((s) => {
+    if (!s.ltRoleReady) s.ltRoleReady = [];
+    if (!s.ltRoleReady.includes(playerId)) s.ltRoleReady.push(playerId);
+  });
+
+/** تسجيل فحص تفصيلي لدليل «آخر رحلة» — مشترك مع الفريق ومرة واحدة فقط. */
+export const markLastTripAnalyzed = (evidenceId: string) =>
+  update((s) => {
+    if (!s.ltAnalyzed) s.ltAnalyzed = [];
+    if (!s.ltAnalyzed.includes(evidenceId)) s.ltAnalyzed.push(evidenceId);
   });
 
 export function findPlayer(room: RoomState | null, playerId?: string): Player | undefined {
