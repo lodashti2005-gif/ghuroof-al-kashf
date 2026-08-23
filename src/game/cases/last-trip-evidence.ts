@@ -32,7 +32,7 @@ export const lastTripEvidence: LastTripEvidence[] = [
   {
     id: "lt-tissue",
     title: "الكلينكس المستخدم",
-    view: "trash",
+    view: "trashOpen",
     observation: "منديل مستخدم ومبلل جزئياً.",
     analysis: "الأثر الموجود على المنديل يتطابق مع الأثر المتبقي على حنفية الحمام الطرفي.",
   },
@@ -55,7 +55,7 @@ export const lastTripEvidence: LastTripEvidence[] = [
   {
     id: "lt-call-log",
     title: "سجل مكالمة عبدالله",
-    view: "parking",
+    view: "abdullah-file",
     observation: "بيانات جهاز عبدالله تبيّن مكالمة طويلة بنفس الفترة… وفيها انقطاع قصير.",
     analysis: "الانقطاع القصير ما له تفسير حتى الآن.",
   },
