@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, MessageSquare, Search, ShieldAlert } from "lucide-react";
 
 import { ActionButton } from "@/components/game/shell";
+import { LastTripRoleGate } from "@/components/game/last-trip-role-gate";
+import { useLastTripRole } from "@/game/cases/last-trip-role-state";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { lastTripCase } from "@/game/cases/last-trip";
 import {
@@ -28,10 +30,19 @@ export const Route = createFileRoute("/last-trip/suspects")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: LastTripSuspectsRoute,
+  component: LastTripSuspectsScreen,
 });
 
+function LastTripSuspectsScreen() {
+  return (
+    <LastTripRoleGate>
+      <LastTripSuspectsRoute />
+    </LastTripRoleGate>
+  );
+}
+
 function LastTripSuspectsRoute() {
+  const { role } = useLastTripRole();
   return (
     <div dir="rtl" className="min-h-screen bg-background px-4 py-6 sm:px-6">
       <div className="mx-auto max-w-6xl space-y-5">
@@ -48,6 +59,7 @@ function LastTripSuspectsRoute() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <CaseTag>{lastTripCase.code}</CaseTag>
+            {role && <CaseTag>دورك: {role.title}</CaseTag>}
             <CaseTag tone="danger">المشتبه فيهم {LAST_TRIP_SUSPECT_TOTAL}</CaseTag>
             <Link to="/last-trip/scene">
               <ActionButton variant="outline">
