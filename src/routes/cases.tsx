@@ -1,5 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BadgeCheck, Clock3, Gauge, Lock, Play, ShieldAlert, ShoppingCart, Users } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Clock3,
+  Eye,
+  Gauge,
+  Lock,
+  Play,
+  ShieldAlert,
+  ShoppingCart,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
 
 import { Eyebrow } from "@/components/game/ui";
@@ -219,13 +230,23 @@ function CaseCard({
               <Play className="size-4" /> ابدأ القضية
             </Link>
           ) : soon ? (
-            <button
-              type="button"
-              disabled
-              className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-border bg-surface-2 px-5 py-3 font-display text-sm font-bold text-muted-foreground"
-            >
-              <Lock className="size-4" /> قيد التجهيز
-            </button>
+            <div className="space-y-2">
+              <button
+                type="button"
+                disabled
+                className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-border bg-surface-2 px-5 py-3 font-display text-sm font-bold text-muted-foreground"
+              >
+                <Lock className="size-4" /> قيد التجهيز
+              </button>
+              {item.id === "last-trip" && (
+                <Link
+                  to="/last-trip/scene"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-secondary/60 bg-secondary/10 px-5 py-2.5 font-display text-xs font-bold text-secondary-foreground transition-colors hover:bg-secondary/20"
+                >
+                  <Eye className="size-3.5" /> تجربة القضية (مطوّر)
+                </Link>
+              )}
+            </div>
           ) : (
             <button
               type="button"
