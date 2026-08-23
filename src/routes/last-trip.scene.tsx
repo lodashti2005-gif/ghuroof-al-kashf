@@ -208,6 +208,7 @@ function LastTripSceneRoute() {
                   key={`${view.id}-${e.evidenceId}`}
                   type="button"
                   aria-label="فحص تفصيلة داخل المحطة"
+                  data-ev={e.evidenceId}
                   onClick={(ev) => {
                     ev.stopPropagation();
                     openEvidence(e.evidenceId);
