@@ -29,6 +29,10 @@ export interface LastTripDecoyHotspot extends LastTripRect {
   message: string;
 }
 
+export interface LastTripEvidenceHotspot extends LastTripRect {
+  evidenceId: string;
+}
+
 export interface LastTripSceneView {
   id: string;
   /** تعليق جوي بسيط فقط — ليس عنصر تنقل. */
@@ -37,6 +41,8 @@ export interface LastTripSceneView {
   /** جو المكان (يظهر كسطر وصفي تحت الصورة). */
   mood: string;
   nav: LastTripNavHotspot[];
+  /** أدلة مخفية — بدون أي مؤشر ظاهر على الصورة. */
+  evidence?: LastTripEvidenceHotspot[];
   decoys: LastTripDecoyHotspot[];
 }
 
@@ -54,6 +60,7 @@ export const lastTripSceneViews: LastTripSceneView[] = [
       { to: "entrance", x: 50, y: 55, w: 22, h: 12 },
       { to: "entrance", x: 30, y: 56, w: 5, h: 8 },
     ],
+    evidence: [{ evidenceId: "lt-call-log", x: 20, y: 63, w: 5, h: 4 }],
     decoys: [
       { id: "sedan", x: 16, y: 60, w: 16, h: 10, message: "سيارة واقفة ومقفلة… ماكو شي واضح" },
       { id: "pickup", x: 81, y: 61, w: 16, h: 10, message: "وانيت مغبر، ولا أثر واضح" },
@@ -94,6 +101,7 @@ export const lastTripSceneViews: LastTripSceneView[] = [
       // باب الكوفي شوب على اليمين.
       { to: "coffee", x: 95, y: 50, w: 10, h: 40 },
     ],
+    evidence: [{ evidenceId: "lt-tissue", x: 62, y: 74, w: 6, h: 6 }],
     decoys: [
       { id: "bin", x: 58, y: 62, w: 22, h: 40, message: "أكياس وأكواب فوق بعض… ماكو شي واضح للحين" },
       { id: "cup", x: 73, y: 88, w: 8, h: 8, message: "كوب فاضي على الأرض" },
@@ -111,6 +119,10 @@ export const lastTripSceneViews: LastTripSceneView[] = [
       { to: "corridor", x: 46, y: 54, w: 8, h: 26 },
       // الزجاج المطل على الموقف → برّه.
       { to: "trash", x: 12, y: 45, w: 16, h: 26 },
+    ],
+    evidence: [
+      { evidenceId: "lt-coffee-cup", x: 40, y: 70, w: 6, h: 6 },
+      { evidenceId: "lt-coffee-cam", x: 46, y: 40, w: 6, h: 5 },
     ],
     decoys: [
       { id: "counter", x: 66, y: 62, w: 24, h: 20, message: "الكاونتر نظيف، ماكو شي مهم هنا" },
@@ -134,6 +146,7 @@ export const lastTripSceneViews: LastTripSceneView[] = [
       // رجوع للمدخل.
       { to: "entrance", x: 45, y: 95, w: 34, h: 10 },
     ],
+    evidence: [{ evidenceId: "lt-corridor-cam", x: 79, y: 16, w: 8, h: 7 }],
     decoys: [
       { id: "left-wall", x: 12, y: 45, w: 20, h: 30, message: "طوفة بلاط، ماكو شي مهم هنا" },
       { id: "ceiling", x: 40, y: 6, w: 30, h: 10, message: "لمبة نيون تطق… بس إضاءة" },
@@ -167,6 +180,7 @@ export const lastTripSceneViews: LastTripSceneView[] = [
       // رجوع للممر.
       { to: "corridor", x: 78, y: 94, w: 34, h: 12 },
     ],
+    evidence: [{ evidenceId: "lt-shoe-print", x: 66, y: 88, w: 12, h: 8 }],
     decoys: [
       { id: "mirror", x: 20, y: 32, w: 14, h: 22, message: "مراية مشققة… ماكو شي واضح فيها" },
       { id: "stall", x: 42, y: 50, w: 18, h: 40, message: "باب الحمام مسكّر بس فاضي" },
@@ -181,8 +195,8 @@ export const lastTripSceneViews: LastTripSceneView[] = [
     image: farSinkImg,
     mood: "مغسلة قديمة وحنفية معدنية… هنا انلقى راشد.",
     nav: [{ to: "farBath", x: 50, y: 95, w: 60, h: 10 }],
+    evidence: [{ evidenceId: "lt-faucet", x: 52, y: 48, w: 8, h: 9 }],
     decoys: [
-      { id: "faucet", x: 52, y: 48, w: 12, h: 14, message: "حنفية قديمة، تقطّر شوي" },
       { id: "basin", x: 50, y: 68, w: 40, h: 16, message: "حوض المغسلة… ماكو شي فيه للحين" },
       { id: "mirror-edge", x: 52, y: 8, w: 40, h: 12, message: "حرف المراية مكسّر" },
       { id: "tiles", x: 18, y: 40, w: 20, h: 30, message: "بلاط الطوفة رطب" },
