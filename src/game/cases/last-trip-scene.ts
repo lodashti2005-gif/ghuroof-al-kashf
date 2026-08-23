@@ -135,8 +135,8 @@ export const lastTripSceneViews: LastTripSceneView[] = [
     evidence: [
       // كوب جاسم — الكوب القريب على طاولة اليسار.
       { evidenceId: "lt-coffee-cup", x: 16, y: 68, w: 7, h: 9 },
-      // كاميرا مدخل الكوفي — فوق الباب بالزاوية اليسار العليا.
-      { evidenceId: "lt-coffee-cam", x: 15, y: 5, w: 8, h: 8 },
+      // كاميرا مدخل الكوفي — فوق الباب بالزاوية اليسار العليا (ظاهرة بالصورة).
+      { evidenceId: "lt-coffee-cam", x: 15.3, y: 5, w: 6.5, h: 7.5 },
     ],
     decoys: [
       { id: "cups-far", x: 16, y: 55, w: 12, h: 8, message: "كوبين متروكين على طاولة ثانية" },
