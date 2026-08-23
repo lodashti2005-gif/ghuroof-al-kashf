@@ -79,6 +79,8 @@ function LastTripInterrogationRoute() {
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<{ evidenceId?: string; witnessId?: string } | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const { remaining, expired } = useLastTripTimer(suspectId);
+
 
   useEffect(() => {
     hydrateLastTripProgress();
