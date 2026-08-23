@@ -53,10 +53,14 @@ export function culpritPillars(input: LastTripPromptInput) {
 export function culpritTier(input: LastTripPromptInput) {
   const p = culpritPillars(input);
   const count = [p.tissue, p.wet, p.trash, p.farBathroom].filter(Boolean).length;
-  if (count >= 4 && input.stress >= 80 && input.contradictionCount >= 2) return 5;
-  if (count >= 3 && input.stress >= 62) return 4;
-  if (count >= 2) return 3;
-  if (count >= 1) return 2;
+  // لا يوجد أي عتبة توتر رقمية إلزامية — الاعتراف يعتمد على قوة الربط المنطقي.
+  // التوتر يسرّع الانكسار بدرجة واحدة كحد أقصى ولا يفتح المستوى ٥ لوحده.
+  const boost = input.stress >= 70 || input.contradictionCount >= 2 ? 1 : 0;
+  // المستوى ٥ يتطلب الأعمدة الأربعة (سلسلة: الحمام البعيد + التنظيف + الكلينكس + الجدول الكاذب).
+  if (count >= 4) return 5;
+  if (count >= 3) return Math.min(4, 4);
+  if (count >= 2) return Math.min(4, 3 + boost);
+  if (count >= 1) return Math.min(3, 2 + boost);
   return 1;
 }
 
