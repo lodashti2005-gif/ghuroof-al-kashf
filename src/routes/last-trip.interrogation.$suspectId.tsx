@@ -201,7 +201,21 @@ function LastTripInterrogationRoute() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-mono text-sm tabular-nums",
+                  expired
+                    ? "border-destructive/50 bg-destructive/10 text-destructive"
+                    : remaining <= 30
+                      ? "border-primary/50 bg-primary/10 text-primary"
+                      : "border-border bg-secondary text-foreground",
+                )}
+                aria-label="الوقت المتبقي لاستجواب هذا المشتبه فيه"
+              >
+                <Clock className="size-4" /> {formatInterrogationClock(remaining)}
+              </span>
               <CaseTag>الأدلة {foundEvidence.length}</CaseTag>
+
               <Link to="/last-trip/suspects">
                 <ActionButton variant="outline">
                   <Users className="size-4" /> الشخصيات
