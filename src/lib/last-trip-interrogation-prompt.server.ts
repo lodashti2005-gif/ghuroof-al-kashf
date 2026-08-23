@@ -11,25 +11,10 @@ import {
 } from "@/game/cases/last-trip-interrogation.server";
 import { getLastTripEvidence } from "@/game/cases/last-trip-evidence";
 import { lastTripCase } from "@/game/cases/last-trip";
+import { lastTripWitnessMap } from "@/game/cases/last-trip-witness-claims";
 
 const STATE_LIST =
   "calm, thinking, nervous, defensive, angry, shocked, scared, suspicious, silent";
-
-/** شهادات الشهود اللي يقدر المحقق يواجه فيها (مو أدلة مادية). */
-export const LAST_TRIP_WITNESS_CLAIMS: Record<string, { label: string; text: string }> = {
-  "nasser-wet": {
-    label: "شهادة ناصر — إيد وكم مبلول",
-    text: "ناصر يقول إنه شافك راجع صوب الكوفي وإيدك مبلولة وكم ثوبك مبلول شوي، وكنت مستعيل.",
-  },
-  "mishal-trash": {
-    label: "شهادة مشعل — رمي شي بالزبالة",
-    text: "مشعل يقول إنه شافك عند مدخل الكوفي ترمي شي بحاوية الزبالة.",
-  },
-  "mishal-argue": {
-    label: "شهادة مشعل — صوت مهاوشة",
-    text: "مشعل يقول إنه سمع رجّالين يتهاوشون من جهة الحمام البعيد، وصوت واحد منهم يشبه صوتك.",
-  },
-};
 
 export interface LastTripPromptInput {
   suspectId: string;
@@ -145,7 +130,7 @@ ${TIER_DIRECTIVE[tier]}`
     ? getLastTripEvidence(input.confrontEvidenceId)
     : undefined;
   const witness = input.confrontWitnessId
-    ? LAST_TRIP_WITNESS_CLAIMS[input.confrontWitnessId]
+    ? lastTripWitnessMap[input.confrontWitnessId]
     : undefined;
 
   const relevant =
