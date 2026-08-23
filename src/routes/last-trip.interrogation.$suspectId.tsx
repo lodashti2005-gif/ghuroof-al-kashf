@@ -163,7 +163,7 @@ function LastTripInterrogationRoute() {
         setBusy(false);
       }
     },
-    [ask, busy, found, session.confronts, session.contradictions, session.lines, session.stress, suspect, suspectId],
+    [ask, busy, expired, found, session.confronts, session.contradictions, session.lines, session.stress, suspect, suspectId],
   );
 
   if (!suspect) {
