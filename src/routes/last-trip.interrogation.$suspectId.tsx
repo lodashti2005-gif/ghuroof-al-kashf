@@ -261,9 +261,15 @@ function LastTripInterrogationRoute() {
               <div ref={endRef} />
             </div>
 
-            {pending && (
+            {pending && !expired && (
               <p className="mt-3 rounded-md border border-evidence/40 bg-evidence/10 px-2.5 py-2 text-xs text-evidence">
                 مواجهة مرفقة مع سؤالك الجاي.
+              </p>
+            )}
+
+            {expired && (
+              <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-2.5 py-2 text-xs text-destructive">
+                خلص وقت استجواب {suspect.name} — ما تقدر ترسل أسئلة جديدة له.
               </p>
             )}
 
@@ -277,13 +283,15 @@ function LastTripInterrogationRoute() {
               <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder="اكتب سؤالك…"
-                className="min-w-0 flex-1 rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary/60"
+                disabled={expired}
+                placeholder={expired ? "انتهى وقت هذا المشتبه فيه" : "اكتب سؤالك…"}
+                className="min-w-0 flex-1 rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary/60 disabled:opacity-60"
               />
-              <ActionButton type="submit" disabled={busy || !draft.trim()}>
+              <ActionButton type="submit" disabled={busy || expired || !draft.trim()}>
                 <Send className="size-4" /> إرسال
               </ActionButton>
             </form>
+
           </Panel>
         </div>
 
