@@ -1,7 +1,9 @@
 import caseCoverChalet from "@/assets/scene-hero.jpg";
-import caseCoverSoon from "@/assets/case-cover-soon.jpg";
+import caseCoverLastTrip from "@/assets/case-cover-last-trip.jpg";
 
 import { caseFile } from "./case-data";
+import { lastTripCase } from "./cases/last-trip";
+
 
 /**
  * هوية اللعبة الرئيسية. القضايا تُسجَّل هنا حتى نقدر نضيف قضايا جديدة مستقبلاً
@@ -62,19 +64,22 @@ export const caseRegistry: CaseSummary[] = [
     free: true,
   },
   {
-    id: "coming-soon-1",
-    title: "قضية جديدة",
-    code: "K-????",
-    description: "ملف جديد قيد التحضير... السالفة لِسِه مغلقة.",
-    teaser: "ملف جديد قيد التحضير... السالفة لِسِه مغلقة.",
+    id: lastTripCase.id,
+    title: lastTripCase.title,
+    code: lastTripCase.code,
+    description:
+      "توقّف عابر في محطة طريق يتحول إلى قضية غامضة. واحد من الشباب ما رجع… وكل واحد يتذكر الليلة بطريقة مختلفة.",
+    teaser:
+      "توقّف عابر في محطة طريق يتحول إلى قضية غامضة. واحد من الشباب ما رجع… وكل واحد يتذكر الليلة بطريقة مختلفة.",
     status: "soon",
-    cover: caseCoverSoon,
+    cover: caseCoverLastTrip,
     difficulty: "صعبة",
-    players: "٤ – ٦ لاعبين",
-    playTime: "٧٥ – ٩٠ دقيقة",
+    players: "٣ – ٦ لاعبين",
+    playTime: "٦٠ – ٩٠ دقيقة",
     price: "د.ك —",
     free: false,
   },
+
 ];
 
 

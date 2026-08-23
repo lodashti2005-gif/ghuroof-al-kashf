@@ -206,7 +206,7 @@ function CaseCard({
         <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3">
           <span className="font-display text-sm font-bold">{item.price}</span>
           <span className="font-mono text-[11px] text-muted-foreground">
-            {soon ? "قيد التحضير" : item.owned ? "متاحة لك" : "تحتاج شراء"}
+            {soon ? "قيد التجهيز" : item.owned ? "متاحة لك" : "تحتاج شراء"}
           </span>
         </div>
 
@@ -224,7 +224,7 @@ function CaseCard({
               disabled
               className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-border bg-surface-2 px-5 py-3 font-display text-sm font-bold text-muted-foreground"
             >
-              <Lock className="size-4" /> قريباً
+              <Lock className="size-4" /> قيد التجهيز
             </button>
           ) : (
             <button
