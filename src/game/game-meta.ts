@@ -1,7 +1,9 @@
 import caseCoverChalet from "@/assets/scene-hero.jpg";
-import caseCoverSoon from "@/assets/case-cover-soon.jpg";
+import caseCoverLastTrip from "@/assets/case-cover-last-trip.jpg";
 
 import { caseFile } from "./case-data";
+import { lastTripCase } from "./cases/last-trip";
+
 
 /**
  * هوية اللعبة الرئيسية. القضايا تُسجَّل هنا حتى نقدر نضيف قضايا جديدة مستقبلاً
