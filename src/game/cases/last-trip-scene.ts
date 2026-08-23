@@ -1,6 +1,7 @@
 import parkingImg from "@/assets/scene-last-trip/parking.jpg";
 import entranceImg from "@/assets/scene-last-trip/entrance.jpg";
 import trashImg from "@/assets/scene-last-trip/trash-bin.jpg";
+import trashCloseImg from "@/assets/scene-last-trip/trash-closeup.jpg";
 import coffeeImg from "@/assets/scene-last-trip/coffee-shop.jpg";
 import corridorImg from "@/assets/scene-last-trip/corridor.jpg";
 import mainBathImg from "@/assets/scene-last-trip/main-bathroom.jpg";
