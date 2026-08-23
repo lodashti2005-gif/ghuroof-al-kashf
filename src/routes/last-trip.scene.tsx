@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Phone, Search, X } from "lucide-react";
+import { ArrowRight, Phone, Search, Users, X } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { ActionButton } from "@/components/game/shell";
@@ -155,6 +155,11 @@ function LastTripSceneRoute() {
             <CaseTag tone="evidence">
               الأدلة {found.length}/{LAST_TRIP_EVIDENCE_TOTAL}
             </CaseTag>
+            <Link to="/last-trip/suspects">
+              <ActionButton variant="outline">
+                <Users className="size-4" /> الشخصيات
+              </ActionButton>
+            </Link>
             <Link to="/cases">
               <ActionButton variant="outline">
                 <ArrowRight className="size-4" /> متجر القضايا
