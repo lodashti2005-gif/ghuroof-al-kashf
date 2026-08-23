@@ -335,7 +335,10 @@ function LastTripSceneRoute() {
               <Eyebrow>ملف التحقيق — عبدالله</Eyebrow>
               <h2 className="mt-1 text-base font-bold sm:text-lg">بيانات جهاز عبدالله</h2>
             </div>
-            <ActionButton variant="outline" onClick={() => setShowCallLog((v) => !v)}>
+            <ActionButton variant="outline" onClick={() => {
+                setShowCallLog(true);
+                openEvidence("lt-call-log");
+              }}>
               <Phone className="size-4" /> فحص سجل المكالمات
             </ActionButton>
           </div>
