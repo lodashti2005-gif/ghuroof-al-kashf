@@ -312,7 +312,7 @@ function LastTripInterrogationRoute() {
                   <button
                     key={e.id}
                     type="button"
-                    disabled={busy}
+                    disabled={busy || expired}
                     onClick={() => {
                       setPending({ evidenceId: e.id });
                       setDraft(`شنو تقول عن ${e.title}؟`);
@@ -333,7 +333,7 @@ function LastTripInterrogationRoute() {
                 <button
                   key={c.id}
                   type="button"
-                  disabled={busy}
+                  disabled={busy || expired}
                   onClick={() => {
                     setPending({ witnessId: c.id });
                     setDraft(`${c.text} شنو ردك؟`);
