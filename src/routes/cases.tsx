@@ -1,5 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BadgeCheck, Clock3, Gauge, Lock, Play, ShieldAlert, ShoppingCart, Users } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Clock3,
+  Eye,
+  Gauge,
+  Lock,
+  Play,
+  ShieldAlert,
+  ShoppingCart,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
 
 import { Eyebrow } from "@/components/game/ui";
