@@ -36,8 +36,8 @@ export interface LastTripPromptInput {
   message: string;
   stress: number;
   unlockedEvidence: string[];
-  confrontEvidenceId?: string | null;
-  confrontWitnessId?: string | null;
+  confrontEvidenceId?: string | null | undefined;
+  confrontWitnessId?: string | null | undefined;
   /** كل ما واجهه المحقق فيه سابقاً خلال القضية (أدلة + شهادات). */
   confrontHistory: string[];
   contradictionCount: number;
