@@ -115,7 +115,8 @@ function LastTripInterrogationRoute() {
 
   const send = useCallback(
     async (text: string, confront: { evidenceId?: string; witnessId?: string } | null) => {
-      if (!suspect || busy || !text.trim()) return;
+      if (!suspect || busy || expired || !text.trim()) return;
+
       setBusy(true);
       const question: Line = { id: crypto.randomUUID(), role: "investigator", text };
       const history = [...session.lines, question];
