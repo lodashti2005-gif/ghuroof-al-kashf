@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Search, ShieldAlert } from "lucide-react";
+import { ArrowRight, MessageSquare, Search, ShieldAlert } from "lucide-react";
 
 import { ActionButton } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
@@ -141,6 +141,15 @@ function LastTripSuspectsRoute() {
                     </li>
                   ))}
                 </ul>
+                <Link
+                  to="/last-trip/interrogation/$suspectId"
+                  params={{ suspectId: s.id }}
+                  className="block"
+                >
+                  <ActionButton className="w-full justify-center">
+                    <MessageSquare className="size-4" /> استجواب {s.name}
+                  </ActionButton>
+                </Link>
               </div>
             </Panel>
           ))}
