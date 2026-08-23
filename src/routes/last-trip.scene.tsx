@@ -146,7 +146,7 @@ function LastTripSceneRoute() {
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
               محطة طريق على الخط السريع بعد منتصف الليل. تحرّك بالضغط على الأبواب والأشياء داخل
-              الصورة نفسها. الأدلة والاستجواب بعدهم قيد التجهيز.
+              الصورة نفسها. دوّر بعينك — الأدلة مخفية داخل المشاهد نفسها.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
