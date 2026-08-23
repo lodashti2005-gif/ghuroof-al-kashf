@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, FileWarning, Send, Users } from "lucide-react";
+import { ArrowRight, Clock, FileWarning, Send, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionButton } from "@/components/game/shell";
@@ -9,12 +9,17 @@ import { getLastTripSuspect, lastTripSuspects } from "@/game/cases/last-trip-sus
 import { lastTripEvidence } from "@/game/cases/last-trip-evidence";
 import { lastTripWitnessClaims } from "@/game/cases/last-trip-witness-claims";
 import {
+  formatInterrogationClock,
+  useLastTripTimer,
+} from "@/game/cases/last-trip-timer";
+import {
   getLastTripFoundSnapshot,
   hydrateLastTripProgress,
   subscribeLastTripProgress,
 } from "@/game/cases/last-trip-progress";
 import { askLastTripSuspect } from "@/lib/last-trip-interrogation.functions";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/last-trip/interrogation/$suspectId")({
   head: () => ({
@@ -74,6 +79,8 @@ function LastTripInterrogationRoute() {
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<{ evidenceId?: string; witnessId?: string } | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const { remaining, expired } = useLastTripTimer(suspectId);
+
 
   useEffect(() => {
     hydrateLastTripProgress();
@@ -108,7 +115,8 @@ function LastTripInterrogationRoute() {
 
   const send = useCallback(
     async (text: string, confront: { evidenceId?: string; witnessId?: string } | null) => {
-      if (!suspect || busy || !text.trim()) return;
+      if (!suspect || busy || expired || !text.trim()) return;
+
       setBusy(true);
       const question: Line = { id: crypto.randomUUID(), role: "investigator", text };
       const history = [...session.lines, question];
@@ -155,7 +163,7 @@ function LastTripInterrogationRoute() {
         setBusy(false);
       }
     },
-    [ask, busy, found, session.confronts, session.contradictions, session.lines, session.stress, suspect, suspectId],
+    [ask, busy, expired, found, session.confronts, session.contradictions, session.lines, session.stress, suspect, suspectId],
   );
 
   if (!suspect) {
@@ -193,7 +201,21 @@ function LastTripInterrogationRoute() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-mono text-sm tabular-nums",
+                  expired
+                    ? "border-destructive/50 bg-destructive/10 text-destructive"
+                    : remaining <= 30
+                      ? "border-primary/50 bg-primary/10 text-primary"
+                      : "border-border bg-secondary text-foreground",
+                )}
+                aria-label="الوقت المتبقي لاستجواب هذا المشتبه فيه"
+              >
+                <Clock className="size-4" /> {formatInterrogationClock(remaining)}
+              </span>
               <CaseTag>الأدلة {foundEvidence.length}</CaseTag>
+
               <Link to="/last-trip/suspects">
                 <ActionButton variant="outline">
                   <Users className="size-4" /> الشخصيات
@@ -239,9 +261,15 @@ function LastTripInterrogationRoute() {
               <div ref={endRef} />
             </div>
 
-            {pending && (
+            {pending && !expired && (
               <p className="mt-3 rounded-md border border-evidence/40 bg-evidence/10 px-2.5 py-2 text-xs text-evidence">
                 مواجهة مرفقة مع سؤالك الجاي.
+              </p>
+            )}
+
+            {expired && (
+              <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-2.5 py-2 text-xs text-destructive">
+                خلص وقت استجواب {suspect.name} — ما تقدر ترسل أسئلة جديدة له.
               </p>
             )}
 
@@ -255,13 +283,15 @@ function LastTripInterrogationRoute() {
               <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder="اكتب سؤالك…"
-                className="min-w-0 flex-1 rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary/60"
+                disabled={expired}
+                placeholder={expired ? "انتهى وقت هذا المشتبه فيه" : "اكتب سؤالك…"}
+                className="min-w-0 flex-1 rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary/60 disabled:opacity-60"
               />
-              <ActionButton type="submit" disabled={busy || !draft.trim()}>
+              <ActionButton type="submit" disabled={busy || expired || !draft.trim()}>
                 <Send className="size-4" /> إرسال
               </ActionButton>
             </form>
+
           </Panel>
         </div>
 
@@ -282,7 +312,7 @@ function LastTripInterrogationRoute() {
                   <button
                     key={e.id}
                     type="button"
-                    disabled={busy}
+                    disabled={busy || expired}
                     onClick={() => {
                       setPending({ evidenceId: e.id });
                       setDraft(`شنو تقول عن ${e.title}؟`);
@@ -303,7 +333,7 @@ function LastTripInterrogationRoute() {
                 <button
                   key={c.id}
                   type="button"
-                  disabled={busy}
+                  disabled={busy || expired}
                   onClick={() => {
                     setPending({ witnessId: c.id });
                     setDraft(`${c.text} شنو ردك؟`);

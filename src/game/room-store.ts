@@ -692,9 +692,18 @@ function bank(rt: SuspectRuntime, now: number) {
  * فتح جلسة استجواب: يوقف عدّادات باقي المشتبهين فوراً ويشغّل عدّاد هذا
  * المشتبه من الوقت المتبقي له. لو خلص وقته سابقاً ما يرجع يبدأ أبداً.
  */
-export const startInterrogationTimer = (suspectId: string) =>
+export const startInterrogationTimer = (suspectId: string, initialSeconds?: number) =>
   update((s) => {
     const now = Date.now();
+    // مشتبهو القضايا الأخرى (مثل «آخر رحلة») ينشأ لهم سجل وقت أول مرة فقط.
+    if (!s.suspects[suspectId] && typeof initialSeconds === "number") {
+      s.suspects[suspectId] = {
+        stress: 12,
+        timeLeft: initialSeconds,
+        finished: false,
+        transcript: [],
+      };
+    }
     for (const [id, rt] of Object.entries(s.suspects)) {
       if (id !== suspectId) bank(rt, now);
     }
@@ -702,6 +711,7 @@ export const startInterrogationTimer = (suspectId: string) =>
     if (!rt || rt.finished || rt.timeLeft <= 0) return;
     if (!rt.timerStartedAt) rt.timerStartedAt = now;
   });
+
 
 /** إيقاف مؤقت عند الخروج من غرفة المشتبه — الوقت المتبقي يبقى محفوظاً. */
 export const pauseInterrogationTimer = (suspectId: string) =>
