@@ -1,10 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowRight, Search, X } from "lucide-react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { ActionButton } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { lastTripCase } from "@/game/cases/last-trip";
+import {
+  LAST_TRIP_EVIDENCE_TOTAL,
+  getLastTripEvidence,
+} from "@/game/cases/last-trip-evidence";
+import {
+  discoverLastTripEvidence,
+  getLastTripFoundServerSnapshot,
+  getLastTripFoundSnapshot,
+  hydrateLastTripProgress,
+  mergeLastTripFromRoom,
+  subscribeLastTripProgress,
+} from "@/game/cases/last-trip-progress";
+import { useRoom } from "@/game/use-room";
 import {
   LAST_TRIP_SCENE_START,
   getLastTripSceneView,
@@ -41,7 +54,36 @@ function LastTripSceneRoute() {
   const [history, setHistory] = useState<string[]>([]);
   const [fade, setFade] = useState(false);
   const [miss, setMiss] = useState<string | null>(null);
+  const [closeUpId, setCloseUpId] = useState<string | null>(null);
+  const [flash, setFlash] = useState(false);
   const view = getLastTripSceneView(viewId);
+
+  const found = useSyncExternalStore(
+    subscribeLastTripProgress,
+    getLastTripFoundSnapshot,
+    getLastTripFoundServerSnapshot,
+  );
+  const { room } = useRoom();
+  const closeUp = closeUpId ? getLastTripEvidence(closeUpId) : undefined;
+
+  useEffect(() => {
+    hydrateLastTripProgress();
+  }, []);
+
+  // مزامنة الأدلة اللي يلقاها لاعبين ثانين بنفس الغرفة.
+  useEffect(() => {
+    mergeLastTripFromRoom(room?.unlockedEvidence ?? []);
+  }, [room?.unlockedEvidence]);
+
+  const openEvidence = (id: string) => {
+    const isNew = discoverLastTripEvidence(id);
+    setMiss(null);
+    setCloseUpId(id);
+    if (isNew) {
+      setFlash(true);
+      setTimeout(() => setFlash(false), 700);
+    }
+  };
 
   // استعادة آخر موقع بعد الـ refresh (داخل هذي القضية فقط).
   useEffect(() => {
@@ -109,7 +151,9 @@ function LastTripSceneRoute() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <CaseTag>{lastTripCase.code}</CaseTag>
-            <CaseTag tone="evidence">قيد التجهيز</CaseTag>
+            <CaseTag tone="evidence">
+              الأدلة {found.length}/{LAST_TRIP_EVIDENCE_TOTAL}
+            </CaseTag>
             <Link to="/cases">
               <ActionButton variant="outline">
                 <ArrowRight className="size-4" /> متجر القضايا
@@ -154,6 +198,28 @@ function LastTripSceneRoute() {
                     height: `${n.h}%`,
                     minWidth: "44px",
                     minHeight: "44px",
+                  }}
+                />
+              ))}
+
+              {/* أدلة مخفية: بدون توهج ولا إطار ولا أي مؤشر. */}
+              {(view.evidence ?? []).map((e) => (
+                <button
+                  key={`${view.id}-${e.evidenceId}`}
+                  type="button"
+                  aria-label="فحص تفصيلة داخل المحطة"
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    openEvidence(e.evidenceId);
+                  }}
+                  className="absolute z-[25] -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none"
+                  style={{
+                    left: `${e.x}%`,
+                    top: `${e.y}%`,
+                    width: `${e.w}%`,
+                    height: `${e.h}%`,
+                    minWidth: "38px",
+                    minHeight: "38px",
                   }}
                 />
               ))}
@@ -204,6 +270,45 @@ function LastTripSceneRoute() {
                 {view.label}
               </span>
             </div>
+
+            {flash && (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 z-40 bg-white/25 transition-opacity duration-500"
+              />
+            )}
+
+            {closeUp && (
+              <div className="absolute inset-0 z-50 flex items-end justify-center bg-black/70 p-4 backdrop-blur-sm sm:items-center">
+                <div className="w-full max-w-md rounded-xl border border-border bg-card/95 p-4 text-right shadow-2xl">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <Eyebrow>دليل جديد</Eyebrow>
+                      <h2 className="mt-1 text-lg font-bold">{closeUp.title}</h2>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label="إغلاق"
+                      onClick={() => setCloseUpId(null)}
+                      className="rounded-lg border border-border p-1.5 text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </div>
+                  <p className="mt-3 text-sm leading-relaxed">{closeUp.observation}</p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    الفحص التفصيلي بعده ما صار — انضاف الدليل لدفتر القضية.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setCloseUpId(null)}
+                    className="mt-4 w-full rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm font-semibold transition-colors hover:bg-secondary/70"
+                  >
+                    رجوع للمشهد
+                  </button>
+                </div>
+              </div>
+            )}
 
             {miss && (
               <div className="pointer-events-none absolute bottom-3 right-1/2 z-40 translate-x-1/2 rounded-lg border border-border bg-card/90 px-3 py-1.5 text-xs text-muted-foreground">
