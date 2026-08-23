@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, FileWarning, Send, Users } from "lucide-react";
+import { ArrowRight, Clock, FileWarning, Send, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionButton } from "@/components/game/shell";
@@ -9,12 +9,17 @@ import { getLastTripSuspect, lastTripSuspects } from "@/game/cases/last-trip-sus
 import { lastTripEvidence } from "@/game/cases/last-trip-evidence";
 import { lastTripWitnessClaims } from "@/game/cases/last-trip-witness-claims";
 import {
+  formatInterrogationClock,
+  useLastTripTimer,
+} from "@/game/cases/last-trip-timer";
+import {
   getLastTripFoundSnapshot,
   hydrateLastTripProgress,
   subscribeLastTripProgress,
 } from "@/game/cases/last-trip-progress";
 import { askLastTripSuspect } from "@/lib/last-trip-interrogation.functions";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/last-trip/interrogation/$suspectId")({
   head: () => ({
