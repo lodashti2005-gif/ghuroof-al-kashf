@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Phone, Search, X } from "lucide-react";
+import { ArrowRight, Phone, Search, Users, X } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { ActionButton } from "@/components/game/shell";
