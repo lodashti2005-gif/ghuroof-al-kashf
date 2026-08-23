@@ -169,6 +169,12 @@ export interface RoomState {
   final: FinalDecision | null;
   /** مشهد المقدمة السينمائية الحالي (null قبل بدايتها أو بعد انتهائها). */
   intro: number | null;
+  /** أدوار قضية «آخر رحلة» فقط: playerId -> roleId (مستقلة عن `roles`). */
+  ltRoles: Record<string, string>;
+  /** لاعبو «آخر رحلة» اللي ضغطوا «فهمت دوري». */
+  ltRoleReady: string[];
+  /** أدلة «آخر رحلة» اللي صار لها فحص تفصيلي (مشتركة مع الفريق). */
+  ltAnalyzed: string[];
 }
 
 /** A magnified region of the master crime-scene photograph. */
