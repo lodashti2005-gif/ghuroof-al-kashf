@@ -56,7 +56,8 @@ export function subscribeLastTripProgress(listener: Listener) {
 }
 
 export const getLastTripFoundSnapshot = (): string[] => found;
-export const getLastTripFoundServerSnapshot = (): string[] => [];
+const EMPTY: string[] = [];
+export const getLastTripFoundServerSnapshot = (): string[] => EMPTY;
 
 export function isLastTripFound(id: string) {
   return found.includes(id);
