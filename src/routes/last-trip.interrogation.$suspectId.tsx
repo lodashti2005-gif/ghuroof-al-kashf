@@ -78,7 +78,10 @@ function LastTripInterrogationRoute() {
   useEffect(() => {
     hydrateLastTripProgress();
     setFound(getLastTripFoundSnapshot());
-    return subscribeLastTripProgress(() => setFound(getLastTripFoundSnapshot()));
+    const unsub = subscribeLastTripProgress(() => setFound(getLastTripFoundSnapshot()));
+    return () => {
+      unsub();
+    };
   }, []);
 
   useEffect(() => {

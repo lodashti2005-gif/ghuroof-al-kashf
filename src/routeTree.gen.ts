@@ -25,6 +25,7 @@ import { Route as SceneRouteImport } from './routes/scene'
 import { Route as InterrogationSuspectIdRouteImport } from './routes/interrogation.$suspectId'
 import { Route as LastTripSceneRouteImport } from './routes/last-trip.scene'
 import { Route as LastTripSuspectsRouteImport } from './routes/last-trip.suspects'
+import { Route as LastTripInterrogationSuspectIdRouteImport } from './routes/last-trip.interrogation.$suspectId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -106,6 +107,12 @@ const LastTripSuspectsRoute = LastTripSuspectsRouteImport.update({
   path: '/last-trip/suspects',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LastTripInterrogationSuspectIdRoute =
+  LastTripInterrogationSuspectIdRouteImport.update({
+    id: '/last-trip/interrogation/$suspectId',
+    path: '/last-trip/interrogation/$suspectId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
   '/last-trip/scene': typeof LastTripSceneRoute
   '/last-trip/suspects': typeof LastTripSuspectsRoute
+  '/last-trip/interrogation/$suspectId': typeof LastTripInterrogationSuspectIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -142,6 +150,7 @@ export interface FileRoutesByTo {
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
   '/last-trip/scene': typeof LastTripSceneRoute
   '/last-trip/suspects': typeof LastTripSuspectsRoute
+  '/last-trip/interrogation/$suspectId': typeof LastTripInterrogationSuspectIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -161,6 +170,7 @@ export interface FileRoutesById {
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
   '/last-trip/scene': typeof LastTripSceneRoute
   '/last-trip/suspects': typeof LastTripSuspectsRoute
+  '/last-trip/interrogation/$suspectId': typeof LastTripInterrogationSuspectIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/interrogation/$suspectId'
     | '/last-trip/scene'
     | '/last-trip/suspects'
+    | '/last-trip/interrogation/$suspectId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/interrogation/$suspectId'
     | '/last-trip/scene'
     | '/last-trip/suspects'
+    | '/last-trip/interrogation/$suspectId'
   id:
     | '__root__'
     | '/'
@@ -217,6 +229,7 @@ export interface FileRouteTypes {
     | '/interrogation/$suspectId'
     | '/last-trip/scene'
     | '/last-trip/suspects'
+    | '/last-trip/interrogation/$suspectId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -236,6 +249,7 @@ export interface RootRouteChildren {
   InterrogationSuspectIdRoute: typeof InterrogationSuspectIdRoute
   LastTripSceneRoute: typeof LastTripSceneRoute
   LastTripSuspectsRoute: typeof LastTripSuspectsRoute
+  LastTripInterrogationSuspectIdRoute: typeof LastTripInterrogationSuspectIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -352,6 +366,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LastTripSuspectsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/last-trip/interrogation/$suspectId': {
+      id: '/last-trip/interrogation/$suspectId'
+      path: '/last-trip/interrogation/$suspectId'
+      fullPath: '/last-trip/interrogation/$suspectId'
+      preLoaderRoute: typeof LastTripInterrogationSuspectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -372,6 +393,7 @@ const rootRouteChildren: RootRouteChildren = {
   InterrogationSuspectIdRoute: InterrogationSuspectIdRoute,
   LastTripSceneRoute: LastTripSceneRoute,
   LastTripSuspectsRoute: LastTripSuspectsRoute,
+  LastTripInterrogationSuspectIdRoute: LastTripInterrogationSuspectIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
