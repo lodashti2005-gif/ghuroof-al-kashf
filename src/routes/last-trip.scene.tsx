@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Search, X } from "lucide-react";
+import { ArrowRight, Phone, Search, X } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { ActionButton } from "@/components/game/shell";
@@ -56,6 +56,7 @@ function LastTripSceneRoute() {
   const [miss, setMiss] = useState<string | null>(null);
   const [closeUpId, setCloseUpId] = useState<string | null>(null);
   const [flash, setFlash] = useState(false);
+  const [showCallLog, setShowCallLog] = useState(false);
   const view = getLastTripSceneView(viewId);
 
   const found = useSyncExternalStore(
