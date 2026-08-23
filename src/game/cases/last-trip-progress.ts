@@ -77,3 +77,12 @@ export function discoverLastTripEvidence(id: string): boolean {
   addNote({ author: "مسرح الجريمة", tag: "دليل", text: `${item.title} — ${item.observation}` });
   return true;
 }
+
+/** دمج أدلة الغرفة الواصلة لحظياً من لاعبين ثانين. */
+export function mergeLastTripFromRoom(ids: string[]) {
+  const incoming = ids.filter((id) => id.startsWith("lt-") && !found.includes(id));
+  if (incoming.length === 0) return;
+  found = [...found, ...incoming];
+  persist();
+  emit();
+}
