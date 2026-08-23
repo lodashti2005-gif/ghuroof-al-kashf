@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Phone, Search, Users, X } from "lucide-react";
+import { ArrowRight, Lock, Microscope, Phone, Search, Users, X } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { ActionButton } from "@/components/game/shell";
@@ -18,6 +18,13 @@ import {
   subscribeLastTripProgress,
 } from "@/game/cases/last-trip-progress";
 import { useRoom } from "@/game/use-room";
+import { LastTripRoleGate } from "@/components/game/last-trip-role-gate";
+import { useLastTripRole } from "@/game/cases/last-trip-role-state";
+import {
+  LAST_TRIP_DENIED_MESSAGE,
+  lastTripEvidenceSpecialty,
+} from "@/game/cases/last-trip-roles";
+import * as store from "@/game/room-store";
 import {
   LAST_TRIP_SCENE_START,
   getLastTripSceneView,
@@ -46,8 +53,16 @@ export const Route = createFileRoute("/last-trip/scene")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: LastTripSceneRoute,
+  component: LastTripSceneScreen,
 });
+
+function LastTripSceneScreen() {
+  return (
+    <LastTripRoleGate>
+      <LastTripSceneRoute />
+    </LastTripRoleGate>
+  );
+}
 
 function LastTripSceneRoute() {
   const [viewId, setViewId] = useState<string>(LAST_TRIP_SCENE_START);
@@ -65,11 +80,55 @@ function LastTripSceneRoute() {
     getLastTripFoundServerSnapshot,
   );
   const { room } = useRoom();
+  const { inRoom, role, can, analyzed } = useLastTripRole();
+  const [localAnalyzed, setLocalAnalyzed] = useState<string[]>([]);
+  const [denied, setDenied] = useState<string | null>(null);
+  const analyzedAll = [...analyzed, ...localAnalyzed];
   const closeUp = closeUpId ? getLastTripEvidence(closeUpId) : undefined;
 
   useEffect(() => {
     hydrateLastTripProgress();
+    try {
+      const raw = window.localStorage.getItem("last-trip:analyzed");
+      if (raw) setLocalAnalyzed(JSON.parse(raw) as string[]);
+    } catch {
+      /* تجاهل */
+    }
   }, []);
+
+  useEffect(() => {
+    if (!denied) return;
+    const t = setTimeout(() => setDenied(null), 2600);
+    return () => clearTimeout(t);
+  }, [denied]);
+
+  /** فحص تفصيلي: صاحب الاختصاص فقط، والنتيجة تنشارك مع الفريق بدفتر القضية. */
+  const runAnalysis = (evidenceId: string) => {
+    const item = getLastTripEvidence(evidenceId);
+    if (!item) return;
+    const capability = lastTripEvidenceSpecialty[evidenceId];
+    if (!capability || !can(capability)) {
+      setDenied(LAST_TRIP_DENIED_MESSAGE);
+      return;
+    }
+    setLocalAnalyzed((prev) => {
+      const next = prev.includes(evidenceId) ? prev : [...prev, evidenceId];
+      try {
+        window.localStorage.setItem("last-trip:analyzed", JSON.stringify(next));
+      } catch {
+        /* تجاهل */
+      }
+      return next;
+    });
+    if (inRoom) {
+      store.markLastTripAnalyzed(evidenceId);
+      store.addNote({
+        author: role?.title ?? "الفريق",
+        tag: "فحص",
+        text: `${item.title} — ${item.analysis}`,
+      });
+    }
+  };
 
   // مزامنة الأدلة اللي يلقاها لاعبين ثانين بنفس الغرفة.
   useEffect(() => {
@@ -152,6 +211,7 @@ function LastTripSceneRoute() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <CaseTag>{lastTripCase.code}</CaseTag>
+            {role && <CaseTag>دورك: {role.title}</CaseTag>}
             <CaseTag tone="evidence">
               الأدلة {found.length}/{LAST_TRIP_EVIDENCE_TOTAL}
             </CaseTag>
@@ -303,8 +363,27 @@ function LastTripSceneRoute() {
                     </button>
                   </div>
                   <p className="mt-3 text-sm leading-relaxed">{closeUp.observation}</p>
+                  {analyzedAll.includes(closeUp.id) ? (
+                    <div className="mt-3 rounded-lg border border-evidence/40 bg-evidence/10 p-3 text-sm leading-relaxed">
+                      <p className="mb-1 text-[0.7rem] text-evidence">الفحص التفصيلي</p>
+                      <p>{closeUp.analysis}</p>
+                    </div>
+                  ) : lastTripEvidenceSpecialty[closeUp.id] &&
+                    can(lastTripEvidenceSpecialty[closeUp.id]!) ? (
+                    <button
+                      type="button"
+                      onClick={() => runAnalysis(closeUp.id)}
+                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-evidence/50 bg-evidence/10 px-3 py-2 text-sm font-semibold text-evidence transition-colors hover:bg-evidence/20"
+                    >
+                      <Microscope className="size-4" /> فحص تفصيلي (قدرة دورك)
+                    </button>
+                  ) : (
+                    <p className="mt-3 flex items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+                      <Lock className="size-3.5 shrink-0" /> {LAST_TRIP_DENIED_MESSAGE}
+                    </p>
+                  )}
                   <p className="mt-2 text-xs text-muted-foreground">
-                    الفحص التفصيلي بعده ما صار — انضاف الدليل لدفتر القضية.
+                    انضاف الدليل لدفتر القضية ويشوفه كل الفريق.
                   </p>
                   <button
                     type="button"
@@ -333,6 +412,12 @@ function LastTripSceneRoute() {
           </div>
         </div>
 
+        {denied && (
+          <p className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs text-primary">
+            {denied}
+          </p>
+        )}
+
         {/* ملف عبدالله — سجل المكالمات ما ينلقى بالصور، ينفتح من بيانات التحقيق. */}
         <Panel className="cine-in space-y-3">
           <div className="flex flex-wrap items-end justify-between gap-3">
@@ -341,6 +426,10 @@ function LastTripSceneRoute() {
               <h2 className="mt-1 text-base font-bold sm:text-lg">بيانات جهاز عبدالله</h2>
             </div>
             <ActionButton variant="outline" onClick={() => {
+                if (!can("comms")) {
+                  setDenied(LAST_TRIP_DENIED_MESSAGE);
+                  return;
+                }
                 setShowCallLog(true);
                 openEvidence("lt-call-log");
               }}>
