@@ -18,6 +18,7 @@ import {
 import {
   getLastTripFoundSnapshot,
   hydrateLastTripProgress,
+  mergeLastTripFromRoom,
   subscribeLastTripProgress,
 } from "@/game/cases/last-trip-progress";
 import * as store from "@/game/room-store";
@@ -123,6 +124,18 @@ function LastTripInterrogationRoute() {
     };
   }, []);
 
+  // أدلة الفريق المشتركة (قاعدة البيانات) — تصل لكل جهاز لحظياً وتبقى بعد الـrefresh.
+  const sharedUnlocked = useMemo(
+    () => (room?.unlockedEvidence ?? []).filter((id) => id.startsWith("lt-")),
+    [room?.unlockedEvidence],
+  );
+
+  // دمج أدلة الغرفة بالتقدّم المحلي حتى ما يحتاج أي لاعب يعيد الاكتشاف.
+  useEffect(() => {
+    mergeLastTripFromRoom(sharedUnlocked);
+  }, [sharedUnlocked]);
+
+
   useEffect(() => {
     setSession(loadSession(suspectId));
   }, [suspectId]);
@@ -146,9 +159,15 @@ function LastTripInterrogationRoute() {
     return () => clearTimeout(t);
   }, [denied]);
 
+  // داخل غرفة: المصدر الوحيد لتوفّر الأدلة هو الحالة المشتركة.
+  const availableIds = useMemo(
+    () => (inRoom ? sharedUnlocked : found),
+    [inRoom, sharedUnlocked, found],
+  );
+
   const foundEvidence = useMemo(
-    () => lastTripEvidence.filter((e) => found.includes(e.id)),
-    [found],
+    () => lastTripEvidence.filter((e) => availableIds.includes(e.id)),
+    [availableIds],
   );
 
   const send = useCallback(
@@ -176,7 +195,7 @@ function LastTripInterrogationRoute() {
             suspectId,
             message: text,
             stress,
-            unlockedEvidence: found,
+            unlockedEvidence: availableIds,
             confrontEvidenceId: confront?.evidenceId ?? null,
             confrontWitnessId: confront?.witnessId ?? null,
             confrontHistory: session.confronts,
@@ -237,7 +256,7 @@ function LastTripInterrogationRoute() {
         setBusy(false);
       }
     },
-    [ask, busy, expired, found, inRoom, isInterrogator, lines, session.confronts, session.contradictions, stress, suspect, suspectId],
+    [ask, busy, expired, availableIds, inRoom, isInterrogator, lines, session.confronts, session.contradictions, stress, suspect, suspectId],
   );
 
   const confrontDisabled = busy || expired || !isInterrogator;
