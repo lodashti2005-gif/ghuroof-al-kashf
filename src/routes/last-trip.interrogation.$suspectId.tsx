@@ -123,6 +123,18 @@ function LastTripInterrogationRoute() {
     };
   }, []);
 
+  // أدلة الفريق المشتركة (قاعدة البيانات) — تصل لكل جهاز لحظياً وتبقى بعد الـrefresh.
+  const sharedUnlocked = useMemo(
+    () => (room?.unlockedEvidence ?? []).filter((id) => id.startsWith("lt-")),
+    [room?.unlockedEvidence],
+  );
+
+  // دمج أدلة الغرفة بالتقدّم المحلي حتى ما يحتاج أي لاعب يعيد الاكتشاف.
+  useEffect(() => {
+    mergeLastTripFromRoom(sharedUnlocked);
+  }, [sharedUnlocked]);
+
+
   useEffect(() => {
     setSession(loadSession(suspectId));
   }, [suspectId]);
