@@ -23,6 +23,7 @@ import { Route as RevealRouteImport } from './routes/reveal'
 import { Route as RolesRouteImport } from './routes/roles'
 import { Route as SceneRouteImport } from './routes/scene'
 import { Route as InterrogationSuspectIdRouteImport } from './routes/interrogation.$suspectId'
+import { Route as LastTripAccusationRouteImport } from './routes/last-trip.accusation'
 import { Route as LastTripSceneRouteImport } from './routes/last-trip.scene'
 import { Route as LastTripSuspectsRouteImport } from './routes/last-trip.suspects'
 import { Route as LastTripInterrogationSuspectIdRouteImport } from './routes/last-trip.interrogation.$suspectId'
@@ -97,6 +98,11 @@ const InterrogationSuspectIdRoute = InterrogationSuspectIdRouteImport.update({
   path: '/interrogation/$suspectId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LastTripAccusationRoute = LastTripAccusationRouteImport.update({
+  id: '/last-trip/accusation',
+  path: '/last-trip/accusation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LastTripSceneRoute = LastTripSceneRouteImport.update({
   id: '/last-trip/scene',
   path: '/last-trip/scene',
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
+  '/last-trip/accusation': typeof LastTripAccusationRoute
   '/last-trip/scene': typeof LastTripSceneRoute
   '/last-trip/suspects': typeof LastTripSuspectsRoute
   '/last-trip/interrogation/$suspectId': typeof LastTripInterrogationSuspectIdRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
+  '/last-trip/accusation': typeof LastTripAccusationRoute
   '/last-trip/scene': typeof LastTripSceneRoute
   '/last-trip/suspects': typeof LastTripSuspectsRoute
   '/last-trip/interrogation/$suspectId': typeof LastTripInterrogationSuspectIdRoute
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
+  '/last-trip/accusation': typeof LastTripAccusationRoute
   '/last-trip/scene': typeof LastTripSceneRoute
   '/last-trip/suspects': typeof LastTripSuspectsRoute
   '/last-trip/interrogation/$suspectId': typeof LastTripInterrogationSuspectIdRoute
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/roles'
     | '/scene'
     | '/interrogation/$suspectId'
+    | '/last-trip/accusation'
     | '/last-trip/scene'
     | '/last-trip/suspects'
     | '/last-trip/interrogation/$suspectId'
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/roles'
     | '/scene'
     | '/interrogation/$suspectId'
+    | '/last-trip/accusation'
     | '/last-trip/scene'
     | '/last-trip/suspects'
     | '/last-trip/interrogation/$suspectId'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/roles'
     | '/scene'
     | '/interrogation/$suspectId'
+    | '/last-trip/accusation'
     | '/last-trip/scene'
     | '/last-trip/suspects'
     | '/last-trip/interrogation/$suspectId'
@@ -247,6 +259,7 @@ export interface RootRouteChildren {
   RolesRoute: typeof RolesRoute
   SceneRoute: typeof SceneRoute
   InterrogationSuspectIdRoute: typeof InterrogationSuspectIdRoute
+  LastTripAccusationRoute: typeof LastTripAccusationRoute
   LastTripSceneRoute: typeof LastTripSceneRoute
   LastTripSuspectsRoute: typeof LastTripSuspectsRoute
   LastTripInterrogationSuspectIdRoute: typeof LastTripInterrogationSuspectIdRoute
@@ -352,6 +365,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InterrogationSuspectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/last-trip/accusation': {
+      id: '/last-trip/accusation'
+      path: '/last-trip/accusation'
+      fullPath: '/last-trip/accusation'
+      preLoaderRoute: typeof LastTripAccusationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/last-trip/scene': {
       id: '/last-trip/scene'
       path: '/last-trip/scene'
@@ -391,6 +411,7 @@ const rootRouteChildren: RootRouteChildren = {
   RolesRoute: RolesRoute,
   SceneRoute: SceneRoute,
   InterrogationSuspectIdRoute: InterrogationSuspectIdRoute,
+  LastTripAccusationRoute: LastTripAccusationRoute,
   LastTripSceneRoute: LastTripSceneRoute,
   LastTripSuspectsRoute: LastTripSuspectsRoute,
   LastTripInterrogationSuspectIdRoute: LastTripInterrogationSuspectIdRoute,

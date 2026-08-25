@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Lock, Microscope, Phone, Search, Users, X } from "lucide-react";
+import { ArrowRight, Gavel, Lock, Microscope, Phone, Search, Users, X } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { ActionButton } from "@/components/game/shell";
@@ -20,6 +20,7 @@ import {
 import { useRoom } from "@/game/use-room";
 import { LastTripRoleGate } from "@/components/game/last-trip-role-gate";
 import { useLastTripRole } from "@/game/cases/last-trip-role-state";
+import { useLastTripInterrogations } from "@/game/cases/last-trip-interrogation-progress";
 import {
   LAST_TRIP_DENIED_MESSAGE,
   lastTripEvidenceSpecialty,
@@ -80,7 +81,9 @@ function LastTripSceneRoute() {
     getLastTripFoundServerSnapshot,
   );
   const { room } = useRoom();
+  const { allDone: allInterrogated } = useLastTripInterrogations();
   const { inRoom, role, can, analyzed } = useLastTripRole();
+
   const [localAnalyzed, setLocalAnalyzed] = useState<string[]>([]);
   const [denied, setDenied] = useState<string | null>(null);
   const analyzedAll = [...analyzed, ...localAnalyzed];
@@ -215,11 +218,19 @@ function LastTripSceneRoute() {
             <CaseTag tone="evidence">
               الأدلة {found.length}/{LAST_TRIP_EVIDENCE_TOTAL}
             </CaseTag>
+            {allInterrogated && (
+              <Link to="/last-trip/accusation">
+                <ActionButton variant="danger">
+                  <Gavel className="size-4" /> الاتهام
+                </ActionButton>
+              </Link>
+            )}
             <Link to="/last-trip/suspects">
               <ActionButton variant="outline">
                 <Users className="size-4" /> الشخصيات
               </ActionButton>
             </Link>
+
             <Link to="/cases">
               <ActionButton variant="outline">
                 <ArrowRight className="size-4" /> متجر القضايا

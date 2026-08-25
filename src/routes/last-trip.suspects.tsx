@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, MessageSquare, Search, ShieldAlert } from "lucide-react";
+import { ArrowRight, Gavel, MessageSquare, Search, ShieldAlert } from "lucide-react";
 
 import { ActionButton } from "@/components/game/shell";
 import { LastTripRoleGate } from "@/components/game/last-trip-role-gate";
 import { useLastTripRole } from "@/game/cases/last-trip-role-state";
+import { useLastTripInterrogations } from "@/game/cases/last-trip-interrogation-progress";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { lastTripCase } from "@/game/cases/last-trip";
 import {
@@ -43,6 +44,7 @@ function LastTripSuspectsScreen() {
 
 function LastTripSuspectsRoute() {
   const { role } = useLastTripRole();
+  const { allDone, count, total, isDone } = useLastTripInterrogations();
   return (
     <div dir="rtl" className="min-h-screen bg-background px-4 py-6 sm:px-6">
       <div className="mx-auto max-w-6xl space-y-5">
@@ -61,6 +63,16 @@ function LastTripSuspectsRoute() {
             <CaseTag>{lastTripCase.code}</CaseTag>
             {role && <CaseTag>دورك: {role.title}</CaseTag>}
             <CaseTag tone="danger">المشتبه فيهم {LAST_TRIP_SUSPECT_TOTAL}</CaseTag>
+            <CaseTag>
+              الاستجوابات {count}/{total}
+            </CaseTag>
+            {allDone && (
+              <Link to="/last-trip/accusation">
+                <ActionButton variant="danger">
+                  <Gavel className="size-4" /> الاتهام
+                </ActionButton>
+              </Link>
+            )}
             <Link to="/last-trip/scene">
               <ActionButton variant="outline">
                 <Search className="size-4" /> مسرح الجريمة
@@ -158,8 +170,12 @@ function LastTripSuspectsRoute() {
                   params={{ suspectId: s.id }}
                   className="block"
                 >
-                  <ActionButton className="w-full justify-center">
-                    <MessageSquare className="size-4" /> استجواب {s.name}
+                  <ActionButton
+                    variant={isDone(s.id) ? "outline" : "primary"}
+                    className="w-full justify-center"
+                  >
+                    <MessageSquare className="size-4" />{" "}
+                    {isDone(s.id) ? `خلص استجواب ${s.name}` : `استجواب ${s.name}`}
                   </ActionButton>
                 </Link>
               </div>

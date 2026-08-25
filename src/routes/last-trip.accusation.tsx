@@ -1,0 +1,141 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight, Gavel, Lock } from "lucide-react";
+import { useState } from "react";
+
+import { ActionButton } from "@/components/game/shell";
+import { LastTripRoleGate } from "@/components/game/last-trip-role-gate";
+import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
+import { lastTripCase } from "@/game/cases/last-trip";
+import { lastTripSuspects } from "@/game/cases/last-trip-suspects";
+import { useLastTripInterrogations } from "@/game/cases/last-trip-interrogation-progress";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/last-trip/accusation")({
+  head: () => ({
+    meta: [
+      { title: "الاتهام — آخر رحلة" },
+      {
+        name: "description",
+        content:
+          "شاشة الاتهام بقضية «آخر رحلة»: اختاروا المتهم بعد ما تخلصون استجواب كل الشخصيات.",
+      },
+      { property: "og:title", content: "الاتهام — آخر رحلة" },
+      {
+        property: "og:description",
+        content: "اختيار المتهم النهائي بقضية «آخر رحلة».",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: LastTripAccusationScreen,
+});
+
+function LastTripAccusationScreen() {
+  return (
+    <LastTripRoleGate>
+      <LastTripAccusationRoute />
+    </LastTripRoleGate>
+  );
+}
+
+function LastTripAccusationRoute() {
+  const { allDone, count, total } = useLastTripInterrogations();
+  const [picked, setPicked] = useState<string | null>(null);
+  const [locked, setLocked] = useState(false);
+  const pickedSuspect = lastTripSuspects.find((s) => s.id === picked) ?? null;
+
+  return (
+    <div dir="rtl" className="min-h-screen bg-background px-4 py-6 sm:px-6">
+      <div className="mx-auto max-w-5xl space-y-5">
+        <Panel className="cine-in flex flex-wrap items-center justify-between gap-4">
+          <div className="min-w-0">
+            <Eyebrow>المرحلة الأخيرة</Eyebrow>
+            <h1 className="mt-1.5 text-xl font-bold sm:text-2xl">
+              الاتهام — {lastTripCase.title}
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+              {allDone
+                ? "خلصتوا استجواب كل الشخصيات. اختاروا منو تتهمونه."
+                : "لازم تخلصون استجواب كل الشخصيات قبل الاتهام."}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <CaseTag tone="danger">
+              الاستجوابات {count}/{total}
+            </CaseTag>
+            <Link to="/last-trip/suspects">
+              <ActionButton variant="outline">
+                <ArrowRight className="size-4" /> الشخصيات
+              </ActionButton>
+            </Link>
+          </div>
+        </Panel>
+
+        {!allDone ? (
+          <Panel className="cine-in flex items-center gap-3 text-sm text-muted-foreground">
+            <Lock className="size-4 shrink-0" /> الاتهام مقفل — باقي{" "}
+            {total - count} استجواب.
+          </Panel>
+        ) : (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {lastTripSuspects.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  disabled={locked}
+                  onClick={() => setPicked(s.id)}
+                  className={cn(
+                    "cine-in overflow-hidden rounded-lg border bg-surface-2 text-right transition-colors",
+                    picked === s.id
+                      ? "border-primary ring-1 ring-primary/40"
+                      : "border-border hover:border-primary/50",
+                    locked && picked !== s.id && "opacity-50",
+                  )}
+                >
+                  <div className="relative">
+                    <img
+                      src={s.portrait}
+                      alt={`صورة ${s.name}`}
+                      width={912}
+                      height={1104}
+                      loading="lazy"
+                      className="aspect-[4/5] w-full object-cover object-top grayscale-[30%]"
+                    />
+                    <div
+                      className="absolute inset-0"
+                      style={{ background: "var(--gradient-portrait)" }}
+                      aria-hidden="true"
+                    />
+                    <div className="absolute inset-x-4 bottom-3">
+                      <h2 className="text-xl font-bold">{s.name}</h2>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{s.relation}</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <Panel className="cine-in flex flex-wrap items-center justify-between gap-4">
+              <p className="text-sm text-muted-foreground">
+                {locked
+                  ? `تم تسجيل اتهامكم: ${pickedSuspect?.name ?? ""}`
+                  : pickedSuspect
+                    ? `اخترتوا: ${pickedSuspect.name}`
+                    : "اختاروا متهم من فوق."}
+              </p>
+              <ActionButton
+                variant="danger"
+                disabled={!picked || locked}
+                onClick={() => setLocked(true)}
+              >
+                <Gavel className="size-4" /> ثبّتوا الاتهام
+              </ActionButton>
+            </Panel>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

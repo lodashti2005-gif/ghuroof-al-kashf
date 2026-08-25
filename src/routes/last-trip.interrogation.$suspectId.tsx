@@ -1,6 +1,6 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, Clock, FileWarning, Lock, Send, Users } from "lucide-react";
+import { ArrowRight, Clock, FileWarning, Gavel, Lock, Send, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionButton } from "@/components/game/shell";
@@ -16,6 +16,8 @@ import {
   formatInterrogationClock,
   useLastTripTimer,
 } from "@/game/cases/last-trip-timer";
+import { markLastTripInterrogationDone } from "@/game/cases/last-trip-interrogation-progress";
+
 import {
   getLastTripFoundSnapshot,
   hydrateLastTripProgress,
@@ -86,6 +88,8 @@ function LastTripInterrogationRoute() {
   const { suspectId } = useParams({ from: "/last-trip/interrogation/$suspectId" });
   const suspect = getLastTripSuspect(suspectId);
   const ask = useServerFn(askLastTripSuspect);
+  const navigate = useNavigate();
+
 
   const [session, setSession] = useState<Session>(emptySession);
   const [found, setFound] = useState<string[]>([]);
@@ -154,11 +158,22 @@ function LastTripInterrogationRoute() {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [lines.length, busy]);
 
+  // خلص الوقت → يُحتسب استجواب هذا المشتبه فيه منتهي (يبقى محفوظ بعد الرجوع/الـrefresh).
+  useEffect(() => {
+    if (expired) markLastTripInterrogationDone(suspectId);
+  }, [expired, suspectId]);
+
+  const finishInterrogation = () => {
+    markLastTripInterrogationDone(suspectId);
+    void navigate({ to: "/last-trip/suspects" });
+  };
+
   useEffect(() => {
     if (!denied) return;
     const t = setTimeout(() => setDenied(null), 2600);
     return () => clearTimeout(t);
   }, [denied]);
+
 
   // داخل غرفة: المصدر الوحيد لتوفّر الأدلة هو الحالة المشتركة.
   const availableIds = useMemo(
@@ -320,11 +335,15 @@ function LastTripInterrogationRoute() {
               </span>
               <CaseTag>الأدلة {foundEvidence.length}</CaseTag>
 
+              <ActionButton variant="outline" onClick={finishInterrogation}>
+                <Gavel className="size-4" /> أنهِ الاستجواب
+              </ActionButton>
               <Link to="/last-trip/suspects">
                 <ActionButton variant="outline">
                   <Users className="size-4" /> الشخصيات
                 </ActionButton>
               </Link>
+
               <Link to="/last-trip/scene">
                 <ActionButton variant="outline">
                   <ArrowRight className="size-4" /> مسرح الجريمة
