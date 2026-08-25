@@ -335,11 +335,15 @@ function LastTripInterrogationRoute() {
               </span>
               <CaseTag>الأدلة {foundEvidence.length}</CaseTag>
 
+              <ActionButton variant="outline" onClick={finishInterrogation}>
+                <Gavel className="size-4" /> أنهِ الاستجواب
+              </ActionButton>
               <Link to="/last-trip/suspects">
                 <ActionButton variant="outline">
                   <Users className="size-4" /> الشخصيات
                 </ActionButton>
               </Link>
+
               <Link to="/last-trip/scene">
                 <ActionButton variant="outline">
                   <ArrowRight className="size-4" /> مسرح الجريمة
