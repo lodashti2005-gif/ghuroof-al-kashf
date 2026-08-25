@@ -1009,13 +1009,13 @@ export const retryLastTripAccusation = () =>
   update((s) => {
     const acc = s.ltAcc;
     if (!acc || acc.result !== "wrong") return;
+    const { confirmedAt: _dropped, ...rest } = acc;
     s.ltAcc = {
-      ...acc,
+      ...rest,
       stage: "select",
       selectedSuspect: null,
       result: null,
       reasons: [],
-      confirmedAt: undefined,
     };
   });
 
