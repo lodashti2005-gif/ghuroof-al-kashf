@@ -246,3 +246,25 @@ export const lastTripInterrogationRules: Record<string, LastTripInterrogationRul
 };
 
 export const getLastTripRules = (id: string) => lastTripInterrogationRules[id] ?? null;
+
+/**
+ * ردود جاسم المعتمدة لكل مواجهة على حدة (دليل أو شهادة) — سيرفر فقط.
+ *
+ * تُستخدم كأساس إلزامي لنبرة الرد، وكـfallback لو فشل نداء الذكاء الاصطناعي،
+ * حتى لا يرجع نفس النفي العام لكل الأدلة.
+ */
+export const LAST_TRIP_JASSIM_CONFRONT_LINES: Record<string, string> = {
+  "nasser-wet": "غسلت إيدي بالمغسلة، شفيها؟ مو معناته إني سويت شي.",
+  "mishal-trash": "كلينكس عادي، قطّيته بالزبالة قبل لا أدخل الكوفي. شنو الغريب؟",
+  "mishal-argue": "يشبه صوتي؟ المحطة فيها ناس، شلون متأكد إنه أنا؟",
+  "lt-tissue": "إي الكلينكس لي، استخدمته وقطّيته. وين المشكلة؟",
+  "lt-faucet": "إي دخلت الحمام البعيد، بس هذا ما يعني إني سويت شي براشد.",
+  "lt-shoe-print": "إي دخلت الحمام البعيد، بس هذا ما يعني إني سويت شي براشد.",
+  "lt-corridor-cam": "إي مريت من الممر… ما قلت إني ما تحركت من مكاني.",
+  "lt-coffee-cam": "إي هذا أنا عند باب الكوفي، وقطّيت كلينكس بالزبالة. شنو فيها؟",
+  "lt-coffee-cup": "فنجالي عادي، شربت قهوة بالكوفي مثل الكل.",
+  "lt-call-log": "هذا ما يخصني، أسألوا عبدالله عن مكالمته.",
+};
+
+export const getJassimConfrontLine = (id: string | null | undefined) =>
+  (id && LAST_TRIP_JASSIM_CONFRONT_LINES[id]) || null;

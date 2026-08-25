@@ -5,6 +5,7 @@
  * ملفات استجواب «قضية الشاليه» ولا يعدّل عليها.
  */
 import {
+  getJassimConfrontLine,
   LAST_TRIP_CULPRIT_ID,
   LAST_TRIP_HIDDEN_TRUTH,
   type LastTripInterrogationRules,
@@ -141,6 +142,18 @@ ${TIER_DIRECTIVE[tier]}`
     (confrontEv && rules.relevantEvidence.includes(confrontEv.id)) ||
     (witness && isCulprit);
 
+  const confrontId = input.confrontEvidenceId || input.confrontWitnessId || null;
+  const baseLine = isCulprit ? getJassimConfrontLine(confrontId) : null;
+  const repeated = !!confrontId && input.confrontHistory.includes(confrontId);
+  const scriptedLine = baseLine
+    ? `الرد المعتمد لهذي المواجهة بالتحديد: «${baseLine}»
+${
+  repeated
+    ? "المحقق عاد نفس المواجهة: غيّر الصياغة وعلّق «قلت لك…» أو «ليش تعيد؟»، وخلّ stressDelta من 0 إلى 1 بس."
+    : "استخدمه كأساس وقدر تغيّر صياغته شوي، بس نفس المعنى ونفس مستوى الاعتراف — ممنوع رد عام أو نفي مكرر من رواية ثانية."
+}`
+    : "";
+
   const confrontBlock =
     confrontEv || witness
       ? `\n## مواجهة الآن
@@ -157,7 +170,8 @@ ${
   relevant
     ? "هذا يخصك ويحرجك: تتلخبط شوي، تحاول تبرر أو تتهرب، وارفع stressDelta بين 10 و20 — بدون ما تتجاوز مستوى الكشف المسموح."
     : "هذا ما يثبت عليك شي: ردك هادي وواثق (مثل «وهذا شنو يثبت علي؟») وارفع stressDelta بين 1 و4 بس."
-}\n`
+}
+${scriptedLine}\n`
       : "";
 
   const accusationRule = isCulprit
