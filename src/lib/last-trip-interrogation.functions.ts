@@ -39,7 +39,9 @@ export interface LastTripReply {
 export const askLastTripSuspect = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => inputSchema.parse(data))
   .handler(async ({ data }): Promise<LastTripReply> => {
-    const { getLastTripRules } = await import("@/game/cases/last-trip-interrogation.server");
+    const { getLastTripRules, getJassimConfrontLine, LAST_TRIP_CULPRIT_ID } = await import(
+      "@/game/cases/last-trip-interrogation.server"
+    );
     const rules = getLastTripRules(data.suspectId);
     if (!rules) throw new Error("unknown suspect");
 
@@ -48,9 +50,16 @@ export const askLastTripSuspect = createServerFn({ method: "POST" })
 
     const { system, user } = buildLastTripPrompt(rules, data);
 
+    const confrontId = data.confrontEvidenceId || data.confrontWitnessId || null;
+    const isCulprit = data.suspectId === LAST_TRIP_CULPRIT_ID;
+    const scripted = isCulprit ? getJassimConfrontLine(confrontId) : null;
+    // نفس المواجهة مرة ثانية ما ترفع التوتر ولا التقدّم.
+    const repeated = !!confrontId && data.confrontHistory.includes(confrontId);
+    const capDelta = (n: number) => (repeated ? Math.min(1, Math.max(0, n)) : n);
+
     if (!process.env["LOVABLE_API_KEY"]) {
       return {
-        text: "…لحظة، ما سمعت السؤال زين. عيده علي.",
+        text: scripted ?? "…لحظة، ما سمعت السؤال زين. عيده علي.",
         state: "thinking",
         stressDelta: 0,
         contradiction: false,
@@ -63,13 +72,22 @@ export const askLastTripSuspect = createServerFn({ method: "POST" })
       return {
         text: reply.text,
         state: reply.state,
-        stressDelta: Math.max(-5, Math.min(20, Math.round(reply.stressDelta))),
+        stressDelta: capDelta(Math.max(-5, Math.min(20, Math.round(reply.stressDelta)))),
         contradiction: reply.contradiction,
       };
     } catch (error) {
       console.error("last-trip interrogation failed", error);
       // لازم كل سؤال يحصل رد — بدون تعليق الشاشة.
-      const fallback = rules.scriptedAnswers[0]?.answer ?? "مادري شنو تبيني أقول أكثر.";
-      return { text: fallback, state: "nervous", stressDelta: 1, contradiction: false };
+      const fallback =
+        scripted ??
+        (confrontId
+          ? "وهذا شنو يثبت علي؟"
+          : rules.scriptedAnswers[0]?.answer ?? "مادري شنو تبيني أقول أكثر.");
+      return {
+        text: repeated ? `قلت لك… ${fallback}` : fallback,
+        state: "nervous",
+        stressDelta: capDelta(scripted ? 6 : 1),
+        contradiction: false,
+      };
     }
   });
