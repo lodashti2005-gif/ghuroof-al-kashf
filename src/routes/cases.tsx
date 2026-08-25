@@ -240,7 +240,7 @@ function CaseCard({
               </button>
               {item.id === "last-trip" && (
                 <Link
-                  to="/last-trip/scene"
+                  to="/last-trip/intro"
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-secondary/60 bg-secondary/10 px-5 py-2.5 font-display text-xs font-bold text-secondary-foreground transition-colors hover:bg-secondary/20"
                 >
                   <Eye className="size-3.5" /> تجربة القضية (مطوّر)
