@@ -1,10 +1,6 @@
 import caseCoverChalet from "@/assets/scene-hero.jpg";
 import caseCoverLastTrip from "@/assets/case-cover-last-trip.jpg";
 
-import { caseFile } from "./case-data";
-import { lastTripCase } from "./cases/last-trip";
-
-
 /**
  * هوية اللعبة الرئيسية. القضايا تُسجَّل هنا حتى نقدر نضيف قضايا جديدة مستقبلاً
  * تحت نفس اللعبة بدون تعديل شاشات اللعبة.
@@ -37,6 +33,9 @@ export interface CaseSummary {
   free: boolean;
 }
 
+const CHALET_CASE_ID = "last-night";
+const LAST_TRIP_CASE_ID = "last-trip";
+
 
 /**
  * سجل القضايا المتوفرة داخل اللعبة.
@@ -49,9 +48,9 @@ export interface CaseSummary {
  */
 export const caseRegistry: CaseSummary[] = [
   {
-    id: caseFile.id,
-    title: caseFile.title,
-    code: caseFile.code,
+    id: CHALET_CASE_ID,
+    title: "قضية الشاليه",
+    code: "K-2291",
     description: "ليلة عادية بين مجموعة أصدقاء انتهت بجريمة... وكل واحد عنده رواية.",
     teaser: "ليلة عادية بين مجموعة أصدقاء انتهت بجريمة... وكل واحد عنده رواية.",
     status: "available",
@@ -64,9 +63,9 @@ export const caseRegistry: CaseSummary[] = [
     free: true,
   },
   {
-    id: lastTripCase.id,
-    title: lastTripCase.title,
-    code: lastTripCase.code,
+    id: LAST_TRIP_CASE_ID,
+    title: "آخر رحلة",
+    code: "K-0472",
     description:
       "توقّف عابر في محطة طريق يتحول إلى قضية غامضة. واحد من الشباب ما رجع… وكل واحد يتذكر الليلة بطريقة مختلفة.",
     teaser:
@@ -84,7 +83,7 @@ export const caseRegistry: CaseSummary[] = [
 
 
 /** القضية الحالية المفعّلة. */
-export const ACTIVE_CASE_ID = caseFile.id;
+export const ACTIVE_CASE_ID = CHALET_CASE_ID;
 
 export const activeCase =
   caseRegistry.find((c) => c.id === ACTIVE_CASE_ID) ?? caseRegistry[0]!;
