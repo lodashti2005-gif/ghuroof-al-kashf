@@ -165,10 +165,17 @@ function LastTripInterrogationRoute() {
     [inRoom, sharedUnlocked, found],
   );
 
+  // أدلة هذا المشتبه فيه فقط — العداد والأزرار تعتمد عليها.
   const foundEvidence = useMemo(
-    () => lastTripEvidence.filter((e) => availableIds.includes(e.id)),
-    [availableIds],
+    () => lastTripEvidenceForSuspect(suspectId, availableIds),
+    [availableIds, suspectId],
   );
+
+  const witnessClaims = useMemo(
+    () => lastTripWitnessClaimsForSuspect(suspectId),
+    [suspectId],
+  );
+
 
   const send = useCallback(
     async (text: string, confront: { evidenceId?: string; witnessId?: string } | null) => {
