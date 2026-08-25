@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Lock, Microscope, Phone, Search, Users, X } from "lucide-react";
+import { ArrowRight, Gavel, Lock, Microscope, Phone, Search, Users, X } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { ActionButton } from "@/components/game/shell";
@@ -20,6 +20,7 @@ import {
 import { useRoom } from "@/game/use-room";
 import { LastTripRoleGate } from "@/components/game/last-trip-role-gate";
 import { useLastTripRole } from "@/game/cases/last-trip-role-state";
+import { useLastTripInterrogations } from "@/game/cases/last-trip-interrogation-progress";
 import {
   LAST_TRIP_DENIED_MESSAGE,
   lastTripEvidenceSpecialty,
