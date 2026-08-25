@@ -154,11 +154,22 @@ function LastTripInterrogationRoute() {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [lines.length, busy]);
 
+  // خلص الوقت → يُحتسب استجواب هذا المشتبه فيه منتهي (يبقى محفوظ بعد الرجوع/الـrefresh).
+  useEffect(() => {
+    if (expired) markLastTripInterrogationDone(suspectId);
+  }, [expired, suspectId]);
+
+  const finishInterrogation = () => {
+    markLastTripInterrogationDone(suspectId);
+    void navigate({ to: "/last-trip/suspects" });
+  };
+
   useEffect(() => {
     if (!denied) return;
     const t = setTimeout(() => setDenied(null), 2600);
     return () => clearTimeout(t);
   }, [denied]);
+
 
   // داخل غرفة: المصدر الوحيد لتوفّر الأدلة هو الحالة المشتركة.
   const availableIds = useMemo(
