@@ -16,6 +16,8 @@ import {
   formatInterrogationClock,
   useLastTripTimer,
 } from "@/game/cases/last-trip-timer";
+import { markLastTripInterrogationDone } from "@/game/cases/last-trip-interrogation-progress";
+
 import {
   getLastTripFoundSnapshot,
   hydrateLastTripProgress,
