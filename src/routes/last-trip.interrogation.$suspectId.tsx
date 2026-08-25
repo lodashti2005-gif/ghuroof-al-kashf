@@ -454,7 +454,7 @@ function LastTripInterrogationRoute() {
           <Panel className="cine-in">
             <Eyebrow>مواجهة بأقوال شاهد</Eyebrow>
             <div className="mt-3 space-y-2">
-              {lastTripWitnessClaims.map((c) => (
+              {witnessClaims.map((c) => (
                 <button
                   key={c.id}
                   type="button"
