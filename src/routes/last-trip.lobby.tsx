@@ -11,10 +11,11 @@ import { useEffect, useState } from "react";
 
 import { ActionButton } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
-import { lastTripCase } from "@/game/cases/last-trip";
+import { getCaseById } from "@/game/game-meta";
 import { useRoom } from "@/game/use-room";
 
 const LAST_TRIP_CASE_ID = "last-trip";
+const lastTripMeta = getCaseById(LAST_TRIP_CASE_ID);
 
 export const Route = createFileRoute("/last-trip/lobby")({
   head: () => ({
@@ -67,15 +68,15 @@ function LastTripLobby() {
             رجوع للقضايا
           </Link>
           <span className="font-mono text-xs text-muted-foreground">
-            ملف {lastTripCase.code} · سري
+            ملف {lastTripMeta?.code ?? "K-0472"} · سري
           </span>
         </header>
 
         <div className="cine-in mt-8">
           <Eyebrow>غرفة اللاعبين</Eyebrow>
-          <h1 className="mt-2 text-3xl font-extrabold sm:text-4xl">{lastTripCase.title}</h1>
+          <h1 className="mt-2 text-3xl font-extrabold sm:text-4xl">{lastTripMeta?.title ?? "آخر رحلة"}</h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
-            {lastTripCase.teaser}
+            {lastTripMeta?.teaser}
           </p>
         </div>
 
