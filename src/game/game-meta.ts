@@ -70,13 +70,14 @@ export const caseRegistry: CaseSummary[] = [
       "توقّف عابر في محطة طريق يتحول إلى قضية غامضة. واحد من الشباب ما رجع… وكل واحد يتذكر الليلة بطريقة مختلفة.",
     teaser:
       "توقّف عابر في محطة طريق يتحول إلى قضية غامضة. واحد من الشباب ما رجع… وكل واحد يتذكر الليلة بطريقة مختلفة.",
-    status: "soon",
+    status: "available",
+    suspects: 5,
     cover: caseCoverLastTrip,
     difficulty: "صعبة",
     players: "٣ – ٦ لاعبين",
     playTime: "٦٠ – ٩٠ دقيقة",
-    price: "د.ك —",
-    free: false,
+    price: "متاحة للتجربة",
+    free: true,
   },
 
 ];
