@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, Clock, FileWarning, Lock, Send, Users } from "lucide-react";
+import { ArrowRight, Clock, FileWarning, Gavel, Lock, Send, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionButton } from "@/components/game/shell";
