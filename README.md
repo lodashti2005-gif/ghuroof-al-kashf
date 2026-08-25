@@ -1,6 +1,6 @@
-# غرفة الألغاز
+# ورا السالفة
 
-Build a polished Arabic RTL multiplayer murder mystery investigation web game called "غرفة التحقيق".
+Build a polished Arabic RTL multiplayer murder mystery investigation web game called "ورا السالفة".
 
 IMPORTANT:
 
@@ -16,7 +16,7 @@ START SCREEN:
 
 Create a cinematic dark landing page with:
 
-- Game title: "غرفة التحقيق"
+- Game title: "ورا السالفة"
 
 - Subtitle: "الحقيقة ما تنقال... تنكشف"
 
