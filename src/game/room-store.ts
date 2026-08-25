@@ -417,14 +417,17 @@ function update(mutate: (s: RoomState) => void) {
 
 export const generateRoomCode = () => String(Math.floor(Math.random() * 1000000)).padStart(6, "0");
 
-export async function createRoom(hostName: string): Promise<{ ok: boolean; code?: string; error?: string }> {
+export async function createRoom(
+  hostName: string,
+  caseId: string = caseFile.id,
+): Promise<{ ok: boolean; code?: string; error?: string }> {
   const playerId = uid();
 
   for (let attempt = 0; attempt < 6; attempt++) {
     const code = generateRoomCode();
     const { data: result, error } = await rpc<string>("room_create", {
       _code: code,
-      _case_id: caseFile.id,
+      _case_id: caseId,
       _host_player_id: playerId,
       _host_name: hostName,
       _state: freshShared(),

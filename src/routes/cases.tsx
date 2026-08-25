@@ -3,7 +3,6 @@ import {
   ArrowRight,
   BadgeCheck,
   Clock3,
-  Eye,
   Gauge,
   Lock,
   Play,
@@ -121,11 +120,11 @@ function CasesPage() {
                   <div className="min-w-0">
                     <p className="truncate font-display text-sm font-bold">{item.title}</p>
                     <p className="mt-1 inline-flex items-center gap-1.5 font-mono text-[11px] text-primary">
-                      <BadgeCheck className="size-3.5" /> تم الشراء ✓
+                      <BadgeCheck className="size-3.5" /> {item.free ? "متاحة" : "تم الشراء ✓"}
                     </p>
                   </div>
                   <Link
-                    to="/play"
+                    to={item.id === "last-trip" ? "/last-trip/lobby" : "/play"}
                     className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 font-display text-xs font-bold text-primary-foreground"
                   >
                     <Play className="size-3.5" /> ابدأ القضية
@@ -180,7 +179,7 @@ function CaseCard({
         >
           {item.owned ? (
             <>
-              <BadgeCheck className="size-3.5" /> تم الشراء ✓
+              <BadgeCheck className="size-3.5" /> {item.free ? "متاحة" : "تم الشراء ✓"}
             </>
           ) : (
             <>
@@ -217,36 +216,26 @@ function CaseCard({
         <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3">
           <span className="font-display text-sm font-bold">{item.price}</span>
           <span className="font-mono text-[11px] text-muted-foreground">
-            {soon ? "قيد التجهيز" : item.owned ? "متاحة لك" : "تحتاج شراء"}
+            {soon ? "قيد التجهيز" : item.owned ? (item.id === "last-trip" ? "متاحة للتجربة" : "متاحة") : "تحتاج شراء"}
           </span>
         </div>
 
         <div className="mt-auto">
           {item.owned ? (
             <Link
-              to="/play"
+              to={item.id === "last-trip" ? "/last-trip/lobby" : "/play"}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-display text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.02]"
             >
               <Play className="size-4" /> ابدأ القضية
             </Link>
           ) : soon ? (
-            <div className="space-y-2">
-              <button
-                type="button"
-                disabled
-                className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-border bg-surface-2 px-5 py-3 font-display text-sm font-bold text-muted-foreground"
-              >
-                <Lock className="size-4" /> قيد التجهيز
-              </button>
-              {item.id === "last-trip" && (
-                <Link
-                  to="/last-trip/intro"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-secondary/60 bg-secondary/10 px-5 py-2.5 font-display text-xs font-bold text-secondary-foreground transition-colors hover:bg-secondary/20"
-                >
-                  <Eye className="size-3.5" /> تجربة القضية (مطوّر)
-                </Link>
-              )}
-            </div>
+            <button
+              type="button"
+              disabled
+              className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-border bg-surface-2 px-5 py-3 font-display text-sm font-bold text-muted-foreground"
+            >
+              <Lock className="size-4" /> قيد التجهيز
+            </button>
           ) : (
             <button
               type="button"
