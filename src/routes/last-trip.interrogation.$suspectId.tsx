@@ -7,8 +7,9 @@ import { ActionButton } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel, StressMeter } from "@/components/game/ui";
 import { LastTripRoleGate } from "@/components/game/last-trip-role-gate";
 import { getLastTripSuspect, lastTripSuspects } from "@/game/cases/last-trip-suspects";
-import { lastTripEvidence } from "@/game/cases/last-trip-evidence";
-import { lastTripWitnessClaims } from "@/game/cases/last-trip-witness-claims";
+import { lastTripEvidenceForSuspect } from "@/game/cases/last-trip-evidence";
+import { lastTripWitnessClaimsForSuspect } from "@/game/cases/last-trip-witness-claims";
+
 import { useLastTripRole } from "@/game/cases/last-trip-role-state";
 import { LAST_TRIP_DENIED_MESSAGE } from "@/game/cases/last-trip-roles";
 import {
