@@ -175,6 +175,26 @@ export interface RoomState {
   ltRoleReady: string[];
   /** أدلة «آخر رحلة» اللي صار لها فحص تفصيلي (مشتركة مع الفريق). */
   ltAnalyzed: string[];
+  /** حالة الاتهام والنهاية بقضية «آخر رحلة» فقط (null قبل أول تأكيد). */
+  ltAcc: LastTripAccusation | null;
+}
+
+/** مرحلة الاتهام/النهاية بقضية «آخر رحلة» — مشتركة بين كل لاعبي الغرفة. */
+export interface LastTripAccusation {
+  /** المرحلة الحالية: اختيار متهم، نتيجة الاتهام، أو النهاية الكاملة. */
+  stage: "select" | "result" | "ending";
+  /** المتهم المثبّت بالمحاولة الحالية. */
+  selectedSuspect: string | null;
+  /** نتيجة المحاولة الحالية. */
+  result: "correct" | "wrong" | null;
+  /** الأدلة/الأسباب اللي اختارها الفريق مع الاتهام. */
+  reasons: string[];
+  /** كل المحاولات السابقة (ما تُمسح عند إعادة الاتهام). */
+  attempts: Array<{ suspectId: string; correct: boolean; at: number; reasons: string[] }>;
+  /** تم فتح النهاية الكاملة. */
+  endingViewed: boolean;
+  /** وقت تثبيت الاتهام الحالي. */
+  confirmedAt?: number;
 }
 
 /** A magnified region of the master crime-scene photograph. */
