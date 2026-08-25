@@ -1,25 +1,32 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Gavel, Lock } from "lucide-react";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { ArrowRight, Check, Gavel, Lock, RotateCcw, ScrollText, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { ActionButton } from "@/components/game/shell";
 import { LastTripRoleGate } from "@/components/game/last-trip-role-gate";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { lastTripCase } from "@/game/cases/last-trip";
 import { lastTripSuspects } from "@/game/cases/last-trip-suspects";
+import { lastTripEvidence } from "@/game/cases/last-trip-evidence";
 import { useLastTripInterrogations } from "@/game/cases/last-trip-interrogation-progress";
+import { useLastTripAccusation } from "@/game/cases/last-trip-accusation";
+import { getLastTripFoundSnapshot, subscribeLastTripProgress, getLastTripFoundServerSnapshot } from "@/game/cases/last-trip-progress";
+import { useRoom } from "@/game/use-room";
+import { judgeLastTripAccusation } from "@/lib/last-trip-ending.functions";
 import { cn } from "@/lib/utils";
+import { useSyncExternalStore } from "react";
 
 export const Route = createFileRoute("/last-trip/accusation")({
   head: () => ({
     meta: [
-      { title: "الاتهام — آخر رحلة" },
+      { title: "الاختيار النهائي — آخر رحلة" },
       {
         name: "description",
         content:
           "شاشة الاتهام بقضية «آخر رحلة»: اختاروا المتهم بعد ما تخلصون استجواب كل الشخصيات.",
       },
-      { property: "og:title", content: "الاتهام — آخر رحلة" },
+      { property: "og:title", content: "الاختيار النهائي — آخر رحلة" },
       {
         property: "og:description",
         content: "اختيار المتهم النهائي بقضية «آخر رحلة».",
@@ -41,9 +48,49 @@ function LastTripAccusationScreen() {
 
 function LastTripAccusationRoute() {
   const { allDone, count, total } = useLastTripInterrogations();
+  const { acc, confirm, retry, openEnding } = useLastTripAccusation();
+  const { room } = useRoom();
+  const navigate = useNavigate();
+  const judge = useServerFn(judgeLastTripAccusation);
+
   const [picked, setPicked] = useState<string | null>(null);
-  const [locked, setLocked] = useState(false);
-  const pickedSuspect = lastTripSuspects.find((s) => s.id === picked) ?? null;
+  const [reasons, setReasons] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+
+  const localFound = useSyncExternalStore(
+    subscribeLastTripProgress,
+    getLastTripFoundSnapshot,
+    getLastTripFoundServerSnapshot,
+  );
+  const unlocked = Array.from(new Set([...(room?.unlockedEvidence ?? []), ...localFound]));
+  const unlockedEvidence = lastTripEvidence.filter((e) => unlocked.includes(e.id));
+
+  const accusedSuspect =
+    lastTripSuspects.find((s) => s.id === acc.selectedSuspect) ?? null;
+
+  // النهاية مشتركة: أول ما تنفتح لأي لاعب، الكل ينتقل بدون refresh.
+  useEffect(() => {
+    if (acc.stage === "ending") void navigate({ to: "/last-trip/ending" });
+  }, [acc.stage, navigate]);
+
+  // بعد «إعادة الاتهام» نرجع الاختيار فاضي للجميع.
+  useEffect(() => {
+    if (acc.stage === "select") {
+      setPicked(null);
+      setReasons([]);
+    }
+  }, [acc.stage]);
+
+  const submit = async () => {
+    if (!picked || busy) return;
+    setBusy(true);
+    try {
+      const verdict = await judge({ data: { suspectId: picked } });
+      confirm(picked, verdict.correct, reasons);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <div dir="rtl" className="min-h-screen bg-background px-4 py-6 sm:px-6">
@@ -52,12 +99,14 @@ function LastTripAccusationRoute() {
           <div className="min-w-0">
             <Eyebrow>المرحلة الأخيرة</Eyebrow>
             <h1 className="mt-1.5 text-xl font-bold sm:text-2xl">
-              الاتهام — {lastTripCase.title}
+              الاختيار النهائي — {lastTripCase.title}
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              {allDone
-                ? "خلصتوا استجواب كل الشخصيات. اختاروا منو تتهمونه."
-                : "لازم تخلصون استجواب كل الشخصيات قبل الاتهام."}
+              {!allDone
+                ? "لازم تخلصون استجواب كل الشخصيات قبل الاتهام."
+                : acc.stage === "result"
+                  ? "تم تسجيل اتهام الفريق — النتيجة تحت."
+                  : "خلصتوا استجواب كل الشخصيات. اختاروا منو تتهمونه."}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -74,9 +123,19 @@ function LastTripAccusationRoute() {
 
         {!allDone ? (
           <Panel className="cine-in flex items-center gap-3 text-sm text-muted-foreground">
-            <Lock className="size-4 shrink-0" /> الاتهام مقفل — باقي{" "}
-            {total - count} استجواب.
+            <Lock className="size-4 shrink-0" /> الاتهام مقفل — باقي {total - count} استجواب.
           </Panel>
+        ) : acc.stage === "result" ? (
+          <ResultPanel
+            correct={acc.result === "correct"}
+            name={accusedSuspect?.name ?? ""}
+            attempts={acc.attempts.length}
+            onRetry={retry}
+            onEnding={() => {
+              openEnding();
+              void navigate({ to: "/last-trip/ending" });
+            }}
+          />
         ) : (
           <>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -84,14 +143,13 @@ function LastTripAccusationRoute() {
                 <button
                   key={s.id}
                   type="button"
-                  disabled={locked}
+                  disabled={busy}
                   onClick={() => setPicked(s.id)}
                   className={cn(
                     "cine-in overflow-hidden rounded-lg border bg-surface-2 text-right transition-colors",
                     picked === s.id
                       ? "border-primary ring-1 ring-primary/40"
                       : "border-border hover:border-primary/50",
-                    locked && picked !== s.id && "opacity-50",
                   )}
                 >
                   <div className="relative">
@@ -117,25 +175,111 @@ function LastTripAccusationRoute() {
               ))}
             </div>
 
+            {unlockedEvidence.length > 0 && (
+              <Panel className="cine-in">
+                <Eyebrow>أسباب الاتهام (اختياري)</Eyebrow>
+                <p className="mt-1.5 text-sm text-muted-foreground">
+                  اختاروا الأدلة اللي بنيتوا عليها الاتهام.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {unlockedEvidence.map((e) => {
+                    const on = reasons.includes(e.id);
+                    return (
+                      <button
+                        key={e.id}
+                        type="button"
+                        onClick={() =>
+                          setReasons((r) =>
+                            r.includes(e.id) ? r.filter((x) => x !== e.id) : [...r, e.id],
+                          )
+                        }
+                        className={cn(
+                          "rounded-full border px-3 py-1.5 text-xs transition-colors",
+                          on
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border text-muted-foreground hover:border-primary/50",
+                        )}
+                      >
+                        {on && <Check className="me-1 inline size-3" />}
+                        {e.title}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Panel>
+            )}
+
             <Panel className="cine-in flex flex-wrap items-center justify-between gap-4">
               <p className="text-sm text-muted-foreground">
-                {locked
-                  ? `تم تسجيل اتهامكم: ${pickedSuspect?.name ?? ""}`
-                  : pickedSuspect
-                    ? `اخترتوا: ${pickedSuspect.name}`
-                    : "اختاروا متهم من فوق."}
+                {picked
+                  ? `اخترتوا: ${lastTripSuspects.find((s) => s.id === picked)?.name ?? ""}`
+                  : "اختاروا متهم من فوق."}
               </p>
-              <ActionButton
-                variant="danger"
-                disabled={!picked || locked}
-                onClick={() => setLocked(true)}
-              >
-                <Gavel className="size-4" /> ثبّتوا الاتهام
+              <ActionButton variant="danger" disabled={!picked || busy} onClick={() => void submit()}>
+                <Gavel className="size-4" /> {busy ? "جاري التسجيل…" : "تأكيد الاتهام"}
               </ActionButton>
             </Panel>
           </>
         )}
       </div>
     </div>
+  );
+}
+
+function ResultPanel({
+  correct,
+  name,
+  attempts,
+  onRetry,
+  onEnding,
+}: {
+  correct: boolean;
+  name: string;
+  attempts: number;
+  onRetry: () => void;
+  onEnding: () => void;
+}) {
+  return (
+    <Panel
+      className={cn(
+        "cine-in space-y-4",
+        correct ? "border-primary/50" : "border-destructive/50",
+      )}
+    >
+      <div className="flex items-center gap-2">
+        {correct ? (
+          <Check className="size-5 text-primary" />
+        ) : (
+          <X className="size-5 text-destructive" />
+        )}
+        <h2 className="text-2xl font-extrabold">
+          {correct ? "اتهام صحيح" : "الاتهام غير صحيح"}
+        </h2>
+      </div>
+      <p className="text-sm leading-relaxed text-muted-foreground">
+        {correct
+          ? `وصلتوا للقاتل: ${name}. ربطتوا الأدلة مع التناقضات بكلامه، والخط الزمني اللي حاول يركبه ما ثبت أمام اللي اكتشفتوه.`
+          : `${name} مب القاتل. الأدلة والتناقضات تشير لشخص ثاني — راجعوا كلام الشهود والخط الزمني وأعيدوا الاتهام، أو شوفوا النهاية.`}
+      </p>
+      {attempts > 1 && (
+        <p className="text-xs text-muted-foreground">عدد محاولات الاتهام: {attempts}</p>
+      )}
+      <div className="flex flex-wrap gap-2">
+        {correct ? (
+          <ActionButton variant="danger" onClick={onEnding}>
+            <ScrollText className="size-4" /> كشف الحل
+          </ActionButton>
+        ) : (
+          <>
+            <ActionButton onClick={onRetry}>
+              <RotateCcw className="size-4" /> إعادة الاتهام
+            </ActionButton>
+            <ActionButton variant="outline" onClick={onEnding}>
+              <ScrollText className="size-4" /> مشاهدة النهاية
+            </ActionButton>
+          </>
+        )}
+      </div>
+    </Panel>
   );
 }

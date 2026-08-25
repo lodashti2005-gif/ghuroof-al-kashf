@@ -51,6 +51,7 @@ type SharedState = Pick<
   | "ltRoles"
   | "ltRoleReady"
   | "ltAnalyzed"
+  | "ltAcc"
 >;
 
 let state: RoomState | null = null;
@@ -103,6 +104,7 @@ const freshShared = (): SharedState => ({
   ltRoles: {},
   ltRoleReady: [],
   ltAnalyzed: [],
+  ltAcc: null,
 });
 
 function saveSession() {
@@ -189,6 +191,7 @@ function toRoomState(snap: Snapshot): RoomState {
     ltRoles: shared.ltRoles ?? {},
     ltRoleReady: shared.ltRoleReady ?? [],
     ltAnalyzed: shared.ltAnalyzed ?? [],
+    ltAcc: shared.ltAcc ?? null,
   };
 }
 
@@ -362,6 +365,7 @@ function sharedPayload(next: RoomState) {
     ltRoles: next.ltRoles,
     ltRoleReady: next.ltRoleReady,
     ltAnalyzed: next.ltAnalyzed,
+    ltAcc: next.ltAcc,
   };
 }
 
@@ -840,6 +844,7 @@ export function resetCase() {
     s.ltRoles = {};
     s.ltRoleReady = [];
     s.ltAnalyzed = [];
+    s.ltAcc = null;
   });
 }
 
@@ -971,6 +976,62 @@ export const markLastTripAnalyzed = (evidenceId: string) =>
   update((s) => {
     if (!s.ltAnalyzed) s.ltAnalyzed = [];
     if (!s.ltAnalyzed.includes(evidenceId)) s.ltAnalyzed.push(evidenceId);
+  });
+
+/**
+ * تأكيد اتهام الفريق بقضية «آخر رحلة». أول تأكيد فقط هو المعتمد — لو ضغط
+ * لاعبان بنفس الوقت، الثاني ما يكتب اتهام مختلف (الحالة المشتركة تُقرأ قبل الكتابة).
+ */
+export const confirmLastTripAccusation = (
+  suspectId: string,
+  correct: boolean,
+  reasons: string[] = [],
+) =>
+  update((s) => {
+    const acc = s.ltAcc;
+    if (acc && acc.stage !== "select") return; // اتهام مسجل أصلاً
+    s.ltAcc = {
+      stage: "result",
+      selectedSuspect: suspectId,
+      result: correct ? "correct" : "wrong",
+      reasons,
+      attempts: [
+        ...(acc?.attempts ?? []),
+        { suspectId, correct, at: Date.now(), reasons },
+      ],
+      endingViewed: acc?.endingViewed ?? false,
+      confirmedAt: Date.now(),
+    };
+  });
+
+/** «إعادة الاتهام» بعد اتهام خاطئ — ما تمس الأدلة ولا المؤقتات ولا الأدوار. */
+export const retryLastTripAccusation = () =>
+  update((s) => {
+    const acc = s.ltAcc;
+    if (!acc || acc.result !== "wrong") return;
+    const { confirmedAt: _dropped, ...rest } = acc;
+    s.ltAcc = {
+      ...rest,
+      stage: "select",
+      selectedSuspect: null,
+      result: null,
+      reasons: [],
+    };
+  });
+
+/** فتح النهاية الكاملة للفريق كله («كشف الحل» أو «مشاهدة النهاية»). */
+export const openLastTripEnding = () =>
+  update((s) => {
+    const acc = s.ltAcc;
+    s.ltAcc = {
+      stage: "ending",
+      selectedSuspect: acc?.selectedSuspect ?? null,
+      result: acc?.result ?? null,
+      reasons: acc?.reasons ?? [],
+      attempts: acc?.attempts ?? [],
+      endingViewed: true,
+      ...(acc?.confirmedAt ? { confirmedAt: acc.confirmedAt } : {}),
+    };
   });
 
 export function findPlayer(room: RoomState | null, playerId?: string): Player | undefined {
