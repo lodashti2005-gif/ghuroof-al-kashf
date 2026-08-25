@@ -45,14 +45,38 @@ export const askLastTripSuspect = createServerFn({ method: "POST" })
     const rules = getLastTripRules(data.suspectId);
     if (!rules) throw new Error("unknown suspect");
 
+    const { isLastTripEvidenceUsable } = await import("@/game/cases/last-trip-evidence");
+    const { isLastTripWitnessUsable } = await import("@/game/cases/last-trip-witness-claims");
+
+    // أدلة هذا المشتبه فيه فقط، ومن ضمن اللي انفتح فعلاً.
+    const usableEvidence = data.unlockedEvidence.filter((id) =>
+      isLastTripEvidenceUsable(data.suspectId, id, data.unlockedEvidence),
+    );
+    const evidenceId =
+      data.confrontEvidenceId &&
+      isLastTripEvidenceUsable(data.suspectId, data.confrontEvidenceId, data.unlockedEvidence)
+        ? data.confrontEvidenceId
+        : null;
+    const witnessId =
+      data.confrontWitnessId && isLastTripWitnessUsable(data.suspectId, data.confrontWitnessId)
+        ? data.confrontWitnessId
+        : null;
+    const safeData = {
+      ...data,
+      unlockedEvidence: usableEvidence,
+      confrontEvidenceId: evidenceId,
+      confrontWitnessId: witnessId,
+    };
+
     const { buildLastTripPrompt } = await import("./last-trip-interrogation-prompt.server");
     const { callModel } = await import("./interrogation-model.server");
 
-    const { system, user } = buildLastTripPrompt(rules, data);
+    const { system, user } = buildLastTripPrompt(rules, safeData);
 
-    const confrontId = data.confrontEvidenceId || data.confrontWitnessId || null;
+    const confrontId = evidenceId || witnessId || null;
     const isCulprit = data.suspectId === LAST_TRIP_CULPRIT_ID;
     const scripted = isCulprit ? getJassimConfrontLine(confrontId) : null;
+
     // نفس المواجهة مرة ثانية ما ترفع التوتر ولا التقدّم.
     const repeated = !!confrontId && data.confrontHistory.includes(confrontId);
     const capDelta = (n: number) => (repeated ? Math.min(1, Math.max(0, n)) : n);

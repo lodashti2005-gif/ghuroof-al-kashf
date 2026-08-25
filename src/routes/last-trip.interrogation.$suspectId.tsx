@@ -7,8 +7,9 @@ import { ActionButton } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel, StressMeter } from "@/components/game/ui";
 import { LastTripRoleGate } from "@/components/game/last-trip-role-gate";
 import { getLastTripSuspect, lastTripSuspects } from "@/game/cases/last-trip-suspects";
-import { lastTripEvidence } from "@/game/cases/last-trip-evidence";
-import { lastTripWitnessClaims } from "@/game/cases/last-trip-witness-claims";
+import { lastTripEvidenceForSuspect } from "@/game/cases/last-trip-evidence";
+import { lastTripWitnessClaimsForSuspect } from "@/game/cases/last-trip-witness-claims";
+
 import { useLastTripRole } from "@/game/cases/last-trip-role-state";
 import { LAST_TRIP_DENIED_MESSAGE } from "@/game/cases/last-trip-roles";
 import {
@@ -165,10 +166,17 @@ function LastTripInterrogationRoute() {
     [inRoom, sharedUnlocked, found],
   );
 
+  // أدلة هذا المشتبه فيه فقط — العداد والأزرار تعتمد عليها.
   const foundEvidence = useMemo(
-    () => lastTripEvidence.filter((e) => availableIds.includes(e.id)),
-    [availableIds],
+    () => lastTripEvidenceForSuspect(suspectId, availableIds),
+    [availableIds, suspectId],
   );
+
+  const witnessClaims = useMemo(
+    () => lastTripWitnessClaimsForSuspect(suspectId),
+    [suspectId],
+  );
+
 
   const send = useCallback(
     async (text: string, confront: { evidenceId?: string; witnessId?: string } | null) => {
@@ -437,6 +445,11 @@ function LastTripInterrogationRoute() {
                     )}
                   >
                     {e.title}
+                    {session.confronts.includes(e.id) && (
+                      <span className="ms-2 text-[0.65rem] text-muted-foreground">
+                        · تمت المواجهة
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -445,8 +458,13 @@ function LastTripInterrogationRoute() {
 
           <Panel className="cine-in">
             <Eyebrow>مواجهة بأقوال شاهد</Eyebrow>
+            {witnessClaims.length === 0 && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                ما فيه أقوال شهود تخص {suspect.name}.
+              </p>
+            )}
             <div className="mt-3 space-y-2">
-              {lastTripWitnessClaims.map((c) => (
+              {witnessClaims.map((c) => (
                 <button
                   key={c.id}
                   type="button"
