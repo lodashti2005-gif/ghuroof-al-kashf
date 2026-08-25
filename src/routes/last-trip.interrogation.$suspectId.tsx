@@ -445,6 +445,11 @@ function LastTripInterrogationRoute() {
                     )}
                   >
                     {e.title}
+                    {session.confronts.includes(e.id) && (
+                      <span className="ms-2 text-[0.65rem] text-muted-foreground">
+                        · تمت المواجهة
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -453,6 +458,11 @@ function LastTripInterrogationRoute() {
 
           <Panel className="cine-in">
             <Eyebrow>مواجهة بأقوال شاهد</Eyebrow>
+            {witnessClaims.length === 0 && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                ما فيه أقوال شهود تخص {suspect.name}.
+              </p>
+            )}
             <div className="mt-3 space-y-2">
               {witnessClaims.map((c) => (
                 <button
