@@ -77,11 +77,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ورا السالفة — لعبة جرائم غامضة" },
+      { title: "ورا السالفة | لعبة تحقيق وقضايا" },
       {
         name: "description",
-        content: "لعبة تحقيق جماعية بالعربي: حلوا قضية غامضة مع أصحابكم واكشفوا القاتل.",
+        content:
+          "ورا السالفة — لعبة تحقيق جماعية تعيشون فيها القضية، تجمعون الأدلة، تستجوبون المشتبه فيهم، وتحاولون تكشفون الحقيقة.",
       },
+      { property: "og:title", content: "ورا السالفة | لعبة تحقيق وقضايا" },
+      {
+        property: "og:description",
+        content:
+          "ورا السالفة — لعبة تحقيق جماعية تعيشون فيها القضية، تجمعون الأدلة، تستجوبون المشتبه فيهم، وتحاولون تكشفون الحقيقة.",
+      },
+
       { name: "theme-color", content: "#0d0d0f" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
