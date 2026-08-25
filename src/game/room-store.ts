@@ -984,13 +984,12 @@ export const markLastTripAnalyzed = (evidenceId: string) =>
  */
 export const confirmLastTripAccusation = (
   suspectId: string,
-  culpritId: string,
+  correct: boolean,
   reasons: string[] = [],
 ) =>
   update((s) => {
     const acc = s.ltAcc;
     if (acc && acc.stage !== "select") return; // اتهام مسجل أصلاً
-    const correct = suspectId === culpritId;
     s.ltAcc = {
       stage: "result",
       selectedSuspect: suspectId,
