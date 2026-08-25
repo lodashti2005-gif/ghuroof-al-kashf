@@ -88,6 +88,8 @@ function LastTripInterrogationRoute() {
   const { suspectId } = useParams({ from: "/last-trip/interrogation/$suspectId" });
   const suspect = getLastTripSuspect(suspectId);
   const ask = useServerFn(askLastTripSuspect);
+  const navigate = useNavigate();
+
 
   const [session, setSession] = useState<Session>(emptySession);
   const [found, setFound] = useState<string[]>([]);
