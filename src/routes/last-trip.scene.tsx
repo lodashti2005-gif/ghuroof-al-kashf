@@ -80,7 +80,9 @@ function LastTripSceneRoute() {
     getLastTripFoundServerSnapshot,
   );
   const { room } = useRoom();
+  const { allDone: allInterrogated } = useLastTripInterrogations();
   const { inRoom, role, can, analyzed } = useLastTripRole();
+
   const [localAnalyzed, setLocalAnalyzed] = useState<string[]>([]);
   const [denied, setDenied] = useState<string | null>(null);
   const analyzedAll = [...analyzed, ...localAnalyzed];
