@@ -42,12 +42,11 @@ function LastTripEndingRoute() {
 
   // بدون غرفة صالحة وصلت مرحلة النهاية: ما نعرض أي شي، ونرجّع اللاعب للقضايا.
   useEffect(() => {
-    if (room === undefined) return;
-    if (!unlocked) {
-      const t = setTimeout(() => void navigate({ to: "/cases" }), 400);
-      return () => clearTimeout(t);
-    }
-  }, [room, unlocked, navigate]);
+    if (unlocked) return undefined;
+    const t = setTimeout(() => void navigate({ to: "/cases" }), 400);
+    return () => clearTimeout(t);
+  }, [unlocked, navigate]);
+
 
   const { data } = useQuery({
     queryKey: ["last-trip-ending", room?.code ?? null],
