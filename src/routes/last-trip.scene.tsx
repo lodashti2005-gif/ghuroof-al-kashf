@@ -122,7 +122,7 @@ function LastTripSceneRoute() {
     setLocalAnalyzed((prev) => {
       const next = prev.includes(evidenceId) ? prev : [...prev, evidenceId];
       try {
-        window.localStorage.setItem("last-trip:analyzed", JSON.stringify(next));
+        window.localStorage.setItem(analyzedKey, JSON.stringify(next));
       } catch {
         /* تجاهل */
       }
