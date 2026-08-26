@@ -19,6 +19,7 @@ import {
 } from "@/game/cases/last-trip-progress";
 import { useRoom } from "@/game/use-room";
 import { LastTripRoleGate } from "@/components/game/last-trip-role-gate";
+import { LastTripTrialGate, LastTripTrialBadge } from "@/components/game/last-trip-trial-gate";
 import { useLastTripRole } from "@/game/cases/last-trip-role-state";
 import { useLastTripInterrogations } from "@/game/cases/last-trip-interrogation-progress";
 import {
@@ -59,9 +60,11 @@ export const Route = createFileRoute("/last-trip/scene")({
 
 function LastTripSceneScreen() {
   return (
-    <LastTripRoleGate>
+    <LastTripTrialGate>
+      <LastTripRoleGate>
       <LastTripSceneRoute />
-    </LastTripRoleGate>
+      </LastTripRoleGate>
+    </LastTripTrialGate>
   );
 }
 

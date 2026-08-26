@@ -10,7 +10,6 @@ import { Link } from "@tanstack/react-router";
 import { Clock, Lock, ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { ActionButton } from "@/components/game/shell";
 import { Eyebrow, Panel } from "@/components/game/ui";
 import * as store from "@/game/room-store";
 import { useRoom } from "@/game/use-room";
@@ -89,9 +88,6 @@ export function LastTripTrialGate({ children }: { children: React.ReactNode }) {
         >
           رجوع للرئيسية
         </Link>
-        <div className="mt-6 hidden">
-          <ActionButton>—</ActionButton>
-        </div>
       </Panel>
     </div>
   );

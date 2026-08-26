@@ -3,6 +3,7 @@ import { ArrowRight, Gavel, MessageSquare, Search, ShieldAlert } from "lucide-re
 
 import { ActionButton } from "@/components/game/shell";
 import { LastTripRoleGate } from "@/components/game/last-trip-role-gate";
+import { LastTripTrialGate, LastTripTrialBadge } from "@/components/game/last-trip-trial-gate";
 import { useLastTripRole } from "@/game/cases/last-trip-role-state";
 import { useLastTripInterrogations } from "@/game/cases/last-trip-interrogation-progress";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
@@ -36,9 +37,11 @@ export const Route = createFileRoute("/last-trip/suspects")({
 
 function LastTripSuspectsScreen() {
   return (
-    <LastTripRoleGate>
+    <LastTripTrialGate>
+      <LastTripRoleGate>
       <LastTripSuspectsRoute />
-    </LastTripRoleGate>
+      </LastTripRoleGate>
+    </LastTripTrialGate>
   );
 }
 
