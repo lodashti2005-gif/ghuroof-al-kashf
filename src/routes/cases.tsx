@@ -10,11 +10,10 @@ import {
   ShoppingCart,
   Users,
 } from "lucide-react";
-import { useState } from "react";
-
 import { Eyebrow } from "@/components/game/ui";
 import { GAME_NAME, GAME_TAGLINE } from "@/game/game-meta";
 import { useCaseStore, type StoreCase } from "@/game/entitlements";
+import { formatCasePrice } from "@/game/pricing";
 
 export const Route = createFileRoute("/cases")({
   head: () => ({
@@ -37,7 +36,6 @@ export const Route = createFileRoute("/cases")({
 
 function CasesPage() {
   const { cases, myCases, signedIn, loading } = useCaseStore();
-  const [notice, setNotice] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,11 +74,6 @@ function CasesPage() {
           </p>
         </div>
 
-        {notice && (
-          <p className="mt-6 rounded-xl border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-primary">
-            {notice}
-          </p>
-        )}
 
         <section className="mt-8">
           <h2 className="font-display text-sm font-bold text-muted-foreground">كل القضايا</h2>
