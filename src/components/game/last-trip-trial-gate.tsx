@@ -91,7 +91,7 @@ export function LastTripTrialGate({ children }: { children: React.ReactNode }) {
         <Link
           to="/purchase/$caseId"
           params={{ caseId: "last-trip" }}
-          search={room ? { room: room.code } : {}}
+          search={{ room: room?.code }}
           className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 font-display text-base font-bold text-primary-foreground"
         >
           <ShoppingCart className="size-4.5" /> افتح القضية كاملة
