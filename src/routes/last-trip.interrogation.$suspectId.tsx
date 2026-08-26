@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActionButton } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel, StressMeter } from "@/components/game/ui";
 import { LastTripRoleGate } from "@/components/game/last-trip-role-gate";
-import { LastTripTrialGate, LastTripTrialBadge } from "@/components/game/last-trip-trial-gate";
+import { LastTripTrialGate } from "@/components/game/last-trip-trial-gate";
 import { getLastTripSuspect, lastTripSuspects } from "@/game/cases/last-trip-suspects";
 import { lastTripEvidenceForSuspect } from "@/game/cases/last-trip-evidence";
 import { lastTripWitnessClaimsForSuspect } from "@/game/cases/last-trip-witness-claims";

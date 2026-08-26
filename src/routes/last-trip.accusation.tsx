@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 import { ActionButton } from "@/components/game/shell";
 import { LastTripRoleGate } from "@/components/game/last-trip-role-gate";
-import { LastTripTrialGate, LastTripTrialBadge } from "@/components/game/last-trip-trial-gate";
+import { LastTripTrialGate } from "@/components/game/last-trip-trial-gate";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { lastTripCase } from "@/game/cases/last-trip";
 import { lastTripSuspects } from "@/game/cases/last-trip-suspects";
