@@ -75,7 +75,7 @@ function PurchasePage() {
   async function onPay() {
     setBusy(true);
     try {
-      const result = await requestPurchase({ data: { caseId } });
+      const result = await requestPurchase({ data: { caseId, room } });
       setIntent(result);
       if (result.checkoutUrl) {
         window.location.href = result.checkoutUrl;
@@ -172,13 +172,18 @@ function PurchasePage() {
                       ? "فيه عملية شراء قيد المعالجة. أول ما يتأكد الدفع تفتح القضية تلقائياً."
                       : intent
                         ? intent.message
-                        : PAYMENT_GATEWAY.status === "unconfigured"
+                        : entitlement?.gatewayStatus === "unconfigured"
                           ? "بوابة الدفع لِسِه ما تربطت. اضغط «ادفع وافتح القضية» وبنسجل طلبك."
                           : "جاهز للدفع."}
             </p>
             <p className="mt-2 font-mono text-[11px] text-muted-foreground">
-              حالة البوابة: {PAYMENT_GATEWAY.status === "live" ? "مفعّلة" : PAYMENT_GATEWAY.status === "sandbox" ? "تجريبية" : "غير مربوطة"}
-              {PAYMENT_GATEWAY.provider ? ` — ${PAYMENT_GATEWAY.provider}` : ""}
+              حالة البوابة:{" "}
+              {entitlement?.gatewayStatus === "live"
+                ? "مفعّلة"
+                : entitlement?.gatewayStatus === "sandbox"
+                  ? "تجريبية"
+                  : "غير مربوطة"}
+              {entitlement?.provider ? ` — ${entitlement.provider}` : ""}
             </p>
           </div>
 
