@@ -197,7 +197,10 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
         </ul>
 
         <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3">
-          <span className="font-display text-sm font-bold">{item.price}</span>
+          <span className="font-display text-sm font-bold">
+            {item.free ? "متاحة للتجربة" : formatCasePrice(item.id)}
+          </span>
+
           <span className="font-mono text-[11px] text-muted-foreground">
             {soon ? "قيد التجهيز" : item.owned ? (item.id === "last-trip" ? "متاحة للتجربة" : "متاحة") : "تحتاج شراء"}
           </span>
