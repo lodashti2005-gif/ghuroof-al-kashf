@@ -75,7 +75,7 @@ function PurchasePage() {
   async function onPay() {
     setBusy(true);
     try {
-      const result = await requestPurchase({ data: { caseId } });
+      const result = await requestPurchase({ data: { caseId, room } });
       setIntent(result);
       if (result.checkoutUrl) {
         window.location.href = result.checkoutUrl;
