@@ -86,19 +86,9 @@ function CasesPage() {
           <h2 className="font-display text-sm font-bold text-muted-foreground">كل القضايا</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {cases.map((item) => (
-              <CaseCard
-                key={item.id}
-                item={item}
-                signedIn={signedIn}
-                onPurchase={() =>
-                  setNotice(
-                    signedIn
-                      ? "بوابة الدفع لِسِه ما تفعّلت. الشراء بيكون متاح قريباً وقتها القضية تفتح على حسابك."
-                      : "سجّل دخول أول عشان الشراء يتسجّل على حسابك.",
-                  )
-                }
-              />
+              <CaseCard key={item.id} item={item} signedIn={signedIn} />
             ))}
+
           </div>
         </section>
 
