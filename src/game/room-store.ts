@@ -136,6 +136,9 @@ export const getServerSnapshot = () => null;
 export const getSession = () => session;
 /** هل فيه جلسة غرفة محفوظة بهذا التاب (قبل ما يخلص hydrate بعد الـrefresh). */
 export const hasStoredSession = () => session !== null || readSession() !== null;
+/** رمز الغرفة المحفوظ بهذا التاب (يفيد قبل ما يخلص hydrate). */
+export const getStoredSessionCode = (): string | null =>
+  session?.code ?? readSession()?.code ?? null;
 
 
 interface Snapshot {
