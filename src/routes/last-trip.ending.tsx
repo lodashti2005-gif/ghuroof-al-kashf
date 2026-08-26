@@ -39,14 +39,28 @@ function LastTripEndingRoute() {
   const playerId = actions.getSession()?.playerId ?? null;
   const unlocked =
     !!room && room.caseId === "last-trip" && !!playerId && room.ltAcc?.stage === "ending";
+  // بعد الـrefresh تأخذ الغرفة لحظة لين ترجع من السيرفر — ما نطرد اللاعب بهذي
+  // اللحظة، بس ما نعرض ولا حرف من الحل قبل التأكيد.
+  const [resolving, setResolving] = useState(true);
+  useEffect(() => {
+    if (!actions.hasStoredSession()) {
+      setResolving(false);
+      return undefined;
+    }
+    if (room) {
+      setResolving(false);
+      return undefined;
+    }
+    const t = setTimeout(() => setResolving(false), 4000);
+    return () => clearTimeout(t);
+  }, [room, actions]);
 
   // بدون غرفة صالحة وصلت مرحلة النهاية: ما نعرض أي شي، ونرجّع اللاعب للقضايا.
   useEffect(() => {
-    if (unlocked) return undefined;
-    const t = setTimeout(() => void navigate({ to: "/cases" }), 400);
+    if (unlocked || resolving) return undefined;
+    const t = setTimeout(() => void navigate({ to: "/cases" }), 600);
     return () => clearTimeout(t);
-  }, [unlocked, navigate]);
-
+  }, [unlocked, resolving, navigate]);
 
   const { data } = useQuery({
     queryKey: ["last-trip-ending", room?.code ?? null],
@@ -59,19 +73,24 @@ function LastTripEndingRoute() {
       <div dir="rtl" className="grid min-h-screen place-items-center bg-background px-4">
         <Panel className="max-w-md space-y-3 text-center">
           <Lock className="mx-auto size-5 text-muted-foreground" />
-          <h1 className="text-lg font-bold">النهاية مقفلة</h1>
+          <h1 className="text-lg font-bold">
+            {resolving ? "جاري التحقق من الغرفة…" : "النهاية مقفلة"}
+          </h1>
           <p className="text-sm leading-relaxed text-muted-foreground">
             شاشة النهاية تفتح لفريق الغرفة بعد ما يخلصون الاتهام النهائي.
           </p>
-          <Link to="/cases">
-            <ActionButton variant="outline">
-              <Home className="size-4" /> القضايا
-            </ActionButton>
-          </Link>
+          {!resolving && (
+            <Link to="/cases">
+              <ActionButton variant="outline">
+                <Home className="size-4" /> القضايا
+              </ActionButton>
+            </Link>
+          )}
         </Panel>
       </div>
     );
   }
+
 
   const culprit = lastTripSuspects.find((s) => s.id === data?.culpritId) ?? null;
   const beats = data?.beats ?? [];
