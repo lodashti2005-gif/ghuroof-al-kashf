@@ -89,15 +89,20 @@ function LastTripSceneRoute() {
   const analyzedAll = [...analyzed, ...localAnalyzed];
   const closeUp = closeUpId ? getLastTripEvidence(closeUpId) : undefined;
 
+  /** مفتاح الفحص مربوط بالغرفة الحالية حتى ما ينتقل بين الغرف. */
+  const analyzedKey = room?.code ? `last-trip:analyzed:room:${room.code}` : "last-trip:analyzed:solo";
+
   useEffect(() => {
     hydrateLastTripProgress();
     try {
-      const raw = window.localStorage.getItem("last-trip:analyzed");
-      if (raw) setLocalAnalyzed(JSON.parse(raw) as string[]);
+      window.localStorage.removeItem("last-trip:analyzed");
+      const raw = window.localStorage.getItem(analyzedKey);
+      setLocalAnalyzed(raw ? (JSON.parse(raw) as string[]) : []);
     } catch {
       /* تجاهل */
     }
-  }, []);
+  }, [analyzedKey]);
+
 
   useEffect(() => {
     if (!denied) return;
