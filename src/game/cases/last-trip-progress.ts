@@ -65,7 +65,10 @@ export function syncLastTripProgress() {
   dropLegacy();
   const room = getSnapshot();
   const inLtRoom = !!room && room.caseId === "last-trip";
-  const key = inLtRoom ? roomKey(room!.code) : SOLO_KEY;
+  // قبل ما تخلص إعادة الاتصال بعد الـrefresh نستخدم كاش نفس الغرفة المحفوظة بالتاب.
+  const pendingCode = inLtRoom ? null : getStoredSessionCode();
+  const key = inLtRoom ? roomKey(room!.code) : pendingCode ? roomKey(pendingCode) : SOLO_KEY;
+
 
   let changed = false;
   if (key !== scopeKey) {
