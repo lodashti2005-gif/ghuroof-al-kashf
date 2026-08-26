@@ -237,13 +237,15 @@ function CaseCard({
               <Lock className="size-4" /> قيد التجهيز
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={onPurchase}
+            <Link
+              to="/purchase/$caseId"
+              params={{ caseId: item.id }}
+              search={{ room: undefined }}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary/50 bg-primary/10 px-5 py-3 font-display text-sm font-bold text-primary transition-colors hover:bg-primary/20"
             >
               <ShoppingCart className="size-4" /> شراء القضية
-            </button>
+            </Link>
+
           )}
           {!item.owned && !soon && !signedIn && (
             <p className="mt-2 text-center font-mono text-[11px] text-muted-foreground">
