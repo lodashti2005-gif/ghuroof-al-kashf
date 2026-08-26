@@ -49,7 +49,7 @@ function LastTripAccusationScreen() {
 function LastTripAccusationRoute() {
   const { allDone, count, total } = useLastTripInterrogations();
   const { acc, confirm, retry, openEnding } = useLastTripAccusation();
-  const { room } = useRoom();
+  const { room, actions } = useRoom();
   const navigate = useNavigate();
   const judge = useServerFn(judgeLastTripAccusation);
 
@@ -231,6 +231,11 @@ function LastTripAccusationRoute() {
                 <Gavel className="size-4" /> {busy ? "جاري التسجيل…" : "تأكيد الاتهام"}
               </ActionButton>
             </Panel>
+
+            {judgeError && (
+              <Panel className="border-destructive/50 text-sm text-destructive">{judgeError}</Panel>
+            )}
+
           </>
         )}
       </div>
