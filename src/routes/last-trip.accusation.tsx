@@ -56,6 +56,7 @@ function LastTripAccusationRoute() {
   const [picked, setPicked] = useState<string | null>(null);
   const [reasons, setReasons] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [judgeError, setJudgeError] = useState<string | null>(null);
 
   const localFound = useSyncExternalStore(
     subscribeLastTripProgress,
@@ -83,14 +84,25 @@ function LastTripAccusationRoute() {
 
   const submit = async () => {
     if (!picked || busy) return;
+    const playerId = actions.getSession()?.playerId ?? null;
+    if (!room || room.caseId !== "last-trip" || !playerId) {
+      setJudgeError("الاتهام النهائي يحتاج غرفة قضية «آخر رحلة» — افتح غرفة أو ادخل برمز.");
+      return;
+    }
     setBusy(true);
+    setJudgeError(null);
     try {
-      const verdict = await judge({ data: { suspectId: picked } });
+      const verdict = await judge({
+        data: { suspectId: picked, code: room.code, playerId },
+      });
       confirm(picked, verdict.correct, reasons);
+    } catch {
+      setJudgeError("ما قدرنا نسجّل الاتهام — تأكد إنك داخل غرفة القضية وجرب مرة ثانية.");
     } finally {
       setBusy(false);
     }
   };
+
 
   return (
     <div dir="rtl" className="min-h-screen bg-background px-4 py-6 sm:px-6">
