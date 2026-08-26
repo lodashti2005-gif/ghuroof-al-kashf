@@ -1,35 +1,41 @@
-import { getSnapshot, addNote, unlockEvidence } from "@/game/room-store";
+import { getSnapshot, subscribe as subscribeRoom, addNote, unlockEvidence } from "@/game/room-store";
 import { getLastTripEvidence } from "./last-trip-evidence";
 
 /**
- * تقدّم اكتشاف أدلة «آخر رحلة» فقط.
+ * تقدّم اكتشاف أدلة «آخر رحلة» — مربوط بالغرفة الحالية فقط.
  *
- * - يُحفظ محلياً (localStorage) حتى يبقى بعد الـ refresh حتى بوضع التجربة بدون غرفة.
- * - إذا اللاعب داخل غرفة، ينضاف نفس الدليل لحالة الغرفة المشتركة + دفتر القضية،
- *   فيتزامن على كل اللاعبين. ما يُحتسب نفس الدليل مرتين.
+ * - داخل غرفة: حالة الغرفة المشتركة (`unlockedEvidence`) هي المصدر الموثوق،
+ *   والكاش المحلي مفتاحه رمز الغرفة (للـrefresh السريع فقط).
+ * - بدون غرفة (تجربة فردية): كاش منفصل لا يلوّث أي غرفة.
+ * - غرفة جديدة تبدأ دائماً 0/7.
  */
-const STORAGE_KEY = "last-trip:evidence:found";
+const LEGACY_KEY = "last-trip:evidence:found";
+const SOLO_KEY = "last-trip:evidence:solo";
+const roomKey = (code: string) => `last-trip:evidence:room:${code}`;
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
 let found: string[] = [];
-let hydrated = false;
+let scopeKey: string | null = null;
+let wired = false;
 
-function read(): string[] {
+const isLt = (id: string) => id.startsWith("lt-");
+
+function readCache(key: string): string[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(key);
     const parsed = raw ? (JSON.parse(raw) as unknown) : [];
-    return Array.isArray(parsed) ? (parsed as string[]) : [];
+    return Array.isArray(parsed) ? (parsed as string[]).filter(isLt) : [];
   } catch {
     return [];
   }
 }
 
 function persist() {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !scopeKey) return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(found));
+    window.localStorage.setItem(scopeKey, JSON.stringify(found));
   } catch {
     /* تجاهل */
   }
@@ -39,15 +45,51 @@ function emit() {
   for (const l of listeners) l();
 }
 
-export function hydrateLastTripProgress() {
-  if (hydrated) return;
-  hydrated = true;
-  const local = read();
+function dropLegacy() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(LEGACY_KEY);
+  } catch {
+    /* تجاهل */
+  }
+}
+
+/** يوائم الحالة المحلية مع الغرفة الحالية (أو الوضع الفردي إذا ماكو غرفة). */
+export function syncLastTripProgress() {
+  dropLegacy();
   const room = getSnapshot();
-  const shared = (room?.unlockedEvidence ?? []).filter((id) => id.startsWith("lt-"));
-  found = Array.from(new Set([...local, ...shared]));
-  persist();
-  emit();
+  const inLtRoom = !!room && room.caseId === "last-trip";
+  const key = inLtRoom ? roomKey(room!.code) : SOLO_KEY;
+
+  let changed = false;
+  if (key !== scopeKey) {
+    scopeKey = key;
+    found = readCache(key);
+    changed = true;
+  }
+
+  if (inLtRoom) {
+    const shared = (room!.unlockedEvidence ?? []).filter(isLt);
+    const merged = Array.from(new Set([...shared, ...found]));
+    if (merged.length !== found.length) {
+      found = merged;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    persist();
+    emit();
+  }
+}
+
+/** توافقية: نفس الاسم القديم، صار يوائم مع الغرفة الحالية. */
+export function hydrateLastTripProgress() {
+  if (!wired) {
+    wired = true;
+    subscribeRoom(syncLastTripProgress);
+  }
+  syncLastTripProgress();
 }
 
 export function subscribeLastTripProgress(listener: Listener) {
@@ -65,6 +107,7 @@ export function isLastTripFound(id: string) {
 
 /** يرجّع true إذا هذا أول اكتشاف لهذا الدليل. */
 export function discoverLastTripEvidence(id: string): boolean {
+  syncLastTripProgress();
   if (found.includes(id)) return false;
   const item = getLastTripEvidence(id);
   if (!item) return false;
@@ -80,10 +123,6 @@ export function discoverLastTripEvidence(id: string): boolean {
 }
 
 /** دمج أدلة الغرفة الواصلة لحظياً من لاعبين ثانين. */
-export function mergeLastTripFromRoom(ids: string[]) {
-  const incoming = ids.filter((id) => id.startsWith("lt-") && !found.includes(id));
-  if (incoming.length === 0) return;
-  found = [...found, ...incoming];
-  persist();
-  emit();
+export function mergeLastTripFromRoom(_ids?: string[]) {
+  syncLastTripProgress();
 }
