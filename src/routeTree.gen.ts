@@ -29,6 +29,7 @@ import { Route as LastTripIntroRouteImport } from './routes/last-trip.intro'
 import { Route as LastTripLobbyRouteImport } from './routes/last-trip.lobby'
 import { Route as LastTripSceneRouteImport } from './routes/last-trip.scene'
 import { Route as LastTripSuspectsRouteImport } from './routes/last-trip.suspects'
+import { Route as PurchaseCaseIdRouteImport } from './routes/purchase.$caseId'
 import { Route as LastTripInterrogationSuspectIdRouteImport } from './routes/last-trip.interrogation.$suspectId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -131,6 +132,11 @@ const LastTripSuspectsRoute = LastTripSuspectsRouteImport.update({
   path: '/last-trip/suspects',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PurchaseCaseIdRoute = PurchaseCaseIdRouteImport.update({
+  id: '/purchase/$caseId',
+  path: '/purchase/$caseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LastTripInterrogationSuspectIdRoute =
   LastTripInterrogationSuspectIdRouteImport.update({
     id: '/last-trip/interrogation/$suspectId',
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/last-trip/lobby': typeof LastTripLobbyRoute
   '/last-trip/scene': typeof LastTripSceneRoute
   '/last-trip/suspects': typeof LastTripSuspectsRoute
+  '/purchase/$caseId': typeof PurchaseCaseIdRoute
   '/last-trip/interrogation/$suspectId': typeof LastTripInterrogationSuspectIdRoute
 }
 export interface FileRoutesByTo {
@@ -182,6 +189,7 @@ export interface FileRoutesByTo {
   '/last-trip/lobby': typeof LastTripLobbyRoute
   '/last-trip/scene': typeof LastTripSceneRoute
   '/last-trip/suspects': typeof LastTripSuspectsRoute
+  '/purchase/$caseId': typeof PurchaseCaseIdRoute
   '/last-trip/interrogation/$suspectId': typeof LastTripInterrogationSuspectIdRoute
 }
 export interface FileRoutesById {
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/last-trip/lobby': typeof LastTripLobbyRoute
   '/last-trip/scene': typeof LastTripSceneRoute
   '/last-trip/suspects': typeof LastTripSuspectsRoute
+  '/purchase/$caseId': typeof PurchaseCaseIdRoute
   '/last-trip/interrogation/$suspectId': typeof LastTripInterrogationSuspectIdRoute
 }
 export interface FileRouteTypes {
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/last-trip/lobby'
     | '/last-trip/scene'
     | '/last-trip/suspects'
+    | '/purchase/$caseId'
     | '/last-trip/interrogation/$suspectId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -254,6 +264,7 @@ export interface FileRouteTypes {
     | '/last-trip/lobby'
     | '/last-trip/scene'
     | '/last-trip/suspects'
+    | '/purchase/$caseId'
     | '/last-trip/interrogation/$suspectId'
   id:
     | '__root__'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/last-trip/lobby'
     | '/last-trip/scene'
     | '/last-trip/suspects'
+    | '/purchase/$caseId'
     | '/last-trip/interrogation/$suspectId'
   fileRoutesById: FileRoutesById
 }
@@ -301,6 +313,7 @@ export interface RootRouteChildren {
   LastTripLobbyRoute: typeof LastTripLobbyRoute
   LastTripSceneRoute: typeof LastTripSceneRoute
   LastTripSuspectsRoute: typeof LastTripSuspectsRoute
+  PurchaseCaseIdRoute: typeof PurchaseCaseIdRoute
   LastTripInterrogationSuspectIdRoute: typeof LastTripInterrogationSuspectIdRoute
 }
 
@@ -446,6 +459,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LastTripSuspectsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/purchase/$caseId': {
+      id: '/purchase/$caseId'
+      path: '/purchase/$caseId'
+      fullPath: '/purchase/$caseId'
+      preLoaderRoute: typeof PurchaseCaseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/last-trip/interrogation/$suspectId': {
       id: '/last-trip/interrogation/$suspectId'
       path: '/last-trip/interrogation/$suspectId'
@@ -477,6 +497,7 @@ const rootRouteChildren: RootRouteChildren = {
   LastTripLobbyRoute: LastTripLobbyRoute,
   LastTripSceneRoute: LastTripSceneRoute,
   LastTripSuspectsRoute: LastTripSuspectsRoute,
+  PurchaseCaseIdRoute: PurchaseCaseIdRoute,
   LastTripInterrogationSuspectIdRoute: LastTripInterrogationSuspectIdRoute,
 }
 export const routeTree = rootRouteImport

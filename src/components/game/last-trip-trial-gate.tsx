@@ -13,6 +13,8 @@ import { useEffect, useState } from "react";
 import { Eyebrow, Panel } from "@/components/game/ui";
 import * as store from "@/game/room-store";
 import { useRoom } from "@/game/use-room";
+import { useCaseEntitlement } from "@/game/use-entitlement";
+
 
 function clock(seconds: number) {
   const m = Math.floor(Math.max(0, seconds) / 60);
@@ -46,6 +48,8 @@ export function LastTripTrialBadge() {
 export function LastTripTrialGate({ children }: { children: React.ReactNode }) {
   const { room } = useRoom();
   const [, tick] = useState(0);
+  // الملكية تُقرأ من الخادم فقط — الواجهة ما تفتح القضية أبداً من نفسها.
+  const { entitlement } = useCaseEntitlement("last-trip");
 
   useEffect(() => {
     const id = window.setInterval(() => tick((n) => n + 1), 1000);
@@ -60,8 +64,16 @@ export function LastTripTrialGate({ children }: { children: React.ReactNode }) {
     if (inRoom && !trial) store.ensureLastTripTrial();
   }, [inRoom, trial]);
 
-  const expired = !!trial && !trial.unlocked && store.remainingLastTripTrial(trial) <= 0;
+  // شراء مؤكَّد من الخادم = فتح الغرفة بالكامل بدون مسح أي تقدم.
+  const purchased = entitlement?.purchased === true;
+  useEffect(() => {
+    if (purchased && inRoom && trial && !trial.unlocked) void store.unlockLastTripRoom();
+  }, [purchased, inRoom, trial]);
+
+  const expired =
+    !purchased && !!trial && !trial.unlocked && store.remainingLastTripTrial(trial) <= 0;
   if (!expired) return <>{children}</>;
+
 
   return (
     <div dir="rtl" className="grid min-h-screen place-items-center bg-background px-4 py-10">
@@ -77,11 +89,14 @@ export function LastTripTrialGate({ children }: { children: React.ReactNode }) {
           المكان بنفس الغرفة.
         </p>
         <Link
-          to="/cases"
+          to="/purchase/$caseId"
+          params={{ caseId: "last-trip" }}
+          search={{ room: room?.code }}
           className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 font-display text-base font-bold text-primary-foreground"
         >
           <ShoppingCart className="size-4.5" /> افتح القضية كاملة
         </Link>
+
         <Link
           to="/"
           className="mt-3 inline-block font-display text-xs text-muted-foreground hover:text-foreground"
