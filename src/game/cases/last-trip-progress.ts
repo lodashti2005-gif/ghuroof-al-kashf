@@ -1,4 +1,10 @@
-import { getSnapshot, subscribe as subscribeRoom, addNote, unlockEvidence } from "@/game/room-store";
+import {
+  getSnapshot,
+  getStoredSessionCode,
+  subscribe as subscribeRoom,
+  addNote,
+  unlockEvidence,
+} from "@/game/room-store";
 import { getLastTripEvidence } from "./last-trip-evidence";
 
 /**
