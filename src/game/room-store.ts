@@ -134,6 +134,9 @@ export function subscribe(listener: Listener) {
 export const getSnapshot = () => state;
 export const getServerSnapshot = () => null;
 export const getSession = () => session;
+/** هل فيه جلسة غرفة محفوظة بهذا التاب (قبل ما يخلص hydrate بعد الـrefresh). */
+export const hasStoredSession = () => session !== null || readSession() !== null;
+
 
 interface Snapshot {
   room: {
