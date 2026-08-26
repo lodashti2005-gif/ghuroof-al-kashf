@@ -129,15 +129,8 @@ function CasesPage() {
   );
 }
 
-function CaseCard({
-  item,
-  signedIn,
-  onPurchase,
-}: {
-  item: StoreCase;
-  signedIn: boolean;
-  onPurchase: () => void;
-}) {
+function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
+
   const soon = item.status === "soon";
 
   return (
