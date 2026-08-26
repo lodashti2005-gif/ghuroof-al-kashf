@@ -13,6 +13,8 @@ import { useEffect, useState } from "react";
 import { Eyebrow, Panel } from "@/components/game/ui";
 import * as store from "@/game/room-store";
 import { useRoom } from "@/game/use-room";
+import { useCaseEntitlement } from "@/game/use-entitlement";
+
 
 function clock(seconds: number) {
   const m = Math.floor(Math.max(0, seconds) / 60);
