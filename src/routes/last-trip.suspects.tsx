@@ -63,6 +63,7 @@ function LastTripSuspectsRoute() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <LastTripTrialBadge />
             <CaseTag>{lastTripCase.code}</CaseTag>
             {role && <CaseTag>دورك: {role.title}</CaseTag>}
             <CaseTag tone="danger">المشتبه فيهم {LAST_TRIP_SUSPECT_TOTAL}</CaseTag>

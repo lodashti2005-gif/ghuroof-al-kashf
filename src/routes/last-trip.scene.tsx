@@ -221,6 +221,7 @@ function LastTripSceneRoute() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <LastTripTrialBadge />
             <CaseTag>{lastTripCase.code}</CaseTag>
             {role && <CaseTag>دورك: {role.title}</CaseTag>}
             <CaseTag tone="evidence">
