@@ -11,7 +11,10 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const caseInput = z.object({ caseId: z.string().min(1).max(64) });
+const caseInput = z.object({
+  caseId: z.string().min(1).max(64),
+  room: z.string().min(1).max(16).optional(),
+});
 
 export interface CaseEntitlementResult {
   caseId: string;
@@ -26,6 +29,10 @@ export interface CaseEntitlementResult {
   /** السعر من القاعدة إن كان معبّأ. */
   priceKwd: number | null;
   title: string | null;
+  /** حالة بوابة الدفع من الخادم (ليس ثابتاً في الواجهة). */
+  gatewayStatus: "unconfigured" | "sandbox" | "live";
+  /** اسم المزوّد إذا كانت البوابة مربوطة. */
+  provider: string | null;
 }
 
 export const getCaseEntitlement = createServerFn({ method: "POST" })
@@ -50,6 +57,8 @@ export const getCaseEntitlement = createServerFn({ method: "POST" })
       supabase.rpc("has_case_entitlement", { _user_id: userId, _case_id: data.caseId }),
     ]);
 
+    const { getGatewayStatus, getGatewayProvider } = await import("@/lib/payment-config.server");
+
     return {
       caseId: data.caseId,
       entitled: entitled === true,
@@ -58,6 +67,8 @@ export const getCaseEntitlement = createServerFn({ method: "POST" })
       free: caseRow?.is_free ?? false,
       priceKwd: caseRow?.price_kwd != null ? Number(caseRow.price_kwd) : null,
       title: caseRow?.title ?? null,
+      gatewayStatus: getGatewayStatus(),
+      provider: getGatewayProvider(),
     };
   });
 
@@ -74,16 +85,21 @@ export interface PurchaseIntentResult {
 }
 
 /**
- * بدء عملية شراء. حالياً ما فيه مزوّد دفع مربوط، فالخادم يرجّع
- * `gateway_unconfigured` بدون منح أي ملكية. عند ربط البوابة: يُنشأ هنا
- * checkout session ويُرجّع `checkoutUrl`.
+ * بدء عملية شراء.
+ *
+ * - لو المستخدم يملك القضية: يرجع already_owned.
+ * - لو بوابة الدفع غير مربوطة: يرجع gateway_unconfigured (لا يمنح ملكية).
+ * - لو Paddle مربوط: ينشئ transaction في Paddle مع custom_data إجبارية
+ *   (user_id + case_id) ويرجع رابط checkout للدفع.
  */
 export const startCasePurchase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => caseInput.parse(data))
   .handler(async ({ data, context }): Promise<PurchaseIntentResult> => {
-    const { data: entitled } = await context.supabase.rpc("has_case_entitlement", {
-      _user_id: context.userId,
+    const { supabase, userId } = context;
+
+    const { data: entitled } = await supabase.rpc("has_case_entitlement", {
+      _user_id: userId,
       _case_id: data.caseId,
     });
     if (entitled === true) {
@@ -94,10 +110,54 @@ export const startCasePurchase = createServerFn({ method: "POST" })
       };
     }
 
+    const {
+      isPaddleConfigured,
+      createPaddleCheckout,
+      getGatewayStatus,
+    } = await import("@/lib/payment-config.server");
+
+    if (!isPaddleConfigured() || getGatewayStatus() === "unconfigured") {
+      return {
+        status: "gateway_unconfigured",
+        checkoutUrl: null,
+        message:
+          "بوابة الدفع لِسِه ما تربطت. طلبك محفوظ عندنا، وأول ما تتفعّل البوابة تقدر تكمل الدفع وتفتح القضية كاملة بنفس الغرفة ونفس التقدم.",
+      };
+    }
+
+    const caseRow = await supabase
+      .from("cases")
+      .select("id, title")
+      .eq("id", data.caseId)
+      .maybeSingle();
+
+    const productName = caseRow.data?.title ?? `Case: ${data.caseId}`;
+
+    // إنشاء checkout Paddle — هذه الدالة تضمن دائماً وجود custom_data.
+    const { transactionId, checkoutUrl } = await createPaddleCheckout(data.caseId, userId, {
+      room: data.room ?? null,
+      productName,
+      productDescription: `شراء قضية "${productName}" في ورا السالفة`,
+    });
+
+    // نسجّل عملية قيد الانتظار بمفتاح الخادم (webhook سيرفعها لـ paid لاحقاً).
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("case_purchases").insert({
+      user_id: userId,
+      case_id: data.caseId,
+      status: "pending",
+      provider: "paddle",
+      provider_ref: transactionId,
+    });
+
+    if (error) {
+      console.error("[purchase] failed to insert pending purchase", error.message);
+      // ما نوقف المستخدم — webhook يقدر ينشئ الصف لاحقاً باستخدام custom_data.
+    }
+
     return {
-      status: "gateway_unconfigured",
-      checkoutUrl: null,
-      message:
-        "بوابة الدفع لِسِه ما تربطت. طلبك محفوظ عندنا، وأول ما تتفعّل البوابة تقدر تكمل الدفع وتفتح القضية كاملة بنفس الغرفة ونفس التقدم.",
+      status: "awaiting_payment",
+      checkoutUrl,
+      message: "تم إعداد عملية الدفع. أكمل الدفع في نافذة Paddle، وراح ترجع للعبة تلقائياً.",
     };
   });
