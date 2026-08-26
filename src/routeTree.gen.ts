@@ -30,6 +30,7 @@ import { Route as LastTripLobbyRouteImport } from './routes/last-trip.lobby'
 import { Route as LastTripSceneRouteImport } from './routes/last-trip.scene'
 import { Route as LastTripSuspectsRouteImport } from './routes/last-trip.suspects'
 import { Route as PurchaseCaseIdRouteImport } from './routes/purchase.$caseId'
+import { Route as ApiPublicPaddleWebhookRouteImport } from './routes/api/public/paddle-webhook'
 import { Route as LastTripInterrogationSuspectIdRouteImport } from './routes/last-trip.interrogation.$suspectId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -137,6 +138,11 @@ const PurchaseCaseIdRoute = PurchaseCaseIdRouteImport.update({
   path: '/purchase/$caseId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaddleWebhookRoute = ApiPublicPaddleWebhookRouteImport.update({
+  id: '/api/public/paddle-webhook',
+  path: '/api/public/paddle-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LastTripInterrogationSuspectIdRoute =
   LastTripInterrogationSuspectIdRouteImport.update({
     id: '/last-trip/interrogation/$suspectId',
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/last-trip/scene': typeof LastTripSceneRoute
   '/last-trip/suspects': typeof LastTripSuspectsRoute
   '/purchase/$caseId': typeof PurchaseCaseIdRoute
+  '/api/public/paddle-webhook': typeof ApiPublicPaddleWebhookRoute
   '/last-trip/interrogation/$suspectId': typeof LastTripInterrogationSuspectIdRoute
 }
 export interface FileRoutesByTo {
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/last-trip/scene': typeof LastTripSceneRoute
   '/last-trip/suspects': typeof LastTripSuspectsRoute
   '/purchase/$caseId': typeof PurchaseCaseIdRoute
+  '/api/public/paddle-webhook': typeof ApiPublicPaddleWebhookRoute
   '/last-trip/interrogation/$suspectId': typeof LastTripInterrogationSuspectIdRoute
 }
 export interface FileRoutesById {
@@ -215,6 +223,7 @@ export interface FileRoutesById {
   '/last-trip/scene': typeof LastTripSceneRoute
   '/last-trip/suspects': typeof LastTripSuspectsRoute
   '/purchase/$caseId': typeof PurchaseCaseIdRoute
+  '/api/public/paddle-webhook': typeof ApiPublicPaddleWebhookRoute
   '/last-trip/interrogation/$suspectId': typeof LastTripInterrogationSuspectIdRoute
 }
 export interface FileRouteTypes {
@@ -241,6 +250,7 @@ export interface FileRouteTypes {
     | '/last-trip/scene'
     | '/last-trip/suspects'
     | '/purchase/$caseId'
+    | '/api/public/paddle-webhook'
     | '/last-trip/interrogation/$suspectId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/last-trip/scene'
     | '/last-trip/suspects'
     | '/purchase/$caseId'
+    | '/api/public/paddle-webhook'
     | '/last-trip/interrogation/$suspectId'
   id:
     | '__root__'
@@ -289,6 +300,7 @@ export interface FileRouteTypes {
     | '/last-trip/scene'
     | '/last-trip/suspects'
     | '/purchase/$caseId'
+    | '/api/public/paddle-webhook'
     | '/last-trip/interrogation/$suspectId'
   fileRoutesById: FileRoutesById
 }
@@ -314,6 +326,7 @@ export interface RootRouteChildren {
   LastTripSceneRoute: typeof LastTripSceneRoute
   LastTripSuspectsRoute: typeof LastTripSuspectsRoute
   PurchaseCaseIdRoute: typeof PurchaseCaseIdRoute
+  ApiPublicPaddleWebhookRoute: typeof ApiPublicPaddleWebhookRoute
   LastTripInterrogationSuspectIdRoute: typeof LastTripInterrogationSuspectIdRoute
 }
 
@@ -466,6 +479,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PurchaseCaseIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/paddle-webhook': {
+      id: '/api/public/paddle-webhook'
+      path: '/api/public/paddle-webhook'
+      fullPath: '/api/public/paddle-webhook'
+      preLoaderRoute: typeof ApiPublicPaddleWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/last-trip/interrogation/$suspectId': {
       id: '/last-trip/interrogation/$suspectId'
       path: '/last-trip/interrogation/$suspectId'
@@ -498,6 +518,7 @@ const rootRouteChildren: RootRouteChildren = {
   LastTripSceneRoute: LastTripSceneRoute,
   LastTripSuspectsRoute: LastTripSuspectsRoute,
   PurchaseCaseIdRoute: PurchaseCaseIdRoute,
+  ApiPublicPaddleWebhookRoute: ApiPublicPaddleWebhookRoute,
   LastTripInterrogationSuspectIdRoute: LastTripInterrogationSuspectIdRoute,
 }
 export const routeTree = rootRouteImport
