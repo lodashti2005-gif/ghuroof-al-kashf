@@ -177,7 +177,18 @@ export interface RoomState {
   ltAnalyzed: string[];
   /** حالة الاتهام والنهاية بقضية «آخر رحلة» فقط (null قبل أول تأكيد). */
   ltAcc: LastTripAccusation | null;
+  /** تجربة «آخر رحلة» المجانية (١٠ دقائق) — مشتركة بين كل لاعبي الغرفة. */
+  ltTrial: LastTripTrial | null;
 }
+
+/** تجربة مجانية مؤقتة لكل غرفة — جاهزة لاحقاً لحالة الشراء (`unlocked`). */
+export interface LastTripTrial {
+  /** وقت بداية القضية فعلياً (ms) — منه يُحسب المتبقي، فالـrefresh ما يعيده. */
+  startedAt: number;
+  /** صارت الغرفة مفتوحة بالكامل (بعد الشراء) — يتجاوز قفل التجربة. */
+  unlocked: boolean;
+}
+
 
 /** مرحلة الاتهام/النهاية بقضية «آخر رحلة» — مشتركة بين كل لاعبي الغرفة. */
 export interface LastTripAccusation {
