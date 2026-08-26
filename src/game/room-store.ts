@@ -17,6 +17,7 @@ import type {
   AbilityUse,
   Contradiction,
   FinalDecision,
+  LastTripTrial,
   Deduction,
   Note,
   Player,
@@ -52,6 +53,7 @@ type SharedState = Pick<
   | "ltRoleReady"
   | "ltAnalyzed"
   | "ltAcc"
+  | "ltTrial"
 >;
 
 let state: RoomState | null = null;
@@ -105,6 +107,7 @@ const freshShared = (): SharedState => ({
   ltRoleReady: [],
   ltAnalyzed: [],
   ltAcc: null,
+  ltTrial: null,
 });
 
 function saveSession() {
@@ -198,6 +201,7 @@ function toRoomState(snap: Snapshot): RoomState {
     ltRoleReady: shared.ltRoleReady ?? [],
     ltAnalyzed: shared.ltAnalyzed ?? [],
     ltAcc: shared.ltAcc ?? null,
+    ltTrial: shared.ltTrial ?? null,
   };
 }
 
@@ -372,6 +376,7 @@ function sharedPayload(next: RoomState) {
     ltRoleReady: next.ltRoleReady,
     ltAnalyzed: next.ltAnalyzed,
     ltAcc: next.ltAcc,
+    ltTrial: next.ltTrial,
   };
 }
 
@@ -498,6 +503,36 @@ export const startIntro = () =>
   update((s) => {
     s.phase = "intro";
     if (s.intro === null) s.intro = 0;
+    // بداية القضية الفعلية = بداية عدّاد التجربة المجانية (لقضية «آخر رحلة» فقط).
+    if (s.caseId === "last-trip" && s.ltTrial === null)
+      s.ltTrial = { startedAt: Date.now(), unlocked: false };
+  });
+
+/* ==================== التجربة المجانية لقضية «آخر رحلة» ==================== */
+
+/** مدة التجربة المجانية لكل غرفة: ١٠ دقائق. */
+export const LAST_TRIP_TRIAL_SECONDS = 600;
+
+/** يضمن وجود بداية للتجربة داخل غرفة «آخر رحلة» (بدون تصفير لو موجودة). */
+export const ensureLastTripTrial = () =>
+  update((s) => {
+    if (s.caseId !== "last-trip") return;
+    if (s.ltTrial === null) s.ltTrial = { startedAt: Date.now(), unlocked: false };
+  });
+
+/** الوقت المتبقي بالثواني — محسوب من الحالة المشتركة فما يتأثر بالـrefresh. */
+export function remainingLastTripTrial(trial?: LastTripTrial | null): number {
+  if (!trial) return LAST_TRIP_TRIAL_SECONDS;
+  if (trial.unlocked) return LAST_TRIP_TRIAL_SECONDS;
+  const passed = Math.floor((Date.now() - trial.startedAt) / 1000);
+  return Math.max(0, LAST_TRIP_TRIAL_SECONDS - passed);
+}
+
+/** جاهزة للربط بالدفع لاحقاً: تفتح الغرفة بالكامل بدون مسح أي تقدم. */
+export const unlockLastTripRoom = () =>
+  update((s) => {
+    if (s.caseId !== "last-trip") return;
+    s.ltTrial = { startedAt: s.ltTrial?.startedAt ?? Date.now(), unlocked: true };
   });
 
 export const setIntroStep = (step: number) =>
