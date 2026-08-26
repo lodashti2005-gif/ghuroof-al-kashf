@@ -46,6 +46,8 @@ export function LastTripTrialBadge() {
 export function LastTripTrialGate({ children }: { children: React.ReactNode }) {
   const { room } = useRoom();
   const [, tick] = useState(0);
+  // الملكية تُقرأ من الخادم فقط — الواجهة ما تفتح القضية أبداً من نفسها.
+  const { entitlement } = useCaseEntitlement("last-trip");
 
   useEffect(() => {
     const id = window.setInterval(() => tick((n) => n + 1), 1000);
@@ -60,8 +62,16 @@ export function LastTripTrialGate({ children }: { children: React.ReactNode }) {
     if (inRoom && !trial) store.ensureLastTripTrial();
   }, [inRoom, trial]);
 
-  const expired = !!trial && !trial.unlocked && store.remainingLastTripTrial(trial) <= 0;
+  // شراء مؤكَّد من الخادم = فتح الغرفة بالكامل بدون مسح أي تقدم.
+  const purchased = entitlement?.purchased === true;
+  useEffect(() => {
+    if (purchased && inRoom && trial && !trial.unlocked) void store.unlockLastTripRoom();
+  }, [purchased, inRoom, trial]);
+
+  const expired =
+    !purchased && !!trial && !trial.unlocked && store.remainingLastTripTrial(trial) <= 0;
   if (!expired) return <>{children}</>;
+
 
   return (
     <div dir="rtl" className="grid min-h-screen place-items-center bg-background px-4 py-10">
