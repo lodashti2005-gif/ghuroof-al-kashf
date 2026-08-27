@@ -22,7 +22,7 @@ export async function logPaddleEvent(entry: PaddleEventLog): Promise<void> {
       typeof entry.userId === "string" &&
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entry.userId);
 
-    await supabaseAdmin.from("paddle_webhook_events").insert({
+    const row = {
       event_id: entry.eventId ?? null,
       event_type: entry.eventType,
       transaction_id: entry.transactionId ?? null,
