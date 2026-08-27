@@ -26,6 +26,7 @@ import { Route as RevealRouteImport } from './routes/reveal'
 import { Route as RolesRouteImport } from './routes/roles'
 import { Route as SceneRouteImport } from './routes/scene'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AdminPaddleEventsRouteImport } from './routes/admin.paddle-events'
 import { Route as InterrogationSuspectIdRouteImport } from './routes/interrogation.$suspectId'
 import { Route as LastTripAccusationRouteImport } from './routes/last-trip.accusation'
 import { Route as LastTripEndingRouteImport } from './routes/last-trip.ending'
@@ -122,6 +123,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminPaddleEventsRoute = AdminPaddleEventsRouteImport.update({
+  id: '/admin/paddle-events',
+  path: '/admin/paddle-events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InterrogationSuspectIdRoute = InterrogationSuspectIdRouteImport.update({
   id: '/interrogation/$suspectId',
   path: '/interrogation/$suspectId',
@@ -192,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
   '/terms': typeof TermsRoute
+  '/admin/paddle-events': typeof AdminPaddleEventsRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
   '/last-trip/accusation': typeof LastTripAccusationRoute
   '/last-trip/ending': typeof LastTripEndingRoute
@@ -221,6 +228,7 @@ export interface FileRoutesByTo {
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
   '/terms': typeof TermsRoute
+  '/admin/paddle-events': typeof AdminPaddleEventsRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
   '/last-trip/accusation': typeof LastTripAccusationRoute
   '/last-trip/ending': typeof LastTripEndingRoute
@@ -251,6 +259,7 @@ export interface FileRoutesById {
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
   '/terms': typeof TermsRoute
+  '/admin/paddle-events': typeof AdminPaddleEventsRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
   '/last-trip/accusation': typeof LastTripAccusationRoute
   '/last-trip/ending': typeof LastTripEndingRoute
@@ -282,6 +291,7 @@ export interface FileRouteTypes {
     | '/roles'
     | '/scene'
     | '/terms'
+    | '/admin/paddle-events'
     | '/interrogation/$suspectId'
     | '/last-trip/accusation'
     | '/last-trip/ending'
@@ -311,6 +321,7 @@ export interface FileRouteTypes {
     | '/roles'
     | '/scene'
     | '/terms'
+    | '/admin/paddle-events'
     | '/interrogation/$suspectId'
     | '/last-trip/accusation'
     | '/last-trip/ending'
@@ -340,6 +351,7 @@ export interface FileRouteTypes {
     | '/roles'
     | '/scene'
     | '/terms'
+    | '/admin/paddle-events'
     | '/interrogation/$suspectId'
     | '/last-trip/accusation'
     | '/last-trip/ending'
@@ -370,6 +382,7 @@ export interface RootRouteChildren {
   RolesRoute: typeof RolesRoute
   SceneRoute: typeof SceneRoute
   TermsRoute: typeof TermsRoute
+  AdminPaddleEventsRoute: typeof AdminPaddleEventsRoute
   InterrogationSuspectIdRoute: typeof InterrogationSuspectIdRoute
   LastTripAccusationRoute: typeof LastTripAccusationRoute
   LastTripEndingRoute: typeof LastTripEndingRoute
@@ -503,6 +516,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/paddle-events': {
+      id: '/admin/paddle-events'
+      path: '/admin/paddle-events'
+      fullPath: '/admin/paddle-events'
+      preLoaderRoute: typeof AdminPaddleEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/interrogation/$suspectId': {
       id: '/interrogation/$suspectId'
       path: '/interrogation/$suspectId'
@@ -594,6 +614,7 @@ const rootRouteChildren: RootRouteChildren = {
   RolesRoute: RolesRoute,
   SceneRoute: SceneRoute,
   TermsRoute: TermsRoute,
+  AdminPaddleEventsRoute: AdminPaddleEventsRoute,
   InterrogationSuspectIdRoute: InterrogationSuspectIdRoute,
   LastTripAccusationRoute: LastTripAccusationRoute,
   LastTripEndingRoute: LastTripEndingRoute,

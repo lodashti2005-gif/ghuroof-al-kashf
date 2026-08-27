@@ -96,7 +96,15 @@ export const Route = createFileRoute("/api/public/paddle-webhook")({
           return new Response("invalid json", { status: 400 });
         }
 
+        const { logPaddleEvent } = await import("@/lib/paddle-log.server");
+
         if (event.event_type !== "transaction.completed") {
+          await logPaddleEvent({
+            eventId: event.event_id ?? null,
+            eventType: event.event_type ?? "unknown",
+            transactionId: event.data?.id ?? null,
+            outcome: "ignored",
+          });
           return Response.json({ ignored: event.event_type ?? null });
         }
 
@@ -107,16 +115,29 @@ export const Route = createFileRoute("/api/public/paddle-webhook")({
         const userId = firstString(custom["user_id"], custom["userId"]);
         const caseId = firstString(custom["case_id"], custom["caseId"], itemCustom["case_id"]);
 
+        const amountRaw = data.details?.totals?.grand_total;
+        const amount = amountRaw != null ? Number(amountRaw) / 100 : null;
+        const currency = data.details?.totals?.currency_code ?? null;
+
+        const logBase = {
+          eventId: event.event_id ?? null,
+          eventType: event.event_type,
+          transactionId: data.id ?? null,
+          caseId,
+          userId,
+          amount: Number.isFinite(amount) ? amount : null,
+          currency,
+        };
+
         if (!userId || !caseId) {
           console.error("[paddle] transaction.completed without user_id/case_id custom_data", {
             transaction: data.id,
           });
+          await logPaddleEvent({ ...logBase, outcome: "missing_custom_data" });
           // 200 حتى لا يعيد Paddle الإرسال بلا فائدة — الحدث مسجّل بالسجلات.
           return Response.json({ ok: false, reason: "missing_custom_data" });
         }
 
-        const amountRaw = data.details?.totals?.grand_total;
-        const amount = amountRaw != null ? Number(amountRaw) / 100 : null;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -130,6 +151,11 @@ export const Route = createFileRoute("/api/public/paddle-webhook")({
           .maybeSingle();
 
         if (existing?.status === "paid") {
+          await logPaddleEvent({
+            ...logBase,
+            outcome: "duplicate",
+            detail: "العملية مسجّلة مسبقاً — ما تكرر الفتح",
+          });
           return Response.json({ ok: true, idempotent: true });
         }
 
@@ -149,9 +175,11 @@ export const Route = createFileRoute("/api/public/paddle-webhook")({
 
         if (error) {
           console.error("[paddle] failed to record purchase", error.message);
+          await logPaddleEvent({ ...logBase, outcome: "db_error", detail: error.message });
           return new Response("db error", { status: 500 });
         }
 
+        await logPaddleEvent({ ...logBase, outcome: "granted" });
         return Response.json({ ok: true });
       },
     },
