@@ -250,6 +250,29 @@ function AuthPage() {
             </button>
           )}
 
+          <div className="mt-5 rounded-xl border border-border bg-surface-2 p-4">
+            <p className="text-sm font-medium">تأكيد بلصق الرابط</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              إذا الزر في الإيميل ما ظهر لك، انسخ رابط التأكيد من الإيميل والصقه هنا ونأكّد لك
+              بريدك مباشرة.
+            </p>
+            <textarea
+              value={pasted}
+              onChange={(e) => setPasted(e.target.value)}
+              dir="ltr"
+              rows={3}
+              placeholder="https://..."
+              className="mt-3 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:border-primary/60"
+            />
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void verifyPastedLink()}
+              className="mt-2 w-full rounded-xl border border-primary/50 bg-primary/10 px-4 py-2.5 font-display text-xs text-primary transition-colors hover:bg-primary/20 disabled:opacity-60"
+            >
+              {busy ? "لحظة..." : "أكّد بريدي من الرابط"}
+            </button>
+          </div>
 
           <button
             type="button"
