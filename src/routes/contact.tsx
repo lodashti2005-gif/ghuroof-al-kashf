@@ -220,10 +220,19 @@ function ContactPage() {
                 <p className="text-center text-xs text-muted-foreground">
                   أو راسلنا مباشرة على{" "}
                   <a
-                    href="mailto:Lateefahalkhaldi@icloud.com"
+                    href={`mailto:${CONTACT_EMAIL}`}
                     className="inline-flex items-center gap-1 text-primary underline underline-offset-4"
                   >
-                    <Mail className="size-3" /> Lateefahalkhaldi@icloud.com
+                    <Mail className="size-3" /> {CONTACT_EMAIL}
+                  </a>
+                  {" "}أو واتساب{" "}
+                  <a
+                    href={WHATSAPP_LINK}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-primary underline underline-offset-4"
+                  >
+                    <MessageCircle className="size-3" /> @waralsalfa
                   </a>
                 </p>
               </form>
