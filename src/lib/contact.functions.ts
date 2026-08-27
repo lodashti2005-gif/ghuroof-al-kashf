@@ -13,7 +13,7 @@ export const submitContact = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { error } = await supabaseAdmin.from("contact_submissions").insert({
+    const { error } = await (supabaseAdmin.from("contact_submissions" as any) as any).insert({
       name: data.name,
       email: data.email,
       subject: data.subject,
