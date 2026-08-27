@@ -159,41 +159,73 @@ export const Route = createFileRoute("/api/public/paddle-webhook")({
         }
 
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-        const { data: existing } = await supabaseAdmin
-          .from("case_purchases")
-          .select("id, status")
-          .eq("user_id", userId)
-          .eq("case_id", caseId)
-          .eq("provider", "paddle")
-          .eq("provider_ref", data.id ?? "")
-          .maybeSingle();
-
-        if (existing?.status === "paid") {
-          await logPaddleEvent({
-            ...logBase,
-            outcome: "duplicate",
-            detail: "العملية مسجّلة مسبقاً — ما تكرر الفتح",
-          });
-          return Response.json({ ok: true, idempotent: true });
+        const transactionId = firstString(data.id);
+        if (!transactionId) {
+          await logPaddleEvent({ ...logBase, outcome: "missing_custom_data", detail: "no transaction id" });
+          return Response.json({ ok: false, reason: "missing_transaction_id" });
         }
 
-        const row = {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+        // Idempotency (1): نفس transaction_id مسجّل مسبقاً → ما نفتح القضية مرة ثانية.
+        const { data: existing } = await supabaseAdmin
+          .from("case_purchases")
+          .select("id, status, user_id, case_id")
+          .eq("provider", "paddle")
+          .eq("provider_ref", transactionId)
+          .maybeSingle();
+
+        if (existing) {
+          if (existing.status === "paid") {
+            await logPaddleEvent({
+              ...logBase,
+              outcome: "duplicate",
+              detail: `نفس العملية ${transactionId} مسجّلة مسبقاً — ما تكرر الفتح`,
+            });
+            return Response.json({ ok: true, idempotent: true });
+          }
+          const { error: updateError } = await supabaseAdmin
+            .from("case_purchases")
+            .update({
+              status: "paid",
+              amount_kwd: Number.isFinite(amount) ? amount : null,
+              purchased_at: new Date().toISOString(),
+            })
+            .eq("id", existing.id)
+            .neq("status", "paid");
+
+          if (updateError) {
+            console.error("[paddle] failed to finalize purchase", updateError.message);
+            await logPaddleEvent({ ...logBase, outcome: "db_error", detail: updateError.message });
+            return new Response("db error", { status: 500 });
+          }
+          await logPaddleEvent({ ...logBase, outcome: "granted" });
+          return Response.json({ ok: true });
+        }
+
+        const { error } = await supabaseAdmin.from("case_purchases").insert({
           user_id: userId,
           case_id: caseId,
           status: "paid",
           amount_kwd: Number.isFinite(amount) ? amount : null,
           provider: "paddle",
-          provider_ref: data.id ?? null,
+          provider_ref: transactionId,
           purchased_at: new Date().toISOString(),
-        };
-
-        const { error } = existing
-          ? await supabaseAdmin.from("case_purchases").update(row).eq("id", existing.id)
-          : await supabaseAdmin.from("case_purchases").insert(row);
+        });
 
         if (error) {
+          // Idempotency (2): سباق بين حدثين بنفس transaction_id — الفهرس الفريد يمنع التكرار.
+          const isDuplicate =
+            (error as { code?: string }).code === "23505" ||
+            /duplicate key|unique constraint/i.test(error.message);
+          if (isDuplicate) {
+            await logPaddleEvent({
+              ...logBase,
+              outcome: "duplicate",
+              detail: `طلب متزامن بنفس العملية ${transactionId} — رفضته القاعدة`,
+            });
+            return Response.json({ ok: true, idempotent: true });
+          }
           console.error("[paddle] failed to record purchase", error.message);
           await logPaddleEvent({ ...logBase, outcome: "db_error", detail: error.message });
           return new Response("db error", { status: 500 });
