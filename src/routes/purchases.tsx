@@ -104,13 +104,20 @@ function PurchasesPage() {
             </span>
             <span className="font-display text-sm font-bold">{GAME_NAME}</span>
           </Link>
-          <button
-            type="button"
-            onClick={() => void load()}
-            className="inline-flex items-center gap-1.5 font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <RefreshCw className="size-3.5" /> تحديث
-          </button>
+          <div className="flex items-center gap-3">
+            {hasPending ? (
+              <span className="inline-flex items-center gap-1.5 font-display text-[11px] text-amber-400">
+                <Loader2 className={`size-3.5 ${syncing ? "animate-spin" : ""}`} /> تحديث لحظي
+              </span>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="inline-flex items-center gap-1.5 font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <RefreshCw className="size-3.5" /> تحديث
+            </button>
+          </div>
         </header>
 
         <Panel className="cine-in mt-8">
@@ -118,7 +125,9 @@ function PurchasesPage() {
           <h1 className="mt-2 text-2xl font-extrabold">حالة عمليات الدفع</h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             كل عملية مرتبطة بقضيتها. لو الحالة «بانتظار التأكيد» انتظر تأكيد البوابة — القضية تنفتح مرة وحدة بس ولو تكرر الدفع ما يتكرر الفتح.
+            {lastSync ? <span className="block opacity-70">آخر تحديث: {fmt(lastSync.toISOString())}</span> : null}
           </p>
+
 
           {loading ? (
             <p className="mt-6 inline-flex items-center gap-2 text-sm text-muted-foreground">
