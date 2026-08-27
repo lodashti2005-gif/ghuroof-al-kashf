@@ -16,6 +16,7 @@ export interface PaddleCheckoutPayload {
   };
   currency_code: string;
   collection_mode: "automatic";
+  discount_id?: string;
   checkout?: {
     url?: string | null;
   };
