@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, ShieldAlert } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ActionButton } from "@/components/game/shell";
 import { Eyebrow } from "@/components/game/ui";
@@ -30,6 +30,24 @@ function AuthPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
+    const isConfirmed =
+      url.searchParams.get("confirmed") === "1" ||
+      hash.get("type") === "signup" ||
+      url.searchParams.get("type") === "signup";
+    if (isConfirmed) {
+      setConfirmed(true);
+      setMode("in");
+      // Keep verification-only sessions out of the way: the user signs in explicitly.
+      void supabase.auth.signOut();
+      window.history.replaceState({}, "", "/auth");
+    }
+  }, []);
+
 
   const submit = async () => {
     setError(null);
