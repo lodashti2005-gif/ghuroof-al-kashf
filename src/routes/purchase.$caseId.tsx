@@ -22,12 +22,7 @@ import { useState } from "react";
 import { Eyebrow, Panel } from "@/components/game/ui";
 import { GAME_NAME, getCaseById } from "@/game/game-meta";
 import { useCaseEntitlement } from "@/game/use-entitlement";
-import {
-
-
-  formatCasePrice,
-  getCasePricing,
-} from "@/game/pricing";
+import { formatCasePrice, getCasePricing } from "@/game/pricing";
 import { startCasePurchase, type PurchaseIntentResult } from "@/lib/purchase.functions";
 
 export const Route = createFileRoute("/purchase/$caseId")({
