@@ -105,7 +105,13 @@ function AuthPage() {
           </Link>
         </header>
 
-        <div className="surface-panel cine-in mt-10 p-6">
+        {confirmed && (
+          <div className="cine-in mt-8 rounded-xl border border-evidence/50 bg-evidence/15 px-4 py-3.5 text-sm font-medium text-evidence">
+            تم تأكيد بريدك الإلكتروني بنجاح، تقدر تسجل الدخول الحين.
+          </div>
+        )}
+
+        <div className="surface-panel cine-in mt-6 p-6">
           <Eyebrow>حساب اللاعب</Eyebrow>
           <h1 className="mt-1 text-2xl font-bold">
             {mode === "in" ? "دخول" : "حساب جديد"}
