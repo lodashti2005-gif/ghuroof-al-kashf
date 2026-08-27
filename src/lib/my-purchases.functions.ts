@@ -27,6 +27,23 @@ export interface MyPurchaseRow {
   attempts: number;
   /** القضية مفتوحة فعلياً على الحساب. */
   entitled: boolean;
+  /** كل الأحداث المسجّلة لهذي القضية (محاولات الدفع + أحداث Paddle). */
+  events: MyPurchaseEvent[];
+}
+
+export interface MyPurchaseEvent {
+  id: string;
+  /** "purchase" = صف عملية شراء، "webhook" = حدث وصل من Paddle. */
+  source: "purchase" | "webhook";
+  status: PurchaseUiStatus;
+  /** وصف مختصر للنتيجة بالعربي. */
+  label: string;
+  transactionId: string | null;
+  eventType: string | null;
+  amount: number | null;
+  currency: string | null;
+  detail: string | null;
+  at: string;
 }
 
 export interface MyPurchasesResult {
