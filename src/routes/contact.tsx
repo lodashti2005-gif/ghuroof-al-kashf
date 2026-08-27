@@ -1,11 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2, Loader2, Mail, Send, ShieldAlert, User } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, Mail, MessageCircle, Send, ShieldAlert, User } from "lucide-react";
 import { useState } from "react";
 
 import { GAME_NAME } from "@/game/game-meta";
 import { Eyebrow } from "@/components/game/ui";
 import { submitContact } from "@/lib/contact.functions";
 import { cn } from "@/lib/utils";
+
+const BRAND_NAME = "ورا السالفة | Wara Al Salfa";
+const CONTACT_EMAIL = "contact@waralsalfa.com";
+const WHATSAPP_LINK = "https://wa.me/waralsalfa";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
