@@ -48,9 +48,9 @@ export const PAYMENT_METHODS: PaymentMethodConfig[] = [
 export const CASE_PRICING: CasePricing[] = [
   {
     caseId: "last-trip",
-    amount: 2.5,
-    currency: "KWD",
-    currencyLabel: "د.ك",
+    amount: 9.99,
+    currency: "USD",
+    currencyLabel: "$",
   },
   {
     caseId: "last-night",
