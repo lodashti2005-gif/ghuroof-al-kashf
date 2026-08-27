@@ -45,7 +45,7 @@ export function SiteFooter() {
               contact@waralsalfa.com
             </a>
             <a
-              href="https://wa.me/waralsalfa"
+              href="https://wa.me/+96551270774"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
