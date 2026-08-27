@@ -71,6 +71,11 @@ function PurchasePage() {
     try {
       const result = await requestPurchase({ data: { caseId, room } });
       setIntent(result);
+      if (result.transactionId) {
+        // نفتح Paddle Checkout الحقيقي داخل الموقع بنفس العملية المنشأة.
+        window.location.href = `/checkout?txn=${encodeURIComponent(result.transactionId)}`;
+        return;
+      }
       if (result.checkoutUrl) {
         window.location.href = result.checkoutUrl;
         return;
@@ -80,6 +85,7 @@ function PurchasePage() {
       setIntent({
         status: "gateway_unconfigured",
         checkoutUrl: null,
+        transactionId: null,
         message: "صار خطأ بالاتصال. جرّب مرة ثانية بعد شوي.",
       });
     } finally {

@@ -81,6 +81,8 @@ export interface PurchaseIntentResult {
   status: PurchaseIntentStatus;
   /** رابط الدفع من المزوّد — يمتلئ بعد ربط البوابة. */
   checkoutUrl: string | null;
+  /** رقم العملية في Paddle — يُستخدم لفتح Paddle Checkout داخل الموقع. */
+  transactionId: string | null;
   message: string;
 }
 
@@ -106,6 +108,7 @@ export const startCasePurchase = createServerFn({ method: "POST" })
       return {
         status: "already_owned",
         checkoutUrl: null,
+        transactionId: null,
         message: "القضية مفتوحة على حسابك — تقدر تكمل من نفس المكان.",
       };
     }
@@ -120,6 +123,7 @@ export const startCasePurchase = createServerFn({ method: "POST" })
       return {
         status: "gateway_unconfigured",
         checkoutUrl: null,
+        transactionId: null,
         message:
           "بوابة الدفع لِسِه ما تربطت. طلبك محفوظ عندنا، وأول ما تتفعّل البوابة تقدر تكمل الدفع وتفتح القضية كاملة بنفس الغرفة ونفس التقدم.",
       };
@@ -179,6 +183,7 @@ export const startCasePurchase = createServerFn({ method: "POST" })
     return {
       status: "awaiting_payment",
       checkoutUrl,
+      transactionId,
       message: "تم إعداد عملية الدفع. أكمل الدفع في نافذة Paddle، وراح ترجع للعبة تلقائياً.",
     };
   });
