@@ -96,7 +96,15 @@ export const Route = createFileRoute("/api/public/paddle-webhook")({
           return new Response("invalid json", { status: 400 });
         }
 
+        const { logPaddleEvent } = await import("@/lib/paddle-log.server");
+
         if (event.event_type !== "transaction.completed") {
+          await logPaddleEvent({
+            eventId: event.event_id ?? null,
+            eventType: event.event_type ?? "unknown",
+            transactionId: event.data?.id ?? null,
+            outcome: "ignored",
+          });
           return Response.json({ ignored: event.event_type ?? null });
         }
 
