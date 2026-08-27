@@ -21,6 +21,7 @@ import { Route as LobbyRouteImport } from './routes/lobby'
 import { Route as NotebookRouteImport } from './routes/notebook'
 import { Route as PlayRouteImport } from './routes/play'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PurchasesRouteImport } from './routes/purchases'
 import { Route as RefundRouteImport } from './routes/refund'
 import { Route as RevealRouteImport } from './routes/reveal'
 import { Route as RolesRouteImport } from './routes/roles'
@@ -96,6 +97,11 @@ const PlayRoute = PlayRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PurchasesRoute = PurchasesRouteImport.update({
+  id: '/purchases',
+  path: '/purchases',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RefundRoute = RefundRouteImport.update({
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/notebook': typeof NotebookRoute
   '/play': typeof PlayRoute
   '/privacy': typeof PrivacyRoute
+  '/purchases': typeof PurchasesRoute
   '/refund': typeof RefundRoute
   '/reveal': typeof RevealRoute
   '/roles': typeof RolesRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/notebook': typeof NotebookRoute
   '/play': typeof PlayRoute
   '/privacy': typeof PrivacyRoute
+  '/purchases': typeof PurchasesRoute
   '/refund': typeof RefundRoute
   '/reveal': typeof RevealRoute
   '/roles': typeof RolesRoute
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/notebook': typeof NotebookRoute
   '/play': typeof PlayRoute
   '/privacy': typeof PrivacyRoute
+  '/purchases': typeof PurchasesRoute
   '/refund': typeof RefundRoute
   '/reveal': typeof RevealRoute
   '/roles': typeof RolesRoute
@@ -286,6 +295,7 @@ export interface FileRouteTypes {
     | '/notebook'
     | '/play'
     | '/privacy'
+    | '/purchases'
     | '/refund'
     | '/reveal'
     | '/roles'
@@ -316,6 +326,7 @@ export interface FileRouteTypes {
     | '/notebook'
     | '/play'
     | '/privacy'
+    | '/purchases'
     | '/refund'
     | '/reveal'
     | '/roles'
@@ -346,6 +357,7 @@ export interface FileRouteTypes {
     | '/notebook'
     | '/play'
     | '/privacy'
+    | '/purchases'
     | '/refund'
     | '/reveal'
     | '/roles'
@@ -377,6 +389,7 @@ export interface RootRouteChildren {
   NotebookRoute: typeof NotebookRoute
   PlayRoute: typeof PlayRoute
   PrivacyRoute: typeof PrivacyRoute
+  PurchasesRoute: typeof PurchasesRoute
   RefundRoute: typeof RefundRoute
   RevealRoute: typeof RevealRoute
   RolesRoute: typeof RolesRoute
@@ -479,6 +492,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/purchases': {
+      id: '/purchases'
+      path: '/purchases'
+      fullPath: '/purchases'
+      preLoaderRoute: typeof PurchasesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/refund': {
@@ -609,6 +629,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotebookRoute: NotebookRoute,
   PlayRoute: PlayRoute,
   PrivacyRoute: PrivacyRoute,
+  PurchasesRoute: PurchasesRoute,
   RefundRoute: RefundRoute,
   RevealRoute: RevealRoute,
   RolesRoute: RolesRoute,
