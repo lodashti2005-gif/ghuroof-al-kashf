@@ -192,6 +192,18 @@ function AuthPage() {
             </ActionButton>
           </form>
 
+          {(pending || mode === "up") && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void resend()}
+              className="mt-3 w-full rounded-xl border border-evidence/50 bg-evidence/10 px-4 py-2.5 font-display text-xs text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-60"
+            >
+              ما وصلك إيميل التأكيد؟ أعد الإرسال
+            </button>
+          )}
+
+
           <button
             type="button"
             onClick={() => {
