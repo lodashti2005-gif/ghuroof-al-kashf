@@ -140,19 +140,40 @@ export const startCasePurchase = createServerFn({ method: "POST" })
       productDescription: `شراء قضية "${productName}" في ورا السالفة`,
     });
 
-    // نسجّل عملية قيد الانتظار بمفتاح الخادم (webhook سيرفعها لـ paid لاحقاً).
+    // بعد نجاح إنشاء الـcheckout فقط: نسجّل/نحدّث عملية قيد الانتظار.
+    // محاولة قديمة معلّقة ما تمنع محاولة جديدة — نحدّث نفس الصف بالعملية الجديدة.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("case_purchases").insert({
-      user_id: userId,
-      case_id: data.caseId,
-      status: "pending",
-      provider: "paddle",
-      provider_ref: transactionId,
-    });
+    const { data: existing } = await supabaseAdmin
+      .from("case_purchases")
+      .select("id, status")
+      .eq("user_id", userId)
+      .eq("case_id", data.caseId)
+      .maybeSingle();
 
-    if (error) {
-      console.error("[purchase] failed to insert pending purchase", error.message);
-      // ما نوقف المستخدم — webhook يقدر ينشئ الصف لاحقاً باستخدام custom_data.
+    if (existing && existing.status !== "paid") {
+      const { error } = await supabaseAdmin
+        .from("case_purchases")
+        .update({
+          status: "pending",
+          provider: "paddle",
+          provider_ref: transactionId,
+          failure_reason: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id);
+      if (error) console.error("[purchase] failed to refresh pending purchase", error.message);
+    } else if (!existing) {
+      const { error } = await supabaseAdmin.from("case_purchases").insert({
+        user_id: userId,
+        case_id: data.caseId,
+        status: "pending",
+        provider: "paddle",
+        provider_ref: transactionId,
+      });
+      if (error) {
+        console.error("[purchase] failed to insert pending purchase", error.message);
+        // ما نوقف المستخدم — webhook يقدر ينشئ الصف لاحقاً باستخدام custom_data.
+      }
     }
 
     return {

@@ -22,12 +22,7 @@ import { useState } from "react";
 import { Eyebrow, Panel } from "@/components/game/ui";
 import { GAME_NAME, getCaseById } from "@/game/game-meta";
 import { useCaseEntitlement } from "@/game/use-entitlement";
-import {
-  PAYMENT_GATEWAY,
-  PAYMENT_METHODS,
-  formatCasePrice,
-  getCasePricing,
-} from "@/game/pricing";
+import { formatCasePrice, getCasePricing } from "@/game/pricing";
 import { startCasePurchase, type PurchaseIntentResult } from "@/lib/purchase.functions";
 
 export const Route = createFileRoute("/purchase/$caseId")({
@@ -62,7 +57,6 @@ function PurchasePage() {
   const { entitlement, signedIn, loading, reload } = useCaseEntitlement(caseId);
   const requestPurchase = useServerFn(startCasePurchase);
 
-  const [method, setMethod] = useState(PAYMENT_METHODS[0]?.id ?? "knet");
   const [busy, setBusy] = useState(false);
   const [intent, setIntent] = useState<PurchaseIntentResult | null>(null);
 
@@ -133,30 +127,13 @@ function PurchasePage() {
           </div>
 
           {/* طريقة الدفع */}
-          <div className="mt-5">
+          <div className="mt-5 rounded-xl border border-border bg-surface-2 px-4 py-3.5">
             <p className="font-display text-xs font-bold text-muted-foreground">طريقة الدفع</p>
-            <div className="mt-2 grid gap-2 sm:grid-cols-3">
-              {PAYMENT_METHODS.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setMethod(m.id)}
-                  className={`rounded-xl border px-3 py-3 text-right transition-colors ${
-                    method === m.id
-                      ? "border-primary/60 bg-primary/10"
-                      : "border-border bg-surface-2 hover:border-primary/30"
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 font-display text-xs font-bold">
-                    <CreditCard className="size-3.5" /> {m.label}
-                  </span>
-                  <span className="mt-1 block font-mono text-[10px] text-muted-foreground">
-                    {m.enabled ? m.hint : `${m.hint} — قريباً`}
-                  </span>
-                </button>
-              ))}
-            </div>
+            <p className="mt-1.5 flex items-center gap-1.5 text-sm">
+              <CreditCard className="size-3.5" /> تختار وسيلة الدفع داخل صفحة الدفع الآمنة
+            </p>
           </div>
+
 
           {/* حالة العملية */}
           <div className="mt-5 rounded-xl border border-border bg-surface-2 px-4 py-3.5">
@@ -224,7 +201,7 @@ function PurchasePage() {
 
           <p className="mt-4 text-center font-mono text-[11px] leading-relaxed text-muted-foreground">
             تقدّمكم والأدلة والغرفة محفوظة — الشراء ما يصفّر أي شي.
-            {PAYMENT_GATEWAY.supportContact ? ` للمساعدة: ${PAYMENT_GATEWAY.supportContact}` : ""}
+             للمساعدة: contact@waralsalfa.com
           </p>
         </Panel>
       </div>
