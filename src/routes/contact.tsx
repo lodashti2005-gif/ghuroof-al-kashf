@@ -82,7 +82,7 @@ function ContactPage() {
             <span className="grid size-9 place-items-center rounded-lg file-tape">
               <ShieldAlert className="size-4.5" />
             </span>
-            <span className="font-display text-sm font-bold">{GAME_NAME}</span>
+            <span className="font-display text-sm font-bold">{BRAND_NAME}</span>
           </Link>
           <Link
             to="/"
@@ -96,9 +96,38 @@ function ContactPage() {
           <Eyebrow>تواصل معنا</Eyebrow>
           <h1 className="mt-2 text-3xl font-extrabold sm:text-4xl">Contact Us</h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
-            عندك سؤال، مشكلة تقنية، أو تبي تتواصل مع فريق ورا السالفة؟ املأ النموذج أدناه
-            وراح نرد عليك في أقرب وقت.
+            عندك سؤال، مشكلة تقنية، أو تبي تتواصل مع فريق {BRAND_NAME}؟ املأ النموذج أدناه
+            أو تواصل معنا مباشرة.
           </p>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              className="surface-panel flex items-center gap-3 p-4 transition-colors hover:border-primary/40"
+            >
+              <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
+                <Mail className="size-5" />
+              </span>
+              <div>
+                <p className="text-xs text-muted-foreground">البريد الإلكتروني</p>
+                <p className="text-sm font-bold" dir="ltr">{CONTACT_EMAIL}</p>
+              </div>
+            </a>
+            <a
+              href={WHATSAPP_LINK}
+              target="_blank"
+              rel="noreferrer"
+              className="surface-panel flex items-center gap-3 p-4 transition-colors hover:border-primary/40"
+            >
+              <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
+                <MessageCircle className="size-5" />
+              </span>
+              <div>
+                <p className="text-xs text-muted-foreground">واتساب</p>
+                <p className="text-sm font-bold">@waralsalfa</p>
+              </div>
+            </a>
+          </div>
 
           <div className="mt-8 surface-panel p-5 sm:p-8">
             {status === "success" ? (
