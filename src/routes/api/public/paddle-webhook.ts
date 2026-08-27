@@ -35,21 +35,26 @@ function parseSignatureHeader(header: string): { ts: string; hashes: string[] } 
   return { ts, hashes };
 }
 
-function verifyPaddleSignature(header: string, rawBody: string, secret: string): boolean {
+type SignatureCheck = { ok: true } | { ok: false; reason: string };
+
+function verifyPaddleSignature(header: string, rawBody: string, secret: string): SignatureCheck {
   const parsed = parseSignatureHeader(header);
-  if (!parsed) return false;
+  if (!parsed) return { ok: false, reason: "malformed_signature_header" };
 
   // حماية من إعادة الإرسال: نرفض الطلبات الأقدم من 5 دقائق.
   const tsSeconds = Number(parsed.ts);
-  if (!Number.isFinite(tsSeconds)) return false;
-  if (Math.abs(Date.now() / 1000 - tsSeconds) > 300) return false;
+  if (!Number.isFinite(tsSeconds)) return { ok: false, reason: "invalid_timestamp" };
+  const driftSeconds = Math.round(Math.abs(Date.now() / 1000 - tsSeconds));
+  if (driftSeconds > 300) return { ok: false, reason: `stale_timestamp_${driftSeconds}s` };
 
   const expected = createHmac("sha256", secret).update(`${parsed.ts}:${rawBody}`).digest("hex");
   const exp = Buffer.from(expected, "utf8");
-  return parsed.hashes.some((hash) => {
+  const match = parsed.hashes.some((hash) => {
     const got = Buffer.from(hash, "utf8");
     return got.length === exp.length && timingSafeEqual(got, exp);
   });
+  if (!match) return { ok: false, reason: "signature_mismatch" };
+  return { ok: true };
 }
 
 function firstString(...values: unknown[]): string | null {
@@ -63,9 +68,19 @@ export const Route = createFileRoute("/api/public/paddle-webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const { logPaddleEvent } = await import("@/lib/paddle-log.server");
+        const logRejection = async (reason: string, detail?: string) => {
+          console.error("[paddle] rejected webhook", reason, detail ?? "");
+          await logPaddleEvent({
+            eventType: "rejected",
+            outcome: "rejected",
+            detail: detail ? `${reason}: ${detail}` : reason,
+          });
+        };
+
         const secret = process.env["PADDLE_WEBHOOK_SECRET"];
         if (!secret) {
-          console.error("[paddle] missing PADDLE_WEBHOOK_SECRET");
+          await logRejection("missing_webhook_secret");
           return new Response("not configured", { status: 503 });
         }
 
@@ -74,29 +89,34 @@ export const Route = createFileRoute("/api/public/paddle-webhook")({
         try {
           const { ok, ip } = await isPaddleRequestIp(request);
           if (!ok) {
-            console.error("[paddle] rejected webhook from non-Paddle IP", ip);
+            await logRejection("non_paddle_ip", ip ?? "unknown");
             return new Response("forbidden", { status: 403 });
           }
         } catch (err) {
-          console.error("[paddle] could not verify caller IP", (err as Error).message);
+          await logRejection("ip_check_unavailable", (err as Error).message);
           return new Response("ip check unavailable", { status: 503 });
         }
 
+        // طبقة ثانية (إلزامية): توقيع Paddle على الجسم الخام.
         const signature = request.headers.get("paddle-signature");
         const rawBody = await request.text();
-        if (!signature || !verifyPaddleSignature(signature, rawBody, secret)) {
+        if (!signature) {
+          await logRejection("missing_signature_header");
           return new Response("invalid signature", { status: 401 });
         }
-
+        const sigCheck = verifyPaddleSignature(signature, rawBody, secret);
+        if (!sigCheck.ok) {
+          await logRejection(sigCheck.reason);
+          return new Response("invalid signature", { status: 401 });
+        }
 
         let event: PaddleTransactionEvent;
         try {
           event = JSON.parse(rawBody) as PaddleTransactionEvent;
         } catch {
+          await logRejection("invalid_json");
           return new Response("invalid json", { status: 400 });
         }
-
-        const { logPaddleEvent } = await import("@/lib/paddle-log.server");
 
         if (event.event_type !== "transaction.completed") {
           await logPaddleEvent({

@@ -34,6 +34,7 @@ const OUTCOME_LABEL: Record<string, string> = {
   ignored: "حدث غير معني",
   missing_custom_data: "بيانات ناقصة",
   db_error: "خطأ بالقاعدة",
+  rejected: "مرفوض — توقيع غير صحيح",
 };
 
 function PaddleEventsPage() {
