@@ -151,6 +151,11 @@ export const Route = createFileRoute("/api/public/paddle-webhook")({
           .maybeSingle();
 
         if (existing?.status === "paid") {
+          await logPaddleEvent({
+            ...logBase,
+            outcome: "duplicate",
+            detail: "العملية مسجّلة مسبقاً — ما تكرر الفتح",
+          });
           return Response.json({ ok: true, idempotent: true });
         }
 
