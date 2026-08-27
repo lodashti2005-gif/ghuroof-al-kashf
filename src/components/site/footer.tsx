@@ -35,11 +35,11 @@ export function SiteFooter() {
           </nav>
 
           <a
-            href="mailto:support@waraalsalfa.app"
+            href="mailto:Lateefahalkhaldi@icloud.com"
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <Mail className="size-4" />
-            support@waraalsalfa.app
+            Lateefahalkhaldi@icloud.com
           </a>
         </div>
 

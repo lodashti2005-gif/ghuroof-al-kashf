@@ -187,10 +187,10 @@ function ContactPage() {
                 <p className="text-center text-xs text-muted-foreground">
                   أو راسلنا مباشرة على{" "}
                   <a
-                    href="mailto:support@waraalsalfa.app"
+                    href="mailto:Lateefahalkhaldi@icloud.com"
                     className="inline-flex items-center gap-1 text-primary underline underline-offset-4"
                   >
-                    <Mail className="size-3" /> support@waraalsalfa.app
+                    <Mail className="size-3" /> Lateefahalkhaldi@icloud.com
                   </a>
                 </p>
               </form>
