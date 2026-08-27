@@ -50,6 +50,24 @@ export interface MyPurchasesResult {
   purchases: MyPurchaseRow[];
 }
 
+const OUTCOME_STATUS: Record<string, PurchaseUiStatus> = {
+  granted: "paid",
+  duplicate: "paid",
+  ignored: "pending",
+  missing_custom_data: "failed",
+  db_error: "failed",
+  rejected: "failed",
+};
+
+const OUTCOME_LABEL: Record<string, string> = {
+  granted: "تأكيد الدفع — فُتحت القضية",
+  duplicate: "حدث مكرر — ما تكرر الفتح",
+  ignored: "حدث غير معني",
+  missing_custom_data: "بيانات ناقصة",
+  db_error: "خطأ أثناء التسجيل",
+  rejected: "مرفوض — توقيع غير صحيح",
+};
+
 function normalize(status: string): PurchaseUiStatus {
   const s = status.toLowerCase();
   if (s === "paid" || s === "completed" || s === "granted") return "paid";
