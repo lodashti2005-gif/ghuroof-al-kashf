@@ -1,0 +1,1 @@
+update public.cases set is_free = false, price_kwd = 9.99 where id = 'last-trip';
