@@ -16,6 +16,7 @@ export interface PaddleCheckoutPayload {
   };
   currency_code: string;
   collection_mode: "automatic";
+  discount_id?: string;
   checkout?: {
     url?: string | null;
   };
@@ -119,6 +120,39 @@ export function buildPaddleCheckoutPayload(
 }
 
 /**
+ * الخصم (اختياري) — يُطبّق من الخادم.
+ *
+ * ملاحظة مهمة: عند إنشاء transaction عبر API، صفحة الدفع المستضافة لا تعرض
+ * خانة الكوبون؛ الخصم لازم يُربط بالـtransaction نفسه. لذلك نقرأ
+ * PADDLE_DISCOUNT_ID أو PADDLE_DISCOUNT_CODE ونحوّل الكود لـid قبل الإنشاء.
+ */
+async function resolveDiscountId(apiKey: string): Promise<string | null> {
+  const explicitId = process.env["PADDLE_DISCOUNT_ID"];
+  if (explicitId) return explicitId;
+
+  const code = process.env["PADDLE_DISCOUNT_CODE"];
+  if (!code) return null;
+
+  try {
+    const res = await fetch(
+      `${getPaddleBaseUrl()}/discounts?code=${encodeURIComponent(code)}&status=active`,
+      { headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" } },
+    );
+    const body = (await res.json()) as { data?: Array<{ id?: string; code?: string }> };
+    if (!res.ok || !body.data?.length) {
+      console.error("[paddle] discount lookup failed", res.status);
+      return null;
+    }
+    const match =
+      body.data.find((d) => d.code?.toUpperCase() === code.toUpperCase()) ?? body.data[0];
+    return match?.id ?? null;
+  } catch (err) {
+    console.error("[paddle] discount lookup error", err);
+    return null;
+  }
+}
+
+/**
  * ينشئ transaction في Paddle ويرجع رابط الدفع.
  * custom_data تُمرّر دائماً من الخادم، ولا يُعتمد على أي بيانات من العميل.
  */
@@ -137,6 +171,12 @@ export async function createPaddleCheckout(
   }
 
   const payload = buildPaddleCheckoutPayload(caseId, userId, options);
+
+  const discountId = await resolveDiscountId(apiKey);
+  if (discountId) {
+    payload.discount_id = discountId;
+  }
+
 
   const res = await fetch(`${getPaddleBaseUrl()}/transactions`, {
     method: "POST",
