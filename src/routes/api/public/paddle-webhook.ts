@@ -259,11 +259,15 @@ export const Route = createFileRoute("/api/public/paddle-webhook")({
         });
 
         if (error) {
-          // Idempotency (2): سباق بين حدثين بنفس transaction_id — الفهرس الفريد يمنع التكرار.
+          // Idempotency (3): سباق بين حدثين متزامنين — الفهرس الفريد يمنع الصف الثاني،
+          // ونتأكد إن الصف الموجود انتقل لـ paid مرة وحدة.
           const isDuplicate =
             (error as { code?: string }).code === "23505" ||
             /duplicate key|unique constraint/i.test(error.message);
           if (isDuplicate) {
+            if (await finalizeExisting()) {
+              return Response.json({ ok: true, idempotent: true });
+            }
             await logPaddleEvent({
               ...logBase,
               outcome: "duplicate",
