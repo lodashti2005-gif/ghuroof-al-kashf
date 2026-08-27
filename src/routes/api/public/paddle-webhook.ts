@@ -35,21 +35,26 @@ function parseSignatureHeader(header: string): { ts: string; hashes: string[] } 
   return { ts, hashes };
 }
 
-function verifyPaddleSignature(header: string, rawBody: string, secret: string): boolean {
+type SignatureCheck = { ok: true } | { ok: false; reason: string };
+
+function verifyPaddleSignature(header: string, rawBody: string, secret: string): SignatureCheck {
   const parsed = parseSignatureHeader(header);
-  if (!parsed) return false;
+  if (!parsed) return { ok: false, reason: "malformed_signature_header" };
 
   // حماية من إعادة الإرسال: نرفض الطلبات الأقدم من 5 دقائق.
   const tsSeconds = Number(parsed.ts);
-  if (!Number.isFinite(tsSeconds)) return false;
-  if (Math.abs(Date.now() / 1000 - tsSeconds) > 300) return false;
+  if (!Number.isFinite(tsSeconds)) return { ok: false, reason: "invalid_timestamp" };
+  const driftSeconds = Math.round(Math.abs(Date.now() / 1000 - tsSeconds));
+  if (driftSeconds > 300) return { ok: false, reason: `stale_timestamp_${driftSeconds}s` };
 
   const expected = createHmac("sha256", secret).update(`${parsed.ts}:${rawBody}`).digest("hex");
   const exp = Buffer.from(expected, "utf8");
-  return parsed.hashes.some((hash) => {
+  const match = parsed.hashes.some((hash) => {
     const got = Buffer.from(hash, "utf8");
     return got.length === exp.length && timingSafeEqual(got, exp);
   });
+  if (!match) return { ok: false, reason: "signature_mismatch" };
+  return { ok: true };
 }
 
 function firstString(...values: unknown[]): string | null {
