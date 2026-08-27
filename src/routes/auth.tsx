@@ -31,6 +31,8 @@ function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [pending, setPending] = useState(false);
+
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -84,8 +86,33 @@ function AuthPage() {
       setError("ما قدرنا نسجّل الحساب، جرب إيميل ثاني");
       return;
     }
-    setMsg("تم إنشاء الحساب. تحقق من إيميلك للتأكيد بعدها سجّل دخول.");
+    setPending(true);
+    setMsg(
+      "تم إنشاء الحساب وأرسلنا لك إيميل التأكيد. افتح الإيميل واضغط على سطر «تأكيد البريد الإلكتروني» — كل السطر رابط قابل للضغط، وإذا ما ظهر لك زر واضح انسخ الرابط والصقه في المتصفح. بعد التأكيد ارجع هنا وسجّل دخول.",
+    );
   };
+
+  const resend = async () => {
+    setError(null);
+    setMsg(null);
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setError("اكتب إيميلك عشان نعيد الإرسال");
+      return;
+    }
+    setBusy(true);
+    const { error: err } = await supabase.auth.resend({
+      type: "signup",
+      email: email.trim(),
+      options: { emailRedirectTo: `${window.location.origin}/auth?confirmed=1` },
+    });
+    setBusy(false);
+    if (err) {
+      setError("ما قدرنا نعيد الإرسال الحين، جرب بعد دقيقة");
+      return;
+    }
+    setMsg("أرسلنا لك إيميل تأكيد جديد. تأكد من مجلد الإعلانات أو الـSpam.");
+  };
+
 
   return (
     <div className="min-h-screen bg-background">
