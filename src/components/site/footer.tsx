@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Mail, ShieldAlert } from "lucide-react";
+import { Mail, MessageCircle, ShieldAlert } from "lucide-react";
 
 import { GAME_NAME } from "@/game/game-meta";
 
@@ -9,6 +9,8 @@ const FOOTER_LINKS = [
   { to: "/refund", label: "Refund Policy" },
   { to: "/contact", label: "Contact Us" },
 ];
+
+const BRAND_NAME = "ورا السالفة | Wara Al Salfa";
 
 export function SiteFooter() {
   return (
@@ -34,18 +36,29 @@ export function SiteFooter() {
             ))}
           </nav>
 
-          <a
-            href="mailto:Lateefahalkhaldi@icloud.com"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <Mail className="size-4" />
-            Lateefahalkhaldi@icloud.com
-          </a>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            <a
+              href="mailto:contact@waralsalfa.com"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Mail className="size-4" />
+              contact@waralsalfa.com
+            </a>
+            <a
+              href="https://wa.me/waralsalfa"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <MessageCircle className="size-4" />
+              @waralsalfa
+            </a>
+          </div>
         </div>
 
         <div className="mt-6 border-t border-border/40 pt-6 text-center">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} ورا السالفة — Wara Al Salfa. جميع الحقوق محفوظة.
+            © {new Date().getFullYear()} {BRAND_NAME}. جميع الحقوق محفوظة.
           </p>
         </div>
       </div>
