@@ -39,28 +39,60 @@ function fmt(date: string | null) {
   return new Date(date).toLocaleString("ar-KW", { dateStyle: "medium", timeStyle: "short" });
 }
 
+const POLL_MS = 5000;
+const POLL_WINDOW_MS = 5 * 60 * 1000;
+
 function PurchasesPage() {
   const fetchPurchases = useServerFn(listMyPurchases);
   const [state, setState] = useState<MyPurchasesResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState<Date | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      setState(await fetchPurchases({ data: undefined }));
-    } catch {
-      setError(true);
-      setState(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchPurchases]);
+  const load = useCallback(
+    async (silent = false) => {
+      if (silent) setSyncing(true);
+      else setLoading(true);
+      if (!silent) setError(false);
+      try {
+        setState(await fetchPurchases({ data: undefined }));
+        setError(false);
+        setLastSync(new Date());
+      } catch {
+        if (!silent) {
+          setError(true);
+          setState(null);
+        }
+      } finally {
+        if (silent) setSyncing(false);
+        else setLoading(false);
+      }
+    },
+    [fetchPurchases],
+  );
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // تحديث لحظي قصير: نستمر بالسحب كل 5 ثواني طالما فيه عملية «بانتظار التأكيد»
+  const hasPending = (state?.purchases ?? []).some((p) => p.status === "pending");
+
+  useEffect(() => {
+    if (!hasPending) return;
+    const startedAt = Date.now();
+    const id = window.setInterval(() => {
+      if (Date.now() - startedAt > POLL_WINDOW_MS) {
+        window.clearInterval(id);
+        return;
+      }
+      if (document.visibilityState === "hidden") return;
+      void load(true);
+    }, POLL_MS);
+    return () => window.clearInterval(id);
+  }, [hasPending, load]);
+
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
@@ -72,13 +104,20 @@ function PurchasesPage() {
             </span>
             <span className="font-display text-sm font-bold">{GAME_NAME}</span>
           </Link>
-          <button
-            type="button"
-            onClick={() => void load()}
-            className="inline-flex items-center gap-1.5 font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <RefreshCw className="size-3.5" /> تحديث
-          </button>
+          <div className="flex items-center gap-3">
+            {hasPending ? (
+              <span className="inline-flex items-center gap-1.5 font-display text-[11px] text-amber-400">
+                <Loader2 className={`size-3.5 ${syncing ? "animate-spin" : ""}`} /> تحديث لحظي
+              </span>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="inline-flex items-center gap-1.5 font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <RefreshCw className="size-3.5" /> تحديث
+            </button>
+          </div>
         </header>
 
         <Panel className="cine-in mt-8">
@@ -86,7 +125,9 @@ function PurchasesPage() {
           <h1 className="mt-2 text-2xl font-extrabold">حالة عمليات الدفع</h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             كل عملية مرتبطة بقضيتها. لو الحالة «بانتظار التأكيد» انتظر تأكيد البوابة — القضية تنفتح مرة وحدة بس ولو تكرر الدفع ما يتكرر الفتح.
+            {lastSync ? <span className="block opacity-70">آخر تحديث: {fmt(lastSync.toISOString())}</span> : null}
           </p>
+
 
           {loading ? (
             <p className="mt-6 inline-flex items-center gap-2 text-sm text-muted-foreground">
