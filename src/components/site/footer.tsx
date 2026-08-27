@@ -8,6 +8,7 @@ const FOOTER_LINKS = [
   { to: "/privacy", label: "Privacy Policy" },
   { to: "/refund", label: "Refund Policy" },
   { to: "/contact", label: "Contact Us" },
+  { to: "/purchases", label: "مشترياتي" },
 ];
 
 const BRAND_NAME = "ورا السالفة | Wara Al Salfa";
