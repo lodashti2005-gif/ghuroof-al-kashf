@@ -27,7 +27,7 @@ export async function logPaddleEvent(entry: PaddleEventLog): Promise<void> {
       event_type: entry.eventType,
       transaction_id: entry.transactionId ?? null,
       case_id: entry.caseId ?? null,
-      user_id: isUuid ? entry.userId : null,
+      user_id: isUuid ? (entry.userId as string) : null,
       outcome: entry.outcome,
       detail: entry.detail ?? (entry.userId && !isUuid ? `user_id=${entry.userId}` : null),
       amount: entry.amount ?? null,
