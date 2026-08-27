@@ -160,6 +160,58 @@ function PurchasesPage() {
                       </p>
                     ) : null}
 
+                    {p.events.length > 0 ? (
+                      <details className="mt-3 rounded-lg border border-border/60 bg-background/40 p-3">
+                        <summary className="cursor-pointer font-display text-[12px] text-muted-foreground">
+                          سجل أحداث الدفع لهذي القضية ({p.events.length})
+                        </summary>
+                        <ul className="mt-3 space-y-2">
+                          {p.events.map((ev) => {
+                            const evUi = STATUS_UI[ev.status];
+                            return (
+                              <li
+                                key={ev.id}
+                                className="rounded-lg border border-border/50 bg-card/30 px-3 py-2 text-[12px]"
+                              >
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <span className="text-foreground">
+                                    {ev.label}
+                                    {ev.eventType ? (
+                                      <span className="ms-2 font-mono text-[10px] text-muted-foreground">
+                                        {ev.eventType}
+                                      </span>
+                                    ) : null}
+                                  </span>
+                                  <span
+                                    className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-display text-[10px] ${evUi.className}`}
+                                  >
+                                    <evUi.Icon className="size-3" /> {evUi.label}
+                                  </span>
+                                </div>
+                                <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                                  <span className="font-mono break-all">
+                                    {ev.transactionId ?? "بدون رقم عملية"}
+                                  </span>
+                                  <span>{fmt(ev.at)}</span>
+                                  {ev.amount != null ? (
+                                    <span>
+                                      {ev.amount} {ev.currency ?? ""}
+                                    </span>
+                                  ) : null}
+                                  <span className="opacity-70">
+                                    {ev.source === "webhook" ? "من Paddle" : "سجل الشراء"}
+                                  </span>
+                                </div>
+                                {ev.detail ? (
+                                  <p className="mt-1 text-[11px] text-muted-foreground">{ev.detail}</p>
+                                ) : null}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </details>
+                    ) : null}
+
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-[12px]">
                       {p.entitled ? (
                         <>
