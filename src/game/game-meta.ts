@@ -76,8 +76,8 @@ export const caseRegistry: CaseSummary[] = [
     difficulty: "صعبة",
     players: "٣ – ٦ لاعبين",
     playTime: "٦٠ – ٩٠ دقيقة",
-    price: "متاحة للتجربة",
-    free: true,
+    price: "$9.99 USD",
+    free: false,
   },
 
 ];

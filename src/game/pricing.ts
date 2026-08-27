@@ -48,9 +48,9 @@ export const PAYMENT_METHODS: PaymentMethodConfig[] = [
 export const CASE_PRICING: CasePricing[] = [
   {
     caseId: "last-trip",
-    amount: 2.5,
-    currency: "KWD",
-    currencyLabel: "د.ك",
+    amount: 9.99,
+    currency: "USD",
+    currencyLabel: "$",
   },
   {
     caseId: "last-night",
@@ -64,9 +64,17 @@ export const getCasePricing = (caseId: string): CasePricing | null =>
   CASE_PRICING.find((p) => p.caseId === caseId) ?? null;
 
 /** نص السعر النهائي — يفضّل سعر القاعدة إذا كان موجوداً. */
-export function formatCasePrice(caseId: string, dbPriceKwd?: number | null): string {
+export function formatCasePrice(caseId: string, dbPrice?: number | null): string {
   const cfg = getCasePricing(caseId);
-  const amount = typeof dbPriceKwd === "number" && dbPriceKwd > 0 ? dbPriceKwd : cfg?.amount;
+  const amount = typeof dbPrice === "number" && dbPrice > 0 ? dbPrice : cfg?.amount;
   if (!amount) return cfg?.note ?? "السعر يُحدد قريباً";
-  return `${amount.toFixed(3).replace(/\.?0+$/, "")} ${cfg?.currencyLabel ?? "د.ك"}`;
+
+  const currency = cfg?.currency ?? "KWD";
+  const decimals = currency === "USD" ? 2 : 3;
+  const formatted = amount.toFixed(decimals).replace(/\.?0+$/, "");
+  const label = cfg?.currencyLabel ?? (currency === "USD" ? "$" : "د.ك");
+
+  // للدولار نحط الرمز قبل الرقم، للباقي بعد.
+  if (currency === "USD") return `${label}${formatted} ${currency}`;
+  return `${formatted} ${label}`;
 }
