@@ -14,14 +14,18 @@ import { Route as AccusationRouteImport } from './routes/accusation'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CaseRouteImport } from './routes/case'
 import { Route as CasesRouteImport } from './routes/cases'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IntroRouteImport } from './routes/intro'
 import { Route as LobbyRouteImport } from './routes/lobby'
 import { Route as NotebookRouteImport } from './routes/notebook'
 import { Route as PlayRouteImport } from './routes/play'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RefundRouteImport } from './routes/refund'
 import { Route as RevealRouteImport } from './routes/reveal'
 import { Route as RolesRouteImport } from './routes/roles'
 import { Route as SceneRouteImport } from './routes/scene'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as InterrogationSuspectIdRouteImport } from './routes/interrogation.$suspectId'
 import { Route as LastTripAccusationRouteImport } from './routes/last-trip.accusation'
 import { Route as LastTripEndingRouteImport } from './routes/last-trip.ending'
@@ -58,6 +62,11 @@ const CasesRoute = CasesRouteImport.update({
   path: '/cases',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -83,6 +92,16 @@ const PlayRoute = PlayRouteImport.update({
   path: '/play',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundRoute = RefundRouteImport.update({
+  id: '/refund',
+  path: '/refund',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RevealRoute = RevealRouteImport.update({
   id: '/reveal',
   path: '/reveal',
@@ -96,6 +115,11 @@ const RolesRoute = RolesRouteImport.update({
 const SceneRoute = SceneRouteImport.update({
   id: '/scene',
   path: '/scene',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InterrogationSuspectIdRoute = InterrogationSuspectIdRouteImport.update({
@@ -156,14 +180,18 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/case': typeof CaseRoute
   '/cases': typeof CasesRoute
+  '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
   '/intro': typeof IntroRoute
   '/lobby': typeof LobbyRoute
   '/notebook': typeof NotebookRoute
   '/play': typeof PlayRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund': typeof RefundRoute
   '/reveal': typeof RevealRoute
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
+  '/terms': typeof TermsRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
   '/last-trip/accusation': typeof LastTripAccusationRoute
   '/last-trip/ending': typeof LastTripEndingRoute
@@ -181,14 +209,18 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/case': typeof CaseRoute
   '/cases': typeof CasesRoute
+  '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
   '/intro': typeof IntroRoute
   '/lobby': typeof LobbyRoute
   '/notebook': typeof NotebookRoute
   '/play': typeof PlayRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund': typeof RefundRoute
   '/reveal': typeof RevealRoute
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
+  '/terms': typeof TermsRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
   '/last-trip/accusation': typeof LastTripAccusationRoute
   '/last-trip/ending': typeof LastTripEndingRoute
@@ -207,14 +239,18 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/case': typeof CaseRoute
   '/cases': typeof CasesRoute
+  '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
   '/intro': typeof IntroRoute
   '/lobby': typeof LobbyRoute
   '/notebook': typeof NotebookRoute
   '/play': typeof PlayRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund': typeof RefundRoute
   '/reveal': typeof RevealRoute
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
+  '/terms': typeof TermsRoute
   '/interrogation/$suspectId': typeof InterrogationSuspectIdRoute
   '/last-trip/accusation': typeof LastTripAccusationRoute
   '/last-trip/ending': typeof LastTripEndingRoute
@@ -234,14 +270,18 @@ export interface FileRouteTypes {
     | '/auth'
     | '/case'
     | '/cases'
+    | '/contact'
     | '/dashboard'
     | '/intro'
     | '/lobby'
     | '/notebook'
     | '/play'
+    | '/privacy'
+    | '/refund'
     | '/reveal'
     | '/roles'
     | '/scene'
+    | '/terms'
     | '/interrogation/$suspectId'
     | '/last-trip/accusation'
     | '/last-trip/ending'
@@ -259,14 +299,18 @@ export interface FileRouteTypes {
     | '/auth'
     | '/case'
     | '/cases'
+    | '/contact'
     | '/dashboard'
     | '/intro'
     | '/lobby'
     | '/notebook'
     | '/play'
+    | '/privacy'
+    | '/refund'
     | '/reveal'
     | '/roles'
     | '/scene'
+    | '/terms'
     | '/interrogation/$suspectId'
     | '/last-trip/accusation'
     | '/last-trip/ending'
@@ -284,14 +328,18 @@ export interface FileRouteTypes {
     | '/auth'
     | '/case'
     | '/cases'
+    | '/contact'
     | '/dashboard'
     | '/intro'
     | '/lobby'
     | '/notebook'
     | '/play'
+    | '/privacy'
+    | '/refund'
     | '/reveal'
     | '/roles'
     | '/scene'
+    | '/terms'
     | '/interrogation/$suspectId'
     | '/last-trip/accusation'
     | '/last-trip/ending'
@@ -310,14 +358,18 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CaseRoute: typeof CaseRoute
   CasesRoute: typeof CasesRoute
+  ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRoute
   IntroRoute: typeof IntroRoute
   LobbyRoute: typeof LobbyRoute
   NotebookRoute: typeof NotebookRoute
   PlayRoute: typeof PlayRoute
+  PrivacyRoute: typeof PrivacyRoute
+  RefundRoute: typeof RefundRoute
   RevealRoute: typeof RevealRoute
   RolesRoute: typeof RolesRoute
   SceneRoute: typeof SceneRoute
+  TermsRoute: typeof TermsRoute
   InterrogationSuspectIdRoute: typeof InterrogationSuspectIdRoute
   LastTripAccusationRoute: typeof LastTripAccusationRoute
   LastTripEndingRoute: typeof LastTripEndingRoute
@@ -367,6 +419,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -402,6 +461,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refund': {
+      id: '/refund'
+      path: '/refund'
+      fullPath: '/refund'
+      preLoaderRoute: typeof RefundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reveal': {
       id: '/reveal'
       path: '/reveal'
@@ -421,6 +494,13 @@ declare module '@tanstack/react-router' {
       path: '/scene'
       fullPath: '/scene'
       preLoaderRoute: typeof SceneRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/interrogation/$suspectId': {
@@ -502,14 +582,18 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CaseRoute: CaseRoute,
   CasesRoute: CasesRoute,
+  ContactRoute: ContactRoute,
   DashboardRoute: DashboardRoute,
   IntroRoute: IntroRoute,
   LobbyRoute: LobbyRoute,
   NotebookRoute: NotebookRoute,
   PlayRoute: PlayRoute,
+  PrivacyRoute: PrivacyRoute,
+  RefundRoute: RefundRoute,
   RevealRoute: RevealRoute,
   RolesRoute: RolesRoute,
   SceneRoute: SceneRoute,
+  TermsRoute: TermsRoute,
   InterrogationSuspectIdRoute: InterrogationSuspectIdRoute,
   LastTripAccusationRoute: LastTripAccusationRoute,
   LastTripEndingRoute: LastTripEndingRoute,
