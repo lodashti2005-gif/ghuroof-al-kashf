@@ -16,36 +16,51 @@ export type Database = {
     Tables: {
       case_purchases: {
         Row: {
+          amount: number | null
           amount_kwd: number | null
           case_id: string
           created_at: string
+          currency: string
+          failure_reason: string | null
           id: string
           provider: string | null
+          provider_invoice_id: string | null
           provider_ref: string | null
           purchased_at: string | null
           status: string
+          updated_at: string
           user_id: string
         }
         Insert: {
+          amount?: number | null
           amount_kwd?: number | null
           case_id: string
           created_at?: string
+          currency?: string
+          failure_reason?: string | null
           id?: string
           provider?: string | null
+          provider_invoice_id?: string | null
           provider_ref?: string | null
           purchased_at?: string | null
           status?: string
+          updated_at?: string
           user_id: string
         }
         Update: {
+          amount?: number | null
           amount_kwd?: number | null
           case_id?: string
           created_at?: string
+          currency?: string
+          failure_reason?: string | null
           id?: string
           provider?: string | null
+          provider_invoice_id?: string | null
           provider_ref?: string | null
           purchased_at?: string | null
           status?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
