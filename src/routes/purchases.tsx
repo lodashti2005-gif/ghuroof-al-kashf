@@ -39,28 +39,60 @@ function fmt(date: string | null) {
   return new Date(date).toLocaleString("ar-KW", { dateStyle: "medium", timeStyle: "short" });
 }
 
+const POLL_MS = 5000;
+const POLL_WINDOW_MS = 5 * 60 * 1000;
+
 function PurchasesPage() {
   const fetchPurchases = useServerFn(listMyPurchases);
   const [state, setState] = useState<MyPurchasesResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState<Date | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      setState(await fetchPurchases({ data: undefined }));
-    } catch {
-      setError(true);
-      setState(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchPurchases]);
+  const load = useCallback(
+    async (silent = false) => {
+      if (silent) setSyncing(true);
+      else setLoading(true);
+      if (!silent) setError(false);
+      try {
+        setState(await fetchPurchases({ data: undefined }));
+        setError(false);
+        setLastSync(new Date());
+      } catch {
+        if (!silent) {
+          setError(true);
+          setState(null);
+        }
+      } finally {
+        if (silent) setSyncing(false);
+        else setLoading(false);
+      }
+    },
+    [fetchPurchases],
+  );
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // تحديث لحظي قصير: نستمر بالسحب كل 5 ثواني طالما فيه عملية «بانتظار التأكيد»
+  const hasPending = (state?.purchases ?? []).some((p) => p.status === "pending");
+
+  useEffect(() => {
+    if (!hasPending) return;
+    const startedAt = Date.now();
+    const id = window.setInterval(() => {
+      if (Date.now() - startedAt > POLL_WINDOW_MS) {
+        window.clearInterval(id);
+        return;
+      }
+      if (document.visibilityState === "hidden") return;
+      void load(true);
+    }, POLL_MS);
+    return () => window.clearInterval(id);
+  }, [hasPending, load]);
+
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
