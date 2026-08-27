@@ -68,9 +68,19 @@ export const Route = createFileRoute("/api/public/paddle-webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const { logPaddleEvent } = await import("@/lib/paddle-log.server");
+        const logRejection = async (reason: string, detail?: string) => {
+          console.error("[paddle] rejected webhook", reason, detail ?? "");
+          await logPaddleEvent({
+            eventType: "rejected",
+            outcome: "rejected",
+            detail: detail ? `${reason}: ${detail}` : reason,
+          });
+        };
+
         const secret = process.env["PADDLE_WEBHOOK_SECRET"];
         if (!secret) {
-          console.error("[paddle] missing PADDLE_WEBHOOK_SECRET");
+          await logRejection("missing_webhook_secret");
           return new Response("not configured", { status: 503 });
         }
 
@@ -79,29 +89,34 @@ export const Route = createFileRoute("/api/public/paddle-webhook")({
         try {
           const { ok, ip } = await isPaddleRequestIp(request);
           if (!ok) {
-            console.error("[paddle] rejected webhook from non-Paddle IP", ip);
+            await logRejection("non_paddle_ip", ip ?? "unknown");
             return new Response("forbidden", { status: 403 });
           }
         } catch (err) {
-          console.error("[paddle] could not verify caller IP", (err as Error).message);
+          await logRejection("ip_check_unavailable", (err as Error).message);
           return new Response("ip check unavailable", { status: 503 });
         }
 
+        // طبقة ثانية (إلزامية): توقيع Paddle على الجسم الخام.
         const signature = request.headers.get("paddle-signature");
         const rawBody = await request.text();
-        if (!signature || !verifyPaddleSignature(signature, rawBody, secret)) {
+        if (!signature) {
+          await logRejection("missing_signature_header");
           return new Response("invalid signature", { status: 401 });
         }
-
+        const sigCheck = verifyPaddleSignature(signature, rawBody, secret);
+        if (!sigCheck.ok) {
+          await logRejection(sigCheck.reason);
+          return new Response("invalid signature", { status: 401 });
+        }
 
         let event: PaddleTransactionEvent;
         try {
           event = JSON.parse(rawBody) as PaddleTransactionEvent;
         } catch {
+          await logRejection("invalid_json");
           return new Response("invalid json", { status: 400 });
         }
-
-        const { logPaddleEvent } = await import("@/lib/paddle-log.server");
 
         if (event.event_type !== "transaction.completed") {
           await logPaddleEvent({
