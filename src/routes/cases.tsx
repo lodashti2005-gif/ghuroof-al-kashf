@@ -163,6 +163,13 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
             </>
           )}
         </span>
+
+        {!item.free && !item.owned && !soon && (
+          <span className="absolute top-3 right-3 inline-flex items-center rounded-xl bg-primary px-3 py-1.5 font-display text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20">
+            {formatCasePrice(item.id)}
+          </span>
+        )}
+
         <div className="absolute bottom-3 right-4 left-4">
           <span className="font-mono text-[11px] text-muted-foreground">ملف {item.code}</span>
           <h3 className="text-xl font-bold sm:text-2xl">{item.title}</h3>
@@ -222,7 +229,7 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
               search={{ room: undefined }}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary/50 bg-primary/10 px-5 py-3 font-display text-sm font-bold text-primary transition-colors hover:bg-primary/20"
             >
-              <ShoppingCart className="size-4" /> شراء القضية
+              <ShoppingCart className="size-4" /> شراء القضية — {formatCasePrice(item.id)}
             </Link>
 
           )}
