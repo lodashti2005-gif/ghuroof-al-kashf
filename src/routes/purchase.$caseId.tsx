@@ -23,8 +23,8 @@ import { Eyebrow, Panel } from "@/components/game/ui";
 import { GAME_NAME, getCaseById } from "@/game/game-meta";
 import { useCaseEntitlement } from "@/game/use-entitlement";
 import {
-  PAYMENT_GATEWAY,
-  PAYMENT_METHODS,
+
+
   formatCasePrice,
   getCasePricing,
 } from "@/game/pricing";
@@ -62,7 +62,6 @@ function PurchasePage() {
   const { entitlement, signedIn, loading, reload } = useCaseEntitlement(caseId);
   const requestPurchase = useServerFn(startCasePurchase);
 
-  const [method, setMethod] = useState(PAYMENT_METHODS[0]?.id ?? "knet");
   const [busy, setBusy] = useState(false);
   const [intent, setIntent] = useState<PurchaseIntentResult | null>(null);
 
@@ -207,7 +206,7 @@ function PurchasePage() {
 
           <p className="mt-4 text-center font-mono text-[11px] leading-relaxed text-muted-foreground">
             تقدّمكم والأدلة والغرفة محفوظة — الشراء ما يصفّر أي شي.
-            {PAYMENT_GATEWAY.supportContact ? ` للمساعدة: ${PAYMENT_GATEWAY.supportContact}` : ""}
+             للمساعدة: contact@waralsalfa.com
           </p>
         </Panel>
       </div>
