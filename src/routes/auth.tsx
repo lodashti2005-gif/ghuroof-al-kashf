@@ -32,6 +32,7 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [pending, setPending] = useState(false);
+  const [pasted, setPasted] = useState("");
 
 
   useEffect(() => {
@@ -90,6 +91,52 @@ function AuthPage() {
     setMsg(
       "تم إنشاء الحساب وأرسلنا لك إيميل التأكيد. افتح الإيميل واضغط على سطر «تأكيد البريد الإلكتروني» — كل السطر رابط قابل للضغط، وإذا ما ظهر لك زر واضح انسخ الرابط والصقه في المتصفح. بعد التأكيد ارجع هنا وسجّل دخول.",
     );
+  };
+
+  const verifyPastedLink = async () => {
+    setError(null);
+    setMsg(null);
+    const raw = pasted.trim();
+    if (!raw) {
+      setError("الصق الرابط اللي وصلك في الإيميل");
+      return;
+    }
+    let tokenHash: string | null = null;
+    let otpType: string | null = null;
+    try {
+      const u = new URL(raw);
+      const hash = new URLSearchParams(u.hash.replace(/^#/, ""));
+      tokenHash = u.searchParams.get("token_hash") || u.searchParams.get("token") || hash.get("token_hash");
+      otpType = u.searchParams.get("type") || hash.get("type");
+      if (!tokenHash && hash.get("access_token")) {
+        // Link already contains a session — just follow it.
+        window.location.href = raw;
+        return;
+      }
+    } catch {
+      // Maybe the user pasted only the token itself.
+      if (/^[A-Za-z0-9_-]{6,}$/.test(raw)) tokenHash = raw;
+    }
+    if (!tokenHash) {
+      setError("الرابط غير مكتمل، انسخه كامل من الإيميل وجرب مرة ثانية");
+      return;
+    }
+    setBusy(true);
+    const { error: err } = await supabase.auth.verifyOtp({
+      type: (otpType as "signup" | "email" | "magiclink" | "recovery") || "signup",
+      token_hash: tokenHash,
+    });
+    setBusy(false);
+    if (err) {
+      setError("الرابط منتهي أو غير صحيح، أعد إرسال إيميل التأكيد وجرب الرابط الجديد");
+      return;
+    }
+    await supabase.auth.signOut();
+    setPasted("");
+    setPending(false);
+    setConfirmed(true);
+    setMode("in");
+    setMsg("تم تأكيد بريدك، سجّل دخولك الحين.");
   };
 
   const resend = async () => {
@@ -203,6 +250,29 @@ function AuthPage() {
             </button>
           )}
 
+          <div className="mt-5 rounded-xl border border-border bg-surface-2 p-4">
+            <p className="text-sm font-medium">تأكيد بلصق الرابط</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              إذا الزر في الإيميل ما ظهر لك، انسخ رابط التأكيد من الإيميل والصقه هنا ونأكّد لك
+              بريدك مباشرة.
+            </p>
+            <textarea
+              value={pasted}
+              onChange={(e) => setPasted(e.target.value)}
+              dir="ltr"
+              rows={3}
+              placeholder="https://..."
+              className="mt-3 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:border-primary/60"
+            />
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void verifyPastedLink()}
+              className="mt-2 w-full rounded-xl border border-primary/50 bg-primary/10 px-4 py-2.5 font-display text-xs text-primary transition-colors hover:bg-primary/20 disabled:opacity-60"
+            >
+              {busy ? "لحظة..." : "أكّد بريدي من الرابط"}
+            </button>
+          </div>
 
           <button
             type="button"
