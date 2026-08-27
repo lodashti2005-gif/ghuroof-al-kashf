@@ -203,6 +203,51 @@ export const Route = createFileRoute("/api/public/paddle-webhook")({
           return Response.json({ ok: true });
         }
 
+        // Idempotency (2): نفس (المستخدم + القضية) — الفتح مرة وحدة فقط،
+        // ولو الصف موجود «بانتظار التأكيد» (من محاولة دفع ثانية) نرفعه لـ paid بدون صف جديد.
+        const finalizeExisting = async () => {
+          const { data: sameCase } = await supabaseAdmin
+            .from("case_purchases")
+            .select("id, status")
+            .eq("user_id", userId)
+            .eq("case_id", caseId)
+            .maybeSingle();
+
+          if (!sameCase) return false;
+
+          if (sameCase.status === "paid") {
+            await logPaddleEvent({
+              ...logBase,
+              outcome: "duplicate",
+              detail: `القضية ${caseId} مفتوحة مسبقاً لهذا المستخدم — ما تكرر الفتح`,
+            });
+            return true;
+          }
+
+          const { error: upErr } = await supabaseAdmin
+            .from("case_purchases")
+            .update({
+              status: "paid",
+              amount_kwd: Number.isFinite(amount) ? amount : null,
+              provider: "paddle",
+              provider_ref: transactionId,
+              purchased_at: new Date().toISOString(),
+            })
+            .eq("id", sameCase.id)
+            .neq("status", "paid");
+
+          if (upErr) {
+            await logPaddleEvent({ ...logBase, outcome: "db_error", detail: upErr.message });
+            return true;
+          }
+          await logPaddleEvent({ ...logBase, outcome: "granted" });
+          return true;
+        };
+
+        if (await finalizeExisting()) {
+          return Response.json({ ok: true });
+        }
+
         const { error } = await supabaseAdmin.from("case_purchases").insert({
           user_id: userId,
           case_id: caseId,
