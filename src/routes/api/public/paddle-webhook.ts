@@ -69,11 +69,25 @@ export const Route = createFileRoute("/api/public/paddle-webhook")({
           return new Response("not configured", { status: 503 });
         }
 
+        // طبقة أولى: نرفض أي عنوان ما هو من قائمة Paddle الرسمية (تُجلب من API).
+        const { isPaddleRequestIp } = await import("@/lib/paddle-ips.server");
+        try {
+          const { ok, ip } = await isPaddleRequestIp(request);
+          if (!ok) {
+            console.error("[paddle] rejected webhook from non-Paddle IP", ip);
+            return new Response("forbidden", { status: 403 });
+          }
+        } catch (err) {
+          console.error("[paddle] could not verify caller IP", (err as Error).message);
+          return new Response("ip check unavailable", { status: 503 });
+        }
+
         const signature = request.headers.get("paddle-signature");
         const rawBody = await request.text();
         if (!signature || !verifyPaddleSignature(signature, rawBody, secret)) {
           return new Response("invalid signature", { status: 401 });
         }
+
 
         let event: PaddleTransactionEvent;
         try {
