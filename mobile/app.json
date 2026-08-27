@@ -17,8 +17,8 @@
       "infoPlist": {
         "CFBundleAllowMixedLocalizations": true,
         "CFBundleDevelopmentRegion": "ar",
-        "NSMicrophoneUsageDescription": "يُستخدم الميكروفون لتسجيل أسئلتك الصوتية للمشتبه فيهم داخل غرفة التحقيق.",
-        "NSSpeechRecognitionUsageDescription": "يُستخدم التعرف على الكلام لتحويل أسئلتك الصوتية إلى نص داخل الاستجواب.",
+        "NSMicrophoneUsageDescription": "يُستخدم الميكروفون لتسجيل أسئلتك الصوتية للمشتبه فيهم داخل ورا السالفة.",
+        "NSSpeechRecognitionUsageDescription": "يُستخدم التعرف على الكلام لتحويل أسئلتك الصوتية إلى نص داخل استجواب ورا السالفة.",
         "ITSAppUsesNonExemptEncryption": false,
         "UIViewControllerBasedStatusBarAppearance": false,
         "NSAppTransportSecurity": {

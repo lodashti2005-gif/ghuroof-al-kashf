@@ -188,7 +188,7 @@ useEffect(() => {
               navigate({ to: "/dashboard" });
             }}
           >
-            ادخل غرفة التحقيق <ArrowLeft className="size-4" />
+            ادخل اللعبة <ArrowLeft className="size-4" />
           </ActionButton>
         ) : (
           <ActionButton
@@ -197,7 +197,7 @@ useEffect(() => {
             disabled={room?.phase === "intro"}
             onClick={() => navigate({ to: "/dashboard" })}
           >
-            {room?.phase === "intro" ? "انتظر المضيف" : "ادخل غرفة التحقيق"}
+            {room?.phase === "intro" ? "انتظر المضيف" : "ادخل اللعبة"}
           </ActionButton>
         )}
       </div>
