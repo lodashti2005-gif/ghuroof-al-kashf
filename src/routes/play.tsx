@@ -60,7 +60,7 @@ function PlayCase() {
             <span className="grid size-9 place-items-center rounded-lg file-tape">
               <ShieldAlert className="size-4.5" />
             </span>
-            <span className="font-display text-sm font-bold">إدارة التحقيقات</span>
+            <span className="font-display text-sm font-bold">ورا السالفة | Wara Al Salfa</span>
           </div>
           <div className="flex items-center gap-3">
             <Link
