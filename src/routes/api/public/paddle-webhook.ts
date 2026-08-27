@@ -175,9 +175,11 @@ export const Route = createFileRoute("/api/public/paddle-webhook")({
 
         if (error) {
           console.error("[paddle] failed to record purchase", error.message);
+          await logPaddleEvent({ ...logBase, outcome: "db_error", detail: error.message });
           return new Response("db error", { status: 500 });
         }
 
+        await logPaddleEvent({ ...logBase, outcome: "granted" });
         return Response.json({ ok: true });
       },
     },
