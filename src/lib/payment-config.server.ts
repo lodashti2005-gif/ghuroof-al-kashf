@@ -177,6 +177,12 @@ export async function createPaddleCheckout(
     payload.discount_id = discountId;
   }
 
+  // وضع الاختبار: نرفض أي عملية مبلغها أكبر من صفر (حماية من سحب حقيقي).
+  const requireZeroTotal = process.env["PADDLE_REQUIRE_ZERO_TOTAL"] === "true";
+  if (requireZeroTotal && !discountId) {
+    console.error("[paddle] zero-total test mode enabled but no discount resolved");
+    throw new Error("paddle_zero_total_discount_missing");
+  }
 
   const res = await fetch(`${getPaddleBaseUrl()}/transactions`, {
     method: "POST",
@@ -188,7 +194,15 @@ export async function createPaddleCheckout(
     body: JSON.stringify(payload),
   });
 
-  const body = (await res.json()) as { data?: { id?: string; url?: string; checkout?: { url?: string } }; error?: unknown };
+  const body = (await res.json()) as {
+    data?: {
+      id?: string;
+      url?: string;
+      checkout?: { url?: string };
+      details?: { totals?: { grand_total?: string } };
+    };
+    error?: unknown;
+  };
 
   if (!res.ok || !body.data) {
     console.error("[paddle] create transaction failed", res.status, body.error ?? body);
@@ -202,6 +216,16 @@ export async function createPaddleCheckout(
     console.error("[paddle] transaction created but missing id/url", body.data);
     throw new Error("paddle_checkout_incomplete");
   }
+
+  const grandTotal = body.data.details?.totals?.grand_total;
+  if (requireZeroTotal && grandTotal !== "0" && Number(grandTotal ?? -1) !== 0) {
+    console.error("[paddle] zero-total test mode: refusing non-zero checkout", {
+      transactionId,
+      grandTotal,
+    });
+    throw new Error("paddle_non_zero_total_blocked");
+  }
+
 
   return { transactionId, checkoutUrl };
 }
