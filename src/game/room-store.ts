@@ -276,9 +276,18 @@ interface Snapshot {
     created_at: string;
     updated_at: string;
   };
-  players: Array<{ player_id: string; name: string; is_host: boolean; joined_at: string }>;
+  players: Array<{
+    player_id: string;
+    name: string;
+    is_host: boolean;
+    joined_at: string;
+    last_seen_at?: string | null;
+  }>;
   votes: Array<{ player_id: string; suspect_id: string }>;
 }
+
+/** آخر ظهور لكل لاعب حسب قاعدة البيانات — يمنع إخفاء لاعب نشط عند انقطاع Presence. */
+const lastSeenById = new Map<string, number>();
 
 async function loadSnapshot(code: string, playerId: string): Promise<Snapshot | null> {
   const { data, error } = await rpc<Snapshot>("room_snapshot", {
@@ -299,12 +308,15 @@ function toRoomState(snap: Snapshot): RoomState {
     caseId: snap.room.case_id,
     phase: snap.room.phase as RoomState["phase"],
     createdAt: new Date(snap.room.created_at).getTime(),
-    players: (snap.players ?? []).map<Player>((p) => ({
-      id: p.player_id,
-      name: p.name,
-      isHost: p.is_host,
-      joinedAt: new Date(p.joined_at).getTime(),
-    })),
+    players: (snap.players ?? []).map<Player>((p) => {
+      if (p.last_seen_at) lastSeenById.set(p.player_id, new Date(p.last_seen_at).getTime());
+      return {
+        id: p.player_id,
+        name: p.name,
+        isHost: p.is_host,
+        joinedAt: new Date(p.joined_at).getTime(),
+      };
+    }),
     unlockedEvidence: shared.unlockedEvidence ?? [],
     notes: shared.notes ?? [],
     deductions: shared.deductions ?? [],
@@ -351,7 +363,10 @@ function applyPresence(players: Player[]): Player[] {
     (p) =>
       presenceOnline!.has(p.id) ||
       p.id === session?.playerId ||
-      now - p.joinedAt < PRESENCE_GRACE_MS,
+      p.isHost ||
+      now - p.joinedAt < PRESENCE_GRACE_MS ||
+      // لاعب نشط بقاعدة البيانات (نبضة حديثة) ما يُخفى بسبب انقطاع Presence مؤقت.
+      now - (lastSeenById.get(p.id) ?? 0) < PRESENCE_GRACE_MS,
   );
 }
 
@@ -409,6 +424,7 @@ export async function hydrate() {
 let rtCode: string | null = null;
 let rtCount = 0;
 let rtPoll: number | null = null;
+let rtHeartbeat: number | null = null;
 let refreshTimer: number | null = null;
 
 function scheduleRefresh() {
@@ -417,6 +433,18 @@ function scheduleRefresh() {
     refreshTimer = null;
     void refresh();
   }, 250);
+}
+
+/**
+ * نبضة اللاعب: تحدّث آخر ظهور لصفّه بالغرفة وتنظّف الصفوف الميتة (تبويب مقفول
+ * أو اتصال منقطع منذ فترة طويلة). ما تحذف لاعباً نشطاً ولا دوره ولا تقدمه.
+ */
+async function heartbeat() {
+  if (!session) return;
+  await rpc<boolean>("room_heartbeat", {
+    _code: session.code,
+    _player_id: session.playerId,
+  });
 }
 
 export function startRealtime() {
@@ -443,7 +471,8 @@ export function startRealtime() {
           ),
         );
         if (online.size > 0) {
-          const players = state.players.filter((player) => online.has(player.id));
+          presenceOnline = online;
+          const players = applyPresence(state.players);
           if (players.length !== state.players.length) {
             state = { ...state, players };
             emit();
@@ -461,6 +490,9 @@ export function startRealtime() {
     // الجداول مقفلة على العميل، فتحديثات postgres_changes ما توصل — نعتمد على
     // الحضور + استقصاء سريع كمصدر للمزامنة اللحظية.
     rtPoll = window.setInterval(() => void refresh(), 1500);
+    // نبضة دورية: تثبت أن اللاعب فعلي، وتنظّف صفوف اللاعبين الميتة بالغرفة.
+    void heartbeat();
+    rtHeartbeat = window.setInterval(() => void heartbeat(), 15_000);
   }
 
   return () => {
@@ -477,6 +509,10 @@ function teardownRealtime() {
   if (rtPoll !== null) {
     window.clearInterval(rtPoll);
     rtPoll = null;
+  }
+  if (rtHeartbeat !== null) {
+    window.clearInterval(rtHeartbeat);
+    rtHeartbeat = null;
   }
   if (channel) {
     supabase.removeChannel(channel);
@@ -590,20 +626,26 @@ export async function createRoom(
   return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
 }
 
+/**
+ * الدخول للغرفة: الحساب المسجل يرجع بنفس هوية اللاعب حتى من جهاز أو متصفح ثاني
+ * (بدون إنشاء صف لاعب جديد)، والغرفة محدودة بـ٦ لاعبين فعليين.
+ */
 export async function joinRoom(code: string, name: string): Promise<{ ok: boolean; error?: string }> {
   const clean = code.trim();
   const playerId = uid();
-  const { data: result, error } = await rpc<string>("room_join", {
+  const { data, error } = await rpc<{ status: string; player_id?: string }>("room_join_v2", {
     _code: clean,
     _player_id: playerId,
     _name: name,
   });
   if (error) return { ok: false, error: "ما قدرنا نتصل بالسيرفر، تحقق من النت" };
+  const result = data?.status;
   if (result === "not_found") return { ok: false, error: "ما لقينا غرفة بهذا الرمز" };
+  if (result === "room_full") return { ok: false, error: "الغرفة مكتملة" };
   if (result === "name_taken") return { ok: false, error: "الاسم مستخدم بالغرفة، جرب اسم ثاني" };
   if (result !== "ok") return { ok: false, error: "تأكد من الاسم وجرب مرة ثانية" };
 
-  session = { code: clean, playerId };
+  session = { code: clean, playerId: data?.player_id ?? playerId };
   saveSession();
   await refresh();
   saveProgress();
@@ -734,17 +776,10 @@ export async function claimRole(playerId: string): Promise<boolean> {
       return true;
     }
 
-    // اختَر دور من الأدوار الأقل استخداماً بالفريق (الأولوية للأدوار الأساسية).
-    const counts = new Map<string, number>();
-    Object.values(roles).forEach((r) => counts.set(r, (counts.get(r) ?? 0) + 1));
-    const candidates = [...playerRoles].sort(
-      (a, b) => (counts.get(a.id) ?? 0) - (counts.get(b.id) ?? 0),
-    );
+    // دور شاغر فقط — ممنوع تكرار نفس الدور على لاعبين داخل نفس الغرفة.
     const taken = new Set(Object.values(roles));
-    const pick =
-      candidates.find((r) => !taken.has(r.id)) ??
-      candidates.find((r) => r.repeatable) ??
-      playerRoles[0]!;
+    const pick = playerRoles.find((r) => !taken.has(r.id));
+    if (!pick) return false; // كل الأدوار الستة موزّعة — الغرفة مكتملة.
     roles[playerId] = pick.id;
 
     const { data: newTs, error } = await rpc<string>("room_set_state", {
