@@ -70,6 +70,8 @@ export const askLastTripSuspect = createServerFn({ method: "POST" })
 
     const { buildLastTripPrompt } = await import("./last-trip-interrogation-prompt.server");
     const { callModel } = await import("./interrogation-model.server");
+    // نفس محرك التوتر المستخدم بقضية «الشاليه» — زيادة ثابتة ومتوقعة لكل نوع سؤال.
+    const { classifyQuestion, shapeStressDelta } = await import("./stress.server");
 
     const { system, user } = buildLastTripPrompt(rules, safeData);
 
@@ -77,9 +79,33 @@ export const askLastTripSuspect = createServerFn({ method: "POST" })
     const isCulprit = data.suspectId === LAST_TRIP_CULPRIT_ID;
     const scripted = isCulprit ? getJassimConfrontLine(confrontId) : null;
 
+    /** التحمّل ثابت لكل شخصية: الفاعل أعلى تحمّلاً من البقية. */
+    const tolerance = isCulprit ? 60 : 40;
+    const linkedIds = rules.relevantEvidence ?? [];
+    const profileLike = {
+      evidenceFeared: isCulprit ? linkedIds : [],
+      stressTolerance: tolerance,
+    } as never;
+
+    const kind = classifyQuestion({
+      message: data.message,
+      confrontEvidenceId: confrontId,
+      profile: profileLike,
+      linkedIds,
+    });
+
     // نفس المواجهة مرة ثانية ما ترفع التوتر ولا التقدّم.
     const repeated = !!confrontId && data.confrontHistory.includes(confrontId);
-    const capDelta = (n: number) => (repeated ? Math.min(1, Math.max(0, n)) : n);
+    const shape = (modelDelta: number, contradiction: boolean) => {
+      const delta = shapeStressDelta({
+        modelDelta,
+        kind,
+        contradiction,
+        currentStress: data.stress,
+        tolerance,
+      });
+      return repeated ? Math.min(1, Math.max(0, delta)) : delta;
+    };
 
     if (!process.env["LOVABLE_API_KEY"]) {
       return {
@@ -96,7 +122,7 @@ export const askLastTripSuspect = createServerFn({ method: "POST" })
       return {
         text: reply.text,
         state: reply.state,
-        stressDelta: capDelta(Math.max(-5, Math.min(20, Math.round(reply.stressDelta)))),
+        stressDelta: shape(reply.stressDelta, reply.contradiction),
         contradiction: reply.contradiction,
       };
     } catch (error) {
@@ -110,7 +136,7 @@ export const askLastTripSuspect = createServerFn({ method: "POST" })
       return {
         text: repeated ? `قلت لك… ${fallback}` : fallback,
         state: "nervous",
-        stressDelta: capDelta(scripted ? 6 : 1),
+        stressDelta: shape(scripted ? 6 : 1, false),
         contradiction: false,
       };
     }
