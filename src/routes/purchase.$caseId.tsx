@@ -128,7 +128,7 @@ function PurchasePage() {
               <p className="mt-1 font-display text-xl font-extrabold">{priceText}</p>
             </div>
             <p className="max-w-[9.5rem] text-left font-mono text-[11px] leading-relaxed text-muted-foreground">
-              دفعة واحدة {pricing ? `(${pricing.currency})` : ""} — واحد بس يشتري ويفتح الغرفة
+              دفعة واحدة — واحد بس يشتري ويفتح الغرفة
             </p>
           </div>
 
@@ -152,21 +152,12 @@ function PurchasePage() {
                   : owned
                     ? "القضية مفتوحة على حسابك — تقدر تكمل من نفس المكان."
                     : entitlement?.purchaseStatus === "pending"
-                      ? "فيه عملية شراء قيد المعالجة. أول ما يتأكد الدفع تفتح القضية تلقائياً."
+                      ? "بانتظار تأكيد الدفع — أول ما يتأكد تفتح القضية تلقائياً."
                       : intent
-                        ? intent.message
-                        : entitlement?.gatewayStatus === "unconfigured"
-                          ? "بوابة الدفع لِسِه ما تربطت. اضغط «ادفع وافتح القضية» وبنسجل طلبك."
-                          : "جاهز للدفع."}
-            </p>
-            <p className="mt-2 font-mono text-[11px] text-muted-foreground">
-              حالة البوابة:{" "}
-              {entitlement?.gatewayStatus === "live"
-                ? "مفعّلة"
-                : entitlement?.gatewayStatus === "sandbox"
-                  ? "تجريبية"
-                  : "غير مربوطة"}
-              {entitlement?.provider ? ` — ${entitlement.provider}` : ""}
+                        ? intent.status === "gateway_unconfigured"
+                          ? "تعذر إكمال العملية الآن، حاول مرة أخرى."
+                          : "تم إعداد عملية الدفع. أكمل الدفع في نافذة الدفع الآمنة."
+                        : "جاهز للدفع."}
             </p>
           </div>
 
