@@ -75,6 +75,10 @@ function CasesPage() {
           </p>
         </div>
 
+        <ResumeCaseButton className="mt-6" />
+
+
+
 
         <section className="mt-8">
           <h2 className="font-display text-sm font-bold text-muted-foreground">كل القضايا</h2>
