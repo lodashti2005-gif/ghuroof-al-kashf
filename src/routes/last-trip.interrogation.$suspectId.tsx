@@ -157,18 +157,26 @@ function LastTripInterrogationRoute() {
   }, [sharedUnlocked]);
 
 
-  useEffect(() => {
-    setSession(loadSession(suspectId));
-  }, [suspectId]);
+  // نطاق التخزين المحلي: الغرفة الحالية أو الوضع الفردي — بدون خلط بينهم.
+  const scope = room?.code ?? "solo";
+  const loadedFor = useRef<string | null>(null);
 
   useEffect(() => {
+    setSession(loadSession(suspectId, scope));
+    loadedFor.current = `${scope}:${suspectId}`;
+  }, [suspectId, scope]);
+
+  // ما نكتب قبل ما تُحمّل جلسة نفس المفتاح، عشان الـrefresh ما يمسح السجل.
+  useEffect(() => {
     if (typeof window === "undefined") return;
+    if (loadedFor.current !== `${scope}:${suspectId}`) return;
     try {
-      window.localStorage.setItem(storageKey(suspectId), JSON.stringify(session));
+      window.localStorage.setItem(storageKey(suspectId, scope), JSON.stringify(session));
     } catch {
       /* تجاهل */
     }
-  }, [session, suspectId]);
+  }, [session, suspectId, scope]);
+
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
