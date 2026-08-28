@@ -58,11 +58,15 @@ export const getCaseEntitlement = createServerFn({ method: "POST" })
     ]);
 
     const { getGatewayStatus, getGatewayProvider } = await import("@/lib/payment-config.server");
+    const { isTrialCase } = await import("@/game/trial-cases");
+
+    const purchased = purchase?.status === "paid";
 
     return {
       caseId: data.caseId,
-      entitled: entitled === true,
-      purchased: purchase?.status === "paid",
+      // القضية التجريبية ما تُعتبر مملوكة إلا بشراء مؤكد.
+      entitled: isTrialCase(data.caseId) ? purchased : entitled === true,
+      purchased,
       purchaseStatus: purchase?.status ?? null,
       free: caseRow?.is_free ?? false,
       priceKwd: caseRow?.price_kwd != null ? Number(caseRow.price_kwd) : null,
@@ -100,11 +104,25 @@ export const startCasePurchase = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<PurchaseIntentResult> => {
     const { supabase, userId } = context;
 
-    const { data: entitled } = await supabase.rpc("has_case_entitlement", {
-      _user_id: userId,
-      _case_id: data.caseId,
-    });
-    if (entitled === true) {
+    const { isTrialCase } = await import("@/game/trial-cases");
+    let owned: boolean;
+    if (isTrialCase(data.caseId)) {
+      // القضية التجريبية قابلة للشراء دائماً إلا إذا فيه شراء مؤكد.
+      const { data: paid } = await supabase
+        .from("case_purchases")
+        .select("status")
+        .eq("case_id", data.caseId)
+        .eq("status", "paid")
+        .maybeSingle();
+      owned = !!paid;
+    } else {
+      const { data: entitled } = await supabase.rpc("has_case_entitlement", {
+        _user_id: userId,
+        _case_id: data.caseId,
+      });
+      owned = entitled === true;
+    }
+    if (owned) {
       return {
         status: "already_owned",
         checkoutUrl: null,
