@@ -363,7 +363,10 @@ function applyPresence(players: Player[]): Player[] {
     (p) =>
       presenceOnline!.has(p.id) ||
       p.id === session?.playerId ||
-      now - p.joinedAt < PRESENCE_GRACE_MS,
+      p.isHost ||
+      now - p.joinedAt < PRESENCE_GRACE_MS ||
+      // لاعب نشط بقاعدة البيانات (نبضة حديثة) ما يُخفى بسبب انقطاع Presence مؤقت.
+      now - (lastSeenById.get(p.id) ?? 0) < PRESENCE_GRACE_MS,
   );
 }
 
