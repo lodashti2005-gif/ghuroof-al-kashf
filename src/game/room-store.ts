@@ -323,7 +323,8 @@ async function loadSnapshot(code: string, playerId: string): Promise<Snapshot | 
 }
 
 function toRoomState(snap: Snapshot): RoomState {
-  const shared = { ...freshShared(), ...((snap.room.state ?? {}) as Partial<SharedState>) };
+  const caseId = snap.room.case_id;
+  const shared = { ...freshShared(caseId), ...((snap.room.state ?? {}) as Partial<SharedState>) };
   return {
     code: snap.room.code,
     caseId: snap.room.case_id,
