@@ -393,7 +393,13 @@ async function refresh() {
 export async function hydrate() {
   if (typeof window === "undefined" || state) return;
   const parsed = readSession();
-  if (!parsed) return;
+  if (!parsed) {
+    // ما فيه جلسة بهذا التاب — نستأنف آخر تقدّم محفوظ بالحساب (جهاز/متصفح ثاني).
+    const saved = await loadSavedProgress();
+    if (!saved) return;
+    await resumeSavedProgress(saved);
+    return;
+  }
   session = parsed;
   await refresh();
 }
