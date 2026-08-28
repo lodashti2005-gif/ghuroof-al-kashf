@@ -776,17 +776,10 @@ export async function claimRole(playerId: string): Promise<boolean> {
       return true;
     }
 
-    // اختَر دور من الأدوار الأقل استخداماً بالفريق (الأولوية للأدوار الأساسية).
-    const counts = new Map<string, number>();
-    Object.values(roles).forEach((r) => counts.set(r, (counts.get(r) ?? 0) + 1));
-    const candidates = [...playerRoles].sort(
-      (a, b) => (counts.get(a.id) ?? 0) - (counts.get(b.id) ?? 0),
-    );
+    // دور شاغر فقط — ممنوع تكرار نفس الدور على لاعبين داخل نفس الغرفة.
     const taken = new Set(Object.values(roles));
-    const pick =
-      candidates.find((r) => !taken.has(r.id)) ??
-      candidates.find((r) => r.repeatable) ??
-      playerRoles[0]!;
+    const pick = playerRoles.find((r) => !taken.has(r.id));
+    if (!pick) return false; // كل الأدوار الستة موزّعة — الغرفة مكتملة.
     roles[playerId] = pick.id;
 
     const { data: newTs, error } = await rpc<string>("room_set_state", {
