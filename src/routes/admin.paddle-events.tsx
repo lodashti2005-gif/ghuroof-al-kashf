@@ -1,10 +1,12 @@
 /**
- * صفحة مراقبة أحداث Paddle — للمشرف فقط.
- * قراءة فقط: كل صف يبيّن العملية والقضية والمستخدم والنتيجة، مع تنبيه لأي تكرار.
+ * صفحة مراقبة أحداث الدفع — للمشرف فقط.
+ *
+ * الوصول محمي: أي مستخدم غير مشرف (أو زائر غير مسجّل) يُحوّل تلقائياً إلى "/"
+ * ولا يرى أي محتوى. الصفحة noindex. منطق الـwebhook والقاعدة ما يتغيّر.
  */
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, ArrowRight, Loader2, RefreshCw, ShieldAlert } from "lucide-react";
+import { AlertTriangle, Loader2, RefreshCw, ShieldAlert } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { Eyebrow, Panel } from "@/components/game/ui";
@@ -14,13 +16,11 @@ import { listPaddleEvents, type PaddleEventsResult } from "@/lib/paddle-events.f
 export const Route = createFileRoute("/admin/paddle-events")({
   head: () => ({
     meta: [
-      { title: "سجل أحداث الدفع — ورا السالفة" },
-      {
-        name: "description",
-        content: "لوحة مشرف لمراجعة أحداث بوابة الدفع في ورا السالفة والتأكد من فتح القضايا بدون تكرار.",
-      },
-      { property: "og:title", content: "سجل أحداث الدفع — ورا السالفة" },
-      { property: "og:description", content: "مراجعة أحداث بوابة الدفع وفتح القضايا." },
+      { title: "ورا السالفة" },
+      { name: "description", content: "ورا السالفة" },
+      { name: "robots", content: "noindex, nofollow" },
+      { property: "og:title", content: "ورا السالفة" },
+      { property: "og:description", content: "ورا السالفة" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -39,26 +39,34 @@ const OUTCOME_LABEL: Record<string, string> = {
 
 function PaddleEventsPage() {
   const fetchEvents = useServerFn(listPaddleEvents);
+  const navigate = useNavigate();
   const [state, setState] = useState<PaddleEventsResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(false);
     try {
-      setState(await fetchEvents({ data: undefined }));
+      const result = await fetchEvents({ data: undefined });
+      if (!result.allowed) {
+        navigate({ to: "/" });
+        return;
+      }
+      setState(result);
     } catch {
-      setError(true);
-      setState(null);
+      // غير مسجّل أو ليس مشرف — تحويل صامت للرئيسية بدون كشف أي معلومة.
+      navigate({ to: "/" });
+      return;
     } finally {
       setLoading(false);
     }
-  }, [fetchEvents]);
+  }, [fetchEvents, navigate]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // لا نعرض أي شي إلا بعد تأكيد صلاحية المشرف من الخادم — يحمي SSR والعميل.
+  if (!state || !state.allowed) return null;
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
@@ -81,28 +89,14 @@ function PaddleEventsPage() {
 
         <Panel className="cine-in mt-8">
           <Eyebrow>مراقبة الدفع</Eyebrow>
-          <h1 className="mt-2 text-2xl font-extrabold">سجل أحداث بوابة الدفع</h1>
+          <h1 className="mt-2 text-2xl font-extrabold">سجل أحداث الدفع</h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            آخر 100 حدث وصل من Paddle: رقم العملية، القضية، المستخدم، ونتيجة المعالجة.
+            آخر 100 حدث: رقم العملية، القضية، المستخدم، ونتيجة المعالجة.
           </p>
 
           {loading ? (
             <p className="mt-6 inline-flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" /> جاري التحميل...
-            </p>
-          ) : error || !state ? (
-            <p className="mt-6 text-sm text-muted-foreground">
-              ما قدرنا نقرأ السجل. سجّل دخول بحساب المشرف وجرّب مرة ثانية.{" "}
-              <Link to="/auth" className="underline">
-                دخول
-              </Link>
-            </p>
-          ) : !state.allowed ? (
-            <p className="mt-6 text-sm text-muted-foreground">
-              هذي الصفحة للمشرف بس.{" "}
-              <Link to="/cases" className="inline-flex items-center gap-1 underline">
-                رجوع للقضايا <ArrowRight className="size-3.5" />
-              </Link>
             </p>
           ) : (
             <>
@@ -121,7 +115,7 @@ function PaddleEventsPage() {
 
               {state.rows.length === 0 ? (
                 <p className="mt-5 text-sm text-muted-foreground">
-                  ما وصل أي حدث من Paddle لحد الآن.
+                  ما وصل أي حدث لحد الآن.
                 </p>
               ) : (
                 <ul className="mt-5 space-y-2">
