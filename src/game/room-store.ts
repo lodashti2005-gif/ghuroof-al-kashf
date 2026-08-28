@@ -143,6 +143,128 @@ export const hasStoredSession = () => session !== null || readSession() !== null
 export const getStoredSessionCode = (): string | null =>
   session?.code ?? readSession()?.code ?? null;
 
+/* ==================== حفظ التقدّم على حساب اللاعب ==================== */
+
+/**
+ * تقدّم اللاعب محفوظ بقاعدة البيانات (`game_progress`) ومربوط بـ user_id +
+ * case_id، فيرجع اللاعب لنفس النقطة بعد إغلاق المتصفح أو تسجيل الخروج أو من
+ * جهاز ثاني. حالة اللعب نفسها (الأدلة، الأدوار، الاستجوابات، المؤقتات) محفوظة
+ * أصلاً بالغرفة، فهذا الجدول يربط الحساب بالغرفة + الصفحة الأخيرة.
+ */
+export interface SavedProgress {
+  caseId: string;
+  code: string;
+  playerId: string;
+  phase: string | null;
+  route: string | null;
+}
+
+let lastRoute: string | null = null;
+let progressTimer: number | null = null;
+let lastSavedPhase: string | null = null;
+
+async function currentUserId(): Promise<string | null> {
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function writeProgress() {
+  if (!session || !state) return;
+  const userId = await currentUserId();
+  if (!userId) return; // لاعب دخل برمز غرفة بدون حساب — ما نربط له تقدّم
+  lastSavedPhase = state.phase;
+  const { error } = await supabase.from("game_progress").upsert(
+    {
+      user_id: userId,
+      case_id: state.caseId,
+      room_code: session.code,
+      player_id: session.playerId,
+      phase: state.phase,
+      route: lastRoute,
+      active: true,
+    },
+    { onConflict: "user_id,case_id" },
+  );
+  if (error) console.error("[progress] save failed:", error.message);
+}
+
+/** حفظ مؤجّل بسيط — يمنع كتابة متكررة مع كل تحديث لحظي. */
+export function saveProgress() {
+  if (typeof window === "undefined") return;
+  if (progressTimer !== null) window.clearTimeout(progressTimer);
+  progressTimer = window.setTimeout(() => {
+    progressTimer = null;
+    void writeProgress();
+  }, 600);
+}
+
+/** الصفحة الحالية داخل القضية (تُنادى من الجذر عند تغيّر المسار). */
+export function noteRoute(route: string) {
+  if (route === lastRoute) return;
+  lastRoute = route;
+  saveProgress();
+}
+
+/** آخر تقدّم مفتوح لهذا الحساب — يتحقق أن الغرفة واللاعب لا يزالان موجودين. */
+export async function loadSavedProgress(): Promise<SavedProgress | null> {
+  const userId = await currentUserId();
+  if (!userId) return null;
+  const { data, error } = await supabase
+    .from("game_progress")
+    .select("case_id, room_code, player_id, phase, route")
+    .eq("user_id", userId)
+    .eq("active", true)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error || !data) return null;
+
+  const snap = await loadSnapshot(data.room_code, data.player_id);
+  if (!snap) {
+    await supabase
+      .from("game_progress")
+      .update({ active: false })
+      .eq("user_id", userId)
+      .eq("case_id", data.case_id);
+    return null;
+  }
+
+  return {
+    caseId: data.case_id,
+    code: data.room_code,
+    playerId: data.player_id,
+    phase: data.phase ?? null,
+    route: data.route ?? null,
+  };
+}
+
+/** يستأنف الجلسة المحفوظة بنفس هوية اللاعب داخل الغرفة. */
+export async function resumeSavedProgress(saved: SavedProgress): Promise<boolean> {
+  session = { code: saved.code, playerId: saved.playerId };
+  lastRoute = saved.route;
+  saveSession();
+  await refresh();
+  return !!state;
+}
+
+/** إنهاء التقدّم المحفوظ (خروج من الغرفة). */
+async function closeProgress(caseId: string | null) {
+  if (!caseId) return;
+  const userId = await currentUserId();
+  if (!userId) return;
+  await supabase
+    .from("game_progress")
+    .update({ active: false })
+    .eq("user_id", userId)
+    .eq("case_id", caseId);
+}
+
+
+
 
 interface Snapshot {
   room: {
