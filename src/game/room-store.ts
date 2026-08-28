@@ -276,9 +276,18 @@ interface Snapshot {
     created_at: string;
     updated_at: string;
   };
-  players: Array<{ player_id: string; name: string; is_host: boolean; joined_at: string }>;
+  players: Array<{
+    player_id: string;
+    name: string;
+    is_host: boolean;
+    joined_at: string;
+    last_seen_at?: string | null;
+  }>;
   votes: Array<{ player_id: string; suspect_id: string }>;
 }
+
+/** آخر ظهور لكل لاعب حسب قاعدة البيانات — يمنع إخفاء لاعب نشط عند انقطاع Presence. */
+const lastSeenById = new Map<string, number>();
 
 async function loadSnapshot(code: string, playerId: string): Promise<Snapshot | null> {
   const { data, error } = await rpc<Snapshot>("room_snapshot", {
