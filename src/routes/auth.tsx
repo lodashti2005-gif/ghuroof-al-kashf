@@ -221,6 +221,16 @@ function AuthPage() {
                 dir="ltr"
                 className="w-full rounded-xl border border-input bg-surface-2 px-4 py-3 text-base outline-none focus:border-primary/60"
               />
+              {mode === "in" && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void sendReset()}
+                  className="mt-2 font-display text-xs text-primary transition-colors hover:text-foreground disabled:opacity-60"
+                >
+                  نسيت كلمة السر؟
+                </button>
+              )}
             </label>
 
             {error && (
