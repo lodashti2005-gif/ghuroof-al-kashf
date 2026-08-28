@@ -614,7 +614,10 @@ function LastTripInterrogationRoute() {
             )}
           </Panel>
 
+          <ConfrontLab suspectId={suspectId} suspectName={suspect.name} />
+
           <Panel className="cine-in">
+
             <Eyebrow>المشتبه فيهم</Eyebrow>
             <div className="mt-3 flex flex-wrap gap-2">
               {lastTripSuspects.map((s) => (
