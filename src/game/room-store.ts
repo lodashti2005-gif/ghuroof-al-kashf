@@ -83,20 +83,40 @@ function run<T>(call: RpcResult<T>, label: string) {
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 
-const freshSuspects = (): Record<string, SuspectRuntime> =>
+/**
+ * مشتبهو القضية الحالية فقط — كل قضية معزولة تماماً، فما يدخل مفتاح مشتبه من
+ * «الشاليه» داخل غرفة «آخر رحلة» ولا العكس.
+ */
+const freshSuspects = (caseId: string = caseFile.id): Record<string, SuspectRuntime> =>
   Object.fromEntries(
-    suspects.map((s) => [
-      s.id,
-      { stress: 12, timeLeft: INTERROGATION_SECONDS, finished: false, transcript: [] },
+    suspectIdsForCase(caseId).map((id) => [
+      id,
+      {
+        stress: 12,
+        timeLeft: CASE_INTERROGATION_SECONDS,
+        finished: false,
+        transcript: [],
+        confronts: [],
+        contradictionCount: 0,
+      },
     ]),
   );
 
-const freshShared = (): SharedState => ({
+/** يحذف أي مفتاح مشتبه ما ينتمي لهذي القضية (تنظيف تلوّث حالة قديم). */
+const scopeSuspects = (
+  caseId: string,
+  map: Record<string, SuspectRuntime>,
+): Record<string, SuspectRuntime> => {
+  const allowed = new Set(suspectIdsForCase(caseId));
+  return Object.fromEntries(Object.entries(map).filter(([id]) => allowed.has(id)));
+};
+
+const freshShared = (caseId: string = caseFile.id): SharedState => ({
   unlockedEvidence: [],
   notes: [],
   deductions: [],
   contradictions: [],
-  suspects: freshSuspects(),
+  suspects: freshSuspects(caseId),
   roles: {},
   ready: [],
   turn: null,
