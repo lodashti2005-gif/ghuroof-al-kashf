@@ -458,7 +458,8 @@ export function startRealtime() {
           ),
         );
         if (online.size > 0) {
-          const players = state.players.filter((player) => online.has(player.id));
+          presenceOnline = online;
+          const players = applyPresence(state.players);
           if (players.length !== state.players.length) {
             state = { ...state, players };
             emit();
@@ -476,6 +477,9 @@ export function startRealtime() {
     // الجداول مقفلة على العميل، فتحديثات postgres_changes ما توصل — نعتمد على
     // الحضور + استقصاء سريع كمصدر للمزامنة اللحظية.
     rtPoll = window.setInterval(() => void refresh(), 1500);
+    // نبضة دورية: تثبت أن اللاعب فعلي، وتنظّف صفوف اللاعبين الميتة بالغرفة.
+    void heartbeat();
+    rtHeartbeat = window.setInterval(() => void heartbeat(), 15_000);
   }
 
   return () => {
