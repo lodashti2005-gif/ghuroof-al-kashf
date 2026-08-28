@@ -175,6 +175,42 @@ export type Database = {
         }
         Relationships: []
       }
+      game_progress: {
+        Row: {
+          active: boolean
+          case_id: string
+          created_at: string
+          phase: string | null
+          player_id: string
+          room_code: string
+          route: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          case_id: string
+          created_at?: string
+          phase?: string | null
+          player_id: string
+          room_code: string
+          route?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          case_id?: string
+          created_at?: string
+          phase?: string | null
+          player_id?: string
+          room_code?: string
+          route?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       paddle_webhook_events: {
         Row: {
           amount: number | null
