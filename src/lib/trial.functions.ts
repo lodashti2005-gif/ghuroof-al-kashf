@@ -38,12 +38,26 @@ export const syncCaseTrial = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<TrialState> => {
     const { supabase, userId } = context;
 
-    const { data: entitled } = await supabase.rpc("has_case_entitlement", {
-      _user_id: userId,
-      _case_id: data.caseId,
-    });
+    // القضية التجريبية تُفتح بالشراء المؤكد فقط — كون القضية «متاحة للدخول»
+    // ما يعني ملكية كاملة. باقي القضايا تعتمد على قرار الخادم كما هو.
+    let entitled: boolean;
+    if (isTrialCase(data.caseId)) {
+      const { data: paid } = await supabase
+        .from("case_purchases")
+        .select("status")
+        .eq("case_id", data.caseId)
+        .eq("status", "paid")
+        .maybeSingle();
+      entitled = !!paid;
+    } else {
+      const { data: rpc } = await supabase.rpc("has_case_entitlement", {
+        _user_id: userId,
+        _case_id: data.caseId,
+      });
+      entitled = rpc === true;
+    }
 
-    if (entitled === true) {
+    if (entitled) {
       return {
         caseId: data.caseId,
         entitled: true,
