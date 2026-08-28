@@ -10,7 +10,8 @@
  * `createRoom`/`joinRoom`/`hydrate` now being async.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { INTERROGATION_SECONDS, caseFile, suspects } from "./case-data";
+import { INTERROGATION_SECONDS, caseFile } from "./case-data";
+import { CASE_INTERROGATION_SECONDS, suspectIdsForCase } from "./case-suspects";
 import { assignRoles, playerRoles } from "./roles";
 import { assignLastTripRoles } from "./cases/last-trip-roles";
 import type {
@@ -83,20 +84,40 @@ function run<T>(call: RpcResult<T>, label: string) {
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 
-const freshSuspects = (): Record<string, SuspectRuntime> =>
+/**
+ * مشتبهو القضية الحالية فقط — كل قضية معزولة تماماً، فما يدخل مفتاح مشتبه من
+ * «الشاليه» داخل غرفة «آخر رحلة» ولا العكس.
+ */
+const freshSuspects = (caseId: string = caseFile.id): Record<string, SuspectRuntime> =>
   Object.fromEntries(
-    suspects.map((s) => [
-      s.id,
-      { stress: 12, timeLeft: INTERROGATION_SECONDS, finished: false, transcript: [] },
+    suspectIdsForCase(caseId).map((id) => [
+      id,
+      {
+        stress: 12,
+        timeLeft: CASE_INTERROGATION_SECONDS,
+        finished: false,
+        transcript: [],
+        confronts: [],
+        contradictionCount: 0,
+      },
     ]),
   );
 
-const freshShared = (): SharedState => ({
+/** يحذف أي مفتاح مشتبه ما ينتمي لهذي القضية (تنظيف تلوّث حالة قديم). */
+const scopeSuspects = (
+  caseId: string,
+  map: Record<string, SuspectRuntime>,
+): Record<string, SuspectRuntime> => {
+  const allowed = new Set(suspectIdsForCase(caseId));
+  return Object.fromEntries(Object.entries(map).filter(([id]) => allowed.has(id)));
+};
+
+const freshShared = (caseId: string = caseFile.id): SharedState => ({
   unlockedEvidence: [],
   notes: [],
   deductions: [],
   contradictions: [],
-  suspects: freshSuspects(),
+  suspects: freshSuspects(caseId),
   roles: {},
   ready: [],
   turn: null,
@@ -302,7 +323,8 @@ async function loadSnapshot(code: string, playerId: string): Promise<Snapshot | 
 }
 
 function toRoomState(snap: Snapshot): RoomState {
-  const shared = { ...freshShared(), ...((snap.room.state ?? {}) as Partial<SharedState>) };
+  const caseId = snap.room.case_id;
+  const shared = { ...freshShared(caseId), ...((snap.room.state ?? {}) as Partial<SharedState>) };
   return {
     code: snap.room.code,
     caseId: snap.room.case_id,
@@ -321,7 +343,7 @@ function toRoomState(snap: Snapshot): RoomState {
     notes: shared.notes ?? [],
     deductions: shared.deductions ?? [],
     contradictions: shared.contradictions ?? [],
-    suspects: { ...freshSuspects(), ...(shared.suspects ?? {}) },
+    suspects: scopeSuspects(caseId, { ...freshSuspects(caseId), ...(shared.suspects ?? {}) }),
     roles: shared.roles ?? {},
     ready: shared.ready ?? [],
     votes: Object.fromEntries(
@@ -607,7 +629,7 @@ export async function createRoom(
       _case_id: caseId,
       _host_player_id: playerId,
       _host_name: hostName,
-      _state: freshShared(),
+      _state: freshShared(caseId),
     });
     if (error) return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
     if (result === "code_taken") continue; // code collision, retry
@@ -893,6 +915,27 @@ export const bumpStress = (suspectId: string, delta: number) =>
     rt.stress = Math.max(0, Math.min(100, rt.stress + delta));
   });
 
+/**
+ * تسجيل مواجهة (دليل أو قول شاهد) وعدد التناقضات بالحالة المشتركة — يوصل كل
+ * لاعبي الغرفة فوراً، وما أحد يقدر يعيد نفس المواجهة مرة ثانية.
+ */
+export const recordConfront = (
+  suspectId: string,
+  confrontId: string | null,
+  contradiction = false,
+) =>
+  update((s) => {
+    const rt = s.suspects[suspectId];
+    if (!rt) return;
+    if (confrontId) {
+      rt.confronts = rt.confronts ?? [];
+      if (!rt.confronts.includes(confrontId)) rt.confronts.push(confrontId);
+    }
+    if (contradiction) rt.contradictionCount = (rt.contradictionCount ?? 0) + 1;
+  });
+
+
+
 export const setTimeLeft = (suspectId: string, seconds: number) =>
   update((s) => {
     const rt = s.suspects[suspectId];
@@ -931,6 +974,8 @@ export const startInterrogationTimer = (suspectId: string, initialSeconds?: numb
         timeLeft: initialSeconds,
         finished: false,
         transcript: [],
+        confronts: [],
+        contradictionCount: 0,
       };
     }
     for (const [id, rt] of Object.entries(s.suspects)) {
@@ -1046,7 +1091,7 @@ export function resetCase() {
     s.notes = [];
     s.deductions = [];
     s.contradictions = [];
-    s.suspects = freshSuspects();
+    s.suspects = freshSuspects(s.caseId);
     s.roles = {};
     s.ready = [];
     s.votes = {};

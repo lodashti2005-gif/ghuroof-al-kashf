@@ -72,19 +72,26 @@ type Session = { stress: number; lines: Line[]; confronts: string[]; contradicti
 
 const emptySession = (): Session => ({ stress: 12, lines: [], confronts: [], contradictions: 0 });
 
-function storageKey(id: string) {
-  return `last-trip:interrogation:${id}`;
+/**
+ * تخزين محلي دائم للتحقيق خارج الغرف فقط، مفتاحه مربوط بالغرفة/الوضع الفردي
+ * حتى ما تختلط الجلسات. داخل الغرفة المصدر الوحيد هو حالة الغرفة المشتركة.
+ */
+function storageKey(id: string, scope: string) {
+  return `last-trip:interrogation:${scope}:${id}`;
 }
 
-function loadSession(id: string): Session {
+function loadSession(id: string, scope: string): Session {
   if (typeof window === "undefined") return emptySession();
-  try {
-    const raw = window.localStorage.getItem(storageKey(id));
-    if (!raw) return emptySession();
-    return { ...emptySession(), ...(JSON.parse(raw) as Partial<Session>) };
-  } catch {
-    return emptySession();
-  }
+  const read = (key: string) => {
+    try {
+      const raw = window.localStorage.getItem(key);
+      return raw ? ({ ...emptySession(), ...(JSON.parse(raw) as Partial<Session>) } as Session) : null;
+    } catch {
+      return null;
+    }
+  };
+  // ترحيل الجلسات القديمة (قبل ما يصير المفتاح مربوط بالنطاق).
+  return read(storageKey(id, scope)) ?? read(`last-trip:interrogation:${id}`) ?? emptySession();
 }
 
 function LastTripInterrogationRoute() {
@@ -122,6 +129,12 @@ function LastTripInterrogationRoute() {
   );
   const lines = inRoom ? sharedLines : session.lines;
   const stress = inRoom ? (shared?.stress ?? 12) : session.stress;
+  // المواجهات والتناقضات مشتركة داخل الغرفة: أي لاعب يشوفها فوراً وما تتكرر.
+  const confronts = inRoom ? (shared?.confronts ?? []) : session.confronts;
+  const contradictionCount = inRoom
+    ? (shared?.contradictionCount ?? 0)
+    : session.contradictions;
+
 
   useEffect(() => {
     hydrateLastTripProgress();
@@ -144,18 +157,26 @@ function LastTripInterrogationRoute() {
   }, [sharedUnlocked]);
 
 
-  useEffect(() => {
-    setSession(loadSession(suspectId));
-  }, [suspectId]);
+  // نطاق التخزين المحلي: الغرفة الحالية أو الوضع الفردي — بدون خلط بينهم.
+  const scope = room?.code ?? "solo";
+  const loadedFor = useRef<string | null>(null);
 
   useEffect(() => {
+    setSession(loadSession(suspectId, scope));
+    loadedFor.current = `${scope}:${suspectId}`;
+  }, [suspectId, scope]);
+
+  // ما نكتب قبل ما تُحمّل جلسة نفس المفتاح، عشان الـrefresh ما يمسح السجل.
+  useEffect(() => {
     if (typeof window === "undefined") return;
+    if (loadedFor.current !== `${scope}:${suspectId}`) return;
     try {
-      window.localStorage.setItem(storageKey(suspectId), JSON.stringify(session));
+      window.localStorage.setItem(storageKey(suspectId, scope), JSON.stringify(session));
     } catch {
       /* تجاهل */
     }
-  }, [session, suspectId]);
+  }, [session, suspectId, scope]);
+
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -203,14 +224,30 @@ function LastTripInterrogationRoute() {
         setDenied(LAST_TRIP_DENIED_MESSAGE);
         return;
       }
+      const confrontId = confront?.evidenceId ?? confront?.witnessId ?? null;
+      // مواجهة مستهلكة من أي لاعب بالغرفة ما تتكرر مرة ثانية.
+      if (confrontId && confronts.includes(confrontId)) {
+        setPending(null);
+        setDenied("هذي المواجهة صارت قبل — ما تنفع تتكرر.");
+        return;
+      }
 
       setBusy(true);
       const question: Line = { id: crypto.randomUUID(), role: "investigator", text };
       const history = [...lines, question];
       if (inRoom) {
         store.pushMessage(suspectId, { role: "investigator", author: "المحقق", text });
+        // تُسجّل المواجهة فوراً بالحالة المشتركة قبل انتظار الرد.
+        if (confrontId) store.recordConfront(suspectId, confrontId);
       } else {
-        setSession((s) => ({ ...s, lines: [...s.lines, question] }));
+        setSession((s) => ({
+          ...s,
+          lines: [...s.lines, question],
+          confronts:
+            confrontId && !s.confronts.includes(confrontId)
+              ? [...s.confronts, confrontId]
+              : s.confronts,
+        }));
       }
       setDraft("");
       setPending(null);
@@ -224,8 +261,8 @@ function LastTripInterrogationRoute() {
             unlockedEvidence: availableIds,
             confrontEvidenceId: confront?.evidenceId ?? null,
             confrontWitnessId: confront?.witnessId ?? null,
-            confrontHistory: session.confronts,
-            contradictionCount: session.contradictions,
+            confrontHistory: confronts,
+            contradictionCount,
             transcript: history.slice(-20).map((l) => ({
               role: l.role,
               author: l.role === "investigator" ? "المحقق" : suspect.name,
@@ -233,7 +270,6 @@ function LastTripInterrogationRoute() {
             })),
           },
         });
-        const confrontId = confront?.evidenceId ?? confront?.witnessId;
         if (inRoom) {
           store.pushMessage(suspectId, {
             role: "suspect",
@@ -242,6 +278,7 @@ function LastTripInterrogationRoute() {
             ...(reply.contradiction ? { flagged: true } : {}),
           });
           store.bumpStress(suspectId, reply.stressDelta);
+          store.recordConfront(suspectId, confrontId, reply.contradiction);
           if (reply.contradiction) {
             store.addContradiction({
               suspectId,
@@ -252,16 +289,9 @@ function LastTripInterrogationRoute() {
               author: "المحقق",
             });
           }
-          setSession((s) => ({
-            ...s,
-            confronts:
-              confrontId && !s.confronts.includes(confrontId)
-                ? [...s.confronts, confrontId]
-                : s.confronts,
-            contradictions: s.contradictions + (reply.contradiction ? 1 : 0),
-          }));
         } else {
           setSession((s) => ({
+            ...s,
             stress: Math.max(0, Math.min(100, s.stress + reply.stressDelta)),
             lines: [
               ...history,
@@ -272,9 +302,6 @@ function LastTripInterrogationRoute() {
                 contradiction: reply.contradiction,
               },
             ],
-            confronts: confrontId && !s.confronts.includes(confrontId)
-              ? [...s.confronts, confrontId]
-              : s.confronts,
             contradictions: s.contradictions + (reply.contradiction ? 1 : 0),
           }));
         }
@@ -282,10 +309,30 @@ function LastTripInterrogationRoute() {
         setBusy(false);
       }
     },
-    [ask, busy, expired, availableIds, inRoom, isInterrogator, lines, session.confronts, session.contradictions, stress, suspect, suspectId],
+    [
+      ask,
+      busy,
+      expired,
+      availableIds,
+      inRoom,
+      isInterrogator,
+      lines,
+      confronts,
+      contradictionCount,
+      stress,
+      suspect,
+      suspectId,
+    ],
   );
 
   const confrontDisabled = busy || expired || !isInterrogator;
+
+  // توزيع الأدوار صار بدون «المحقق»؟ ما نخلي الشاشة معلقة — نوضح ونرجّع اللاعب.
+  const ltRoles = room?.ltRoles ?? {};
+  const detectiveMissing =
+    inRoom &&
+    Object.keys(ltRoles).length > 0 &&
+    !Object.values(ltRoles).includes("lt-detective");
 
   if (!suspect) {
     return (
@@ -295,6 +342,29 @@ function LastTripInterrogationRoute() {
           <Link to="/last-trip/suspects" className="mt-4 inline-block">
             <ActionButton variant="outline">رجوع للشخصيات</ActionButton>
           </Link>
+        </Panel>
+      </div>
+    );
+  }
+
+  if (detectiveMissing) {
+    return (
+      <div dir="rtl" className="grid min-h-screen place-items-center bg-background px-4 py-10">
+        <Panel className="cine-in w-full max-w-lg text-center">
+          <Eyebrow>غرفة الاستجواب</Eyebrow>
+          <h1 className="mt-3 text-2xl font-bold">ما فيه محقق بالفريق</h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            الاستجواب يحتاج لاعب بدور «المحقق». رجّعوا لصفحة الشخصيات وتأكدوا إن كل
+            اللاعبين داخلين وأخذوا أدوارهم، وبعدها ارجعوا للاستجواب.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            <Link to="/last-trip/suspects">
+              <ActionButton>رجوع للشخصيات</ActionButton>
+            </Link>
+            <Link to="/last-trip/scene">
+              <ActionButton variant="outline">مسرح الجريمة</ActionButton>
+            </Link>
+          </div>
         </Panel>
       </div>
     );
@@ -452,7 +522,7 @@ function LastTripInterrogationRoute() {
                   <button
                     key={e.id}
                     type="button"
-                    disabled={busy || expired}
+                    disabled={busy || expired || confronts.includes(e.id)}
                     onClick={() => {
                       if (!isInterrogator) {
                         setDenied(LAST_TRIP_DENIED_MESSAGE);
@@ -467,7 +537,7 @@ function LastTripInterrogationRoute() {
                     )}
                   >
                     {e.title}
-                    {session.confronts.includes(e.id) && (
+                    {confronts.includes(e.id) && (
                       <span className="ms-2 text-[0.65rem] text-muted-foreground">
                         · تمت المواجهة
                       </span>
@@ -490,7 +560,7 @@ function LastTripInterrogationRoute() {
                 <button
                   key={c.id}
                   type="button"
-                  disabled={busy || expired}
+                  disabled={busy || expired || confronts.includes(c.id)}
                   onClick={() => {
                     if (!isInterrogator) {
                       setDenied(LAST_TRIP_DENIED_MESSAGE);
@@ -505,6 +575,11 @@ function LastTripInterrogationRoute() {
                   )}
                 >
                   {c.label}
+                  {confronts.includes(c.id) && (
+                    <span className="ms-2 text-[0.65rem] text-muted-foreground">
+                      · تمت المواجهة
+                    </span>
+                  )}
                 </button>
               ))}
             </div>

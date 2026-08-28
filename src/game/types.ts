@@ -54,6 +54,10 @@ export interface SuspectRuntime {
   timerStartedAt?: number;
   finished: boolean;
   transcript: ChatMessage[];
+  /** معرّفات الأدلة/أقوال الشهود اللي صار فيها مواجهة (مشتركة بين كل اللاعبين). */
+  confronts?: string[];
+  /** عدد التناقضات المرصودة على هذا المشتبه فيه (مشترك). */
+  contradictionCount?: number;
 }
 
 /** استنتاج ناتج عن ربط دليلين مكتشفين بنجاح. */
