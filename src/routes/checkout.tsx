@@ -33,10 +33,10 @@ export const Route = createFileRoute("/checkout")({
       { title: "إتمام الدفع — ورا السالفة" },
       {
         name: "description",
-        content: "أكمل دفع قضية ورا السالفة بأمان عبر Paddle، وبعد تأكيد الدفع تفتح القضية على حسابك.",
+        content: "أكمل دفع قضية ورا السالفة بأمان، وبعد تأكيد الدفع تفتح القضية على حسابك.",
       },
       { property: "og:title", content: "إتمام الدفع — ورا السالفة" },
-      { property: "og:description", content: "دفع آمن عبر Paddle لفتح القضية كاملة." },
+      { property: "og:description", content: "دفع آمن لفتح القضية كاملة." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -83,7 +83,7 @@ function CheckoutPage() {
         if (cancelled) return;
         if (!config.token) {
           setError(
-            "إعداد الدفع ناقص: client-side token تبع Paddle غير مضاف. تواصل معنا على contact@waralsalfa.com",
+            "تعذر إكمال العملية، حاول مرة أخرى أو تواصل معنا على contact@waralsalfa.com",
           );
           return;
         }

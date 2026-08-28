@@ -124,7 +124,7 @@ function PurchasesPage() {
           <Eyebrow>الحساب</Eyebrow>
           <h1 className="mt-2 text-2xl font-extrabold">حالة عمليات الدفع</h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            كل عملية مرتبطة بقضيتها. لو الحالة «بانتظار التأكيد» انتظر تأكيد البوابة — القضية تنفتح مرة وحدة بس ولو تكرر الدفع ما يتكرر الفتح.
+            كل عملية مرتبطة بقضيتها. لو الحالة «بانتظار التأكيد» انتظر تأكيد الدفع — القضية تنفتح مرة وحدة بس ولو تكرر الدفع ما يتكرر الفتح.
             {lastSync ? <span className="block opacity-70">آخر تحديث: {fmt(lastSync.toISOString())}</span> : null}
           </p>
 
@@ -157,7 +157,6 @@ function PurchasesPage() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <h2 className="font-display text-base font-bold">{p.caseTitle ?? p.caseId}</h2>
-                        <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">{p.caseId}</p>
                       </div>
                       <span
                         className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-display text-[11px] ${ui.className}`}
@@ -181,17 +180,11 @@ function PurchasesPage() {
                         <dt className="opacity-70">تاريخ التأكيد</dt>
                         <dd className="text-foreground">{fmt(p.purchasedAt)}</dd>
                       </div>
-                      <div className="col-span-2 sm:col-span-3">
-                        <dt className="opacity-70">رقم العملية</dt>
-                        <dd className="font-mono text-[11px] text-foreground break-all">
-                          {p.transactionId ?? "—"}
-                        </dd>
-                      </div>
                     </dl>
 
-                    {p.status === "failed" && p.failureReason ? (
+                    {p.status === "failed" ? (
                       <p className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-[12px] text-destructive">
-                        سبب الرفض: {p.failureReason}
+                        تعذر إكمال العملية، حاول مرة أخرى.
                       </p>
                     ) : null}
 
@@ -215,14 +208,7 @@ function PurchasesPage() {
                                 className="rounded-lg border border-border/50 bg-card/30 px-3 py-2 text-[12px]"
                               >
                                 <div className="flex flex-wrap items-center justify-between gap-2">
-                                  <span className="text-foreground">
-                                    {ev.label}
-                                    {ev.eventType ? (
-                                      <span className="ms-2 font-mono text-[10px] text-muted-foreground">
-                                        {ev.eventType}
-                                      </span>
-                                    ) : null}
-                                  </span>
+                                  <span className="text-foreground">{ev.label}</span>
                                   <span
                                     className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-display text-[10px] ${evUi.className}`}
                                   >
@@ -230,22 +216,13 @@ function PurchasesPage() {
                                   </span>
                                 </div>
                                 <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-                                  <span className="font-mono break-all">
-                                    {ev.transactionId ?? "بدون رقم عملية"}
-                                  </span>
                                   <span>{fmt(ev.at)}</span>
                                   {ev.amount != null ? (
                                     <span>
                                       {ev.amount} {ev.currency ?? ""}
                                     </span>
                                   ) : null}
-                                  <span className="opacity-70">
-                                    {ev.source === "webhook" ? "من Paddle" : "سجل الشراء"}
-                                  </span>
                                 </div>
-                                {ev.detail ? (
-                                  <p className="mt-1 text-[11px] text-muted-foreground">{ev.detail}</p>
-                                ) : null}
                               </li>
                             );
                           })}
@@ -262,7 +239,7 @@ function PurchasesPage() {
                           </Link>
                         </>
                       ) : p.status === "pending" ? (
-                        <span className="text-muted-foreground">بننتظر تأكيد البوابة — حدّث الصفحة بعد شوي.</span>
+                        <span className="text-muted-foreground">بانتظار تأكيد الدفع — حدّث الصفحة بعد شوي.</span>
                       ) : (
                         <Link to="/cases" className="text-foreground underline underline-offset-4">
                           إعادة المحاولة من صفحة القضايا

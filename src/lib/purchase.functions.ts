@@ -143,7 +143,7 @@ export const startCasePurchase = createServerFn({ method: "POST" })
         checkoutUrl: null,
         transactionId: null,
         message:
-          "بوابة الدفع لِسِه ما تربطت. طلبك محفوظ عندنا، وأول ما تتفعّل البوابة تقدر تكمل الدفع وتفتح القضية كاملة بنفس الغرفة ونفس التقدم.",
+          "تعذر إكمال العملية الآن، حاول مرة أخرى بعد شوي.",
       };
     }
 
@@ -202,6 +202,6 @@ export const startCasePurchase = createServerFn({ method: "POST" })
       status: "awaiting_payment",
       checkoutUrl,
       transactionId,
-      message: "تم إعداد عملية الدفع. أكمل الدفع في نافذة Paddle، وراح ترجع للعبة تلقائياً.",
+      message: "تم إعداد عملية الدفع. أكمل الدفع في نافذة الدفع الآمنة، وراح ترجع للعبة تلقائياً.",
     };
   });
