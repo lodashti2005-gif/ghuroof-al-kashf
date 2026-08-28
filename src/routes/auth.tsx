@@ -93,6 +93,28 @@ function AuthPage() {
     );
   };
 
+  /** إرسال رابط إعادة تعيين كلمة السر لنفس نظام المصادقة الحالي. */
+  const sendReset = async () => {
+    setError(null);
+    setMsg(null);
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setError("اكتب إيميلك أولاً عشان نرسل لك رابط إعادة التعيين");
+      return;
+    }
+    setBusy(true);
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setBusy(false);
+    if (err) {
+      setError("ما قدرنا نرسل رابط إعادة التعيين، جرب بعد شوي");
+      return;
+    }
+    setMsg(
+      "أرسلنا لك رابط إعادة تعيين كلمة السر على إيميلك. افتح الرابط واختر كلمة سر جديدة، وإذا ما ظهر لك زر واضح انسخ الرابط والصقه في المتصفح.",
+    );
+  };
+
   const verifyPastedLink = async () => {
     setError(null);
     setMsg(null);
