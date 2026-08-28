@@ -9,6 +9,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Loader2, ShieldAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { AccountMenu } from "@/components/site/account-menu";
 import { Eyebrow, Panel } from "@/components/game/ui";
 import { GAME_NAME } from "@/game/game-meta";
 import { getPaddleClientConfig } from "@/lib/paddle-client.functions";
@@ -123,12 +124,15 @@ function CheckoutPage() {
             </span>
             <span className="font-display text-sm font-bold">{GAME_NAME}</span>
           </Link>
-          <Link
-            to="/cases"
-            className="inline-flex items-center gap-1.5 font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            رجوع للقضايا <ArrowRight className="size-3.5" />
-          </Link>
+          <div className="flex items-center gap-3">
+            <AccountMenu />
+            <Link
+              to="/cases"
+              className="inline-flex items-center gap-1.5 font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              رجوع للقضايا <ArrowRight className="size-3.5" />
+            </Link>
+          </div>
         </header>
 
         <Panel className="cine-in mt-8">
