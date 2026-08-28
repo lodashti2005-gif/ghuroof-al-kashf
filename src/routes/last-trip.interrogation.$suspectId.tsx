@@ -129,6 +129,12 @@ function LastTripInterrogationRoute() {
   );
   const lines = inRoom ? sharedLines : session.lines;
   const stress = inRoom ? (shared?.stress ?? 12) : session.stress;
+  // المواجهات والتناقضات مشتركة داخل الغرفة: أي لاعب يشوفها فوراً وما تتكرر.
+  const confronts = inRoom ? (shared?.confronts ?? []) : session.confronts;
+  const contradictionCount = inRoom
+    ? (shared?.contradictionCount ?? 0)
+    : session.contradictions;
+
 
   useEffect(() => {
     hydrateLastTripProgress();
