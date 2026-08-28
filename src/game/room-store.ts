@@ -343,7 +343,7 @@ function toRoomState(snap: Snapshot): RoomState {
     notes: shared.notes ?? [],
     deductions: shared.deductions ?? [],
     contradictions: shared.contradictions ?? [],
-    suspects: { ...freshSuspects(), ...(shared.suspects ?? {}) },
+    suspects: scopeSuspects(caseId, { ...freshSuspects(caseId), ...(shared.suspects ?? {}) }),
     roles: shared.roles ?? {},
     ready: shared.ready ?? [],
     votes: Object.fromEntries(
