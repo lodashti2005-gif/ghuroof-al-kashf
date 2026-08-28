@@ -73,6 +73,30 @@ export type Database = {
           },
         ]
       }
+      case_trials: {
+        Row: {
+          case_id: string
+          consumed_seconds: number
+          created_at: string
+          last_seen_at: string
+          user_id: string
+        }
+        Insert: {
+          case_id: string
+          consumed_seconds?: number
+          created_at?: string
+          last_seen_at?: string
+          user_id: string
+        }
+        Update: {
+          case_id?: string
+          consumed_seconds?: number
+          created_at?: string
+          last_seen_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cases: {
         Row: {
           code: string
