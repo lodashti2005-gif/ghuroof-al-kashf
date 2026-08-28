@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertTriangle, ArrowLeft, ShieldAlert } from "lucide-react";
 
 import heroScene from "@/assets/scene-hero.jpg";
+import { AccountMenu } from "@/components/site/account-menu";
 import { ResumeCaseButton } from "@/components/game/resume-case-button";
 import { Eyebrow } from "@/components/game/ui";
 import { GAME_NAME, playableCases } from "@/game/game-meta";
@@ -117,11 +118,14 @@ function Welcome() {
         />
 
         <div className="relative z-10 mx-auto max-w-3xl px-5 py-14 sm:px-8 sm:py-20">
-          <div className="flex items-center gap-2.5">
-            <span className="grid size-9 place-items-center rounded-lg file-tape">
-              <ShieldAlert className="size-4.5" />
-            </span>
-            <span className="font-display text-sm font-bold">ورا السالفة | Wara Al Salfa</span>
+          <div className="flex items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2.5">
+              <span className="grid size-9 place-items-center rounded-lg file-tape">
+                <ShieldAlert className="size-4.5" />
+              </span>
+              <span className="font-display text-sm font-bold">ورا السالفة | Wara Al Salfa</span>
+            </div>
+            <AccountMenu />
           </div>
 
           <div className="cine-in mt-10">
