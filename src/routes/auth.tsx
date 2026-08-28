@@ -38,6 +38,12 @@ function AuthPage() {
   useEffect(() => {
     const url = new URL(window.location.href);
     const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
+    if (url.searchParams.get("reset") === "1") {
+      setMode("in");
+      setMsg("تم تغيير كلمة السر بنجاح — سجّل دخولك بكلمة السر الجديدة.");
+      window.history.replaceState({}, "", "/auth");
+      return;
+    }
     const isConfirmed =
       url.searchParams.get("confirmed") === "1" ||
       hash.get("type") === "signup" ||
