@@ -915,6 +915,27 @@ export const bumpStress = (suspectId: string, delta: number) =>
     rt.stress = Math.max(0, Math.min(100, rt.stress + delta));
   });
 
+/**
+ * تسجيل مواجهة (دليل أو قول شاهد) وعدد التناقضات بالحالة المشتركة — يوصل كل
+ * لاعبي الغرفة فوراً، وما أحد يقدر يعيد نفس المواجهة مرة ثانية.
+ */
+export const recordConfront = (
+  suspectId: string,
+  confrontId: string | null,
+  contradiction = false,
+) =>
+  update((s) => {
+    const rt = s.suspects[suspectId];
+    if (!rt) return;
+    if (confrontId) {
+      rt.confronts = rt.confronts ?? [];
+      if (!rt.confronts.includes(confrontId)) rt.confronts.push(confrontId);
+    }
+    if (contradiction) rt.contradictionCount = (rt.contradictionCount ?? 0) + 1;
+  });
+
+
+
 export const setTimeLeft = (suspectId: string, seconds: number) =>
   update((s) => {
     const rt = s.suspects[suspectId];
