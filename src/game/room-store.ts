@@ -974,6 +974,8 @@ export const startInterrogationTimer = (suspectId: string, initialSeconds?: numb
         timeLeft: initialSeconds,
         finished: false,
         transcript: [],
+        confronts: [],
+        contradictionCount: 0,
       };
     }
     for (const [id, rt] of Object.entries(s.suspects)) {
