@@ -72,19 +72,26 @@ type Session = { stress: number; lines: Line[]; confronts: string[]; contradicti
 
 const emptySession = (): Session => ({ stress: 12, lines: [], confronts: [], contradictions: 0 });
 
-function storageKey(id: string) {
-  return `last-trip:interrogation:${id}`;
+/**
+ * تخزين محلي دائم للتحقيق خارج الغرف فقط، مفتاحه مربوط بالغرفة/الوضع الفردي
+ * حتى ما تختلط الجلسات. داخل الغرفة المصدر الوحيد هو حالة الغرفة المشتركة.
+ */
+function storageKey(id: string, scope: string) {
+  return `last-trip:interrogation:${scope}:${id}`;
 }
 
-function loadSession(id: string): Session {
+function loadSession(id: string, scope: string): Session {
   if (typeof window === "undefined") return emptySession();
-  try {
-    const raw = window.localStorage.getItem(storageKey(id));
-    if (!raw) return emptySession();
-    return { ...emptySession(), ...(JSON.parse(raw) as Partial<Session>) };
-  } catch {
-    return emptySession();
-  }
+  const read = (key: string) => {
+    try {
+      const raw = window.localStorage.getItem(key);
+      return raw ? ({ ...emptySession(), ...(JSON.parse(raw) as Partial<Session>) } as Session) : null;
+    } catch {
+      return null;
+    }
+  };
+  // ترحيل الجلسات القديمة (قبل ما يصير المفتاح مربوط بالنطاق).
+  return read(storageKey(id, scope)) ?? read(`last-trip:interrogation:${id}`) ?? emptySession();
 }
 
 function LastTripInterrogationRoute() {
