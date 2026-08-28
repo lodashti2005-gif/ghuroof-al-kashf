@@ -3,6 +3,7 @@ import { ArrowRight, CheckCircle2, Loader2, Mail, MessageCircle, Send, ShieldAle
 import { useState } from "react";
 
 import { GAME_NAME } from "@/game/game-meta";
+import { AccountMenu } from "@/components/site/account-menu";
 import { Eyebrow } from "@/components/game/ui";
 import { submitContact } from "@/lib/contact.functions";
 import { cn } from "@/lib/utils";
@@ -84,12 +85,15 @@ function ContactPage() {
             </span>
             <span className="font-display text-sm font-bold">{BRAND_NAME}</span>
           </Link>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            الرئيسية <ArrowRight className="size-3.5" />
-          </Link>
+          <div className="flex items-center gap-3">
+            <AccountMenu />
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              الرئيسية <ArrowRight className="size-3.5" />
+            </Link>
+          </div>
         </header>
 
         <section className="cine-in mt-10">
