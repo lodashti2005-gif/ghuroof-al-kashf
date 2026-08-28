@@ -522,7 +522,7 @@ function LastTripInterrogationRoute() {
                   <button
                     key={e.id}
                     type="button"
-                    disabled={busy || expired}
+                    disabled={busy || expired || confronts.includes(e.id)}
                     onClick={() => {
                       if (!isInterrogator) {
                         setDenied(LAST_TRIP_DENIED_MESSAGE);
@@ -537,7 +537,7 @@ function LastTripInterrogationRoute() {
                     )}
                   >
                     {e.title}
-                    {session.confronts.includes(e.id) && (
+                    {confronts.includes(e.id) && (
                       <span className="ms-2 text-[0.65rem] text-muted-foreground">
                         · تمت المواجهة
                       </span>
@@ -560,7 +560,7 @@ function LastTripInterrogationRoute() {
                 <button
                   key={c.id}
                   type="button"
-                  disabled={busy || expired}
+                  disabled={busy || expired || confronts.includes(c.id)}
                   onClick={() => {
                     if (!isInterrogator) {
                       setDenied(LAST_TRIP_DENIED_MESSAGE);
@@ -575,6 +575,11 @@ function LastTripInterrogationRoute() {
                   )}
                 >
                   {c.label}
+                  {confronts.includes(c.id) && (
+                    <span className="ms-2 text-[0.65rem] text-muted-foreground">
+                      · تمت المواجهة
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
