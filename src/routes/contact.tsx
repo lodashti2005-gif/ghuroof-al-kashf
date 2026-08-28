@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 const BRAND_NAME = "ورا السالفة | Wara Al Salfa";
 const CONTACT_EMAIL = "contact@waralsalfa.com";
-const WHATSAPP_LINK = "https://wa.me/waralsalfa";
+const WHATSAPP_LINK = "https://wa.me/+96551270774";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
