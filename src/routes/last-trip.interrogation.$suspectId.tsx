@@ -4,6 +4,8 @@ import { ArrowRight, Clock, FileWarning, Gavel, Lock, Send, Users } from "lucide
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionButton } from "@/components/game/shell";
+import { ConfrontLab } from "@/components/game/confront-lab";
+
 import { CaseTag, Eyebrow, Panel, StressMeter } from "@/components/game/ui";
 import { LastTripRoleGate } from "@/components/game/last-trip-role-gate";
 import { LastTripTrialGate } from "@/components/game/last-trip-trial-gate";
@@ -614,7 +616,10 @@ function LastTripInterrogationRoute() {
             )}
           </Panel>
 
+          <ConfrontLab suspectId={suspectId} suspectName={suspect.name} />
+
           <Panel className="cine-in">
+
             <Eyebrow>المشتبه فيهم</Eyebrow>
             <div className="mt-3 flex flex-wrap gap-2">
               {lastTripSuspects.map((s) => (
