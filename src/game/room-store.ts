@@ -510,6 +510,10 @@ function teardownRealtime() {
     window.clearInterval(rtPoll);
     rtPoll = null;
   }
+  if (rtHeartbeat !== null) {
+    window.clearInterval(rtHeartbeat);
+    rtHeartbeat = null;
+  }
   if (channel) {
     supabase.removeChannel(channel);
     channel = null;
