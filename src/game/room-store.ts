@@ -424,6 +424,7 @@ export async function hydrate() {
 let rtCode: string | null = null;
 let rtCount = 0;
 let rtPoll: number | null = null;
+let rtHeartbeat: number | null = null;
 let refreshTimer: number | null = null;
 
 function scheduleRefresh() {
@@ -432,6 +433,18 @@ function scheduleRefresh() {
     refreshTimer = null;
     void refresh();
   }, 250);
+}
+
+/**
+ * نبضة اللاعب: تحدّث آخر ظهور لصفّه بالغرفة وتنظّف الصفوف الميتة (تبويب مقفول
+ * أو اتصال منقطع منذ فترة طويلة). ما تحذف لاعباً نشطاً ولا دوره ولا تقدمه.
+ */
+async function heartbeat() {
+  if (!session) return;
+  await rpc<boolean>("room_heartbeat", {
+    _code: session.code,
+    _player_id: session.playerId,
+  });
 }
 
 export function startRealtime() {
