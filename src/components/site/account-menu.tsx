@@ -1,4 +1,5 @@
-import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { LogOut, User } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -23,7 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export function AccountMenu() {
   const navigate = useNavigate();
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const [email, setEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
@@ -54,9 +55,8 @@ export function AccountMenu() {
     if (signingOut) return;
     setSigningOut(true);
     try {
-      const queryClient = (router.options.context as { queryClient?: { cancelQueries: () => Promise<void>; clear: () => void } }).queryClient;
-      await queryClient?.cancelQueries?.();
-      queryClient?.clear?.();
+      await queryClient.cancelQueries();
+      queryClient.clear();
       await supabase.auth.signOut();
     } finally {
       setSigningOut(false);
