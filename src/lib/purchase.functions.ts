@@ -104,11 +104,25 @@ export const startCasePurchase = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<PurchaseIntentResult> => {
     const { supabase, userId } = context;
 
-    const { data: entitled } = await supabase.rpc("has_case_entitlement", {
-      _user_id: userId,
-      _case_id: data.caseId,
-    });
-    if (entitled === true) {
+    const { isTrialCase } = await import("@/game/trial-cases");
+    let owned: boolean;
+    if (isTrialCase(data.caseId)) {
+      // القضية التجريبية قابلة للشراء دائماً إلا إذا فيه شراء مؤكد.
+      const { data: paid } = await supabase
+        .from("case_purchases")
+        .select("status")
+        .eq("case_id", data.caseId)
+        .eq("status", "paid")
+        .maybeSingle();
+      owned = !!paid;
+    } else {
+      const { data: entitled } = await supabase.rpc("has_case_entitlement", {
+        _user_id: userId,
+        _case_id: data.caseId,
+      });
+      owned = entitled === true;
+    }
+    if (owned) {
       return {
         status: "already_owned",
         checkoutUrl: null,
