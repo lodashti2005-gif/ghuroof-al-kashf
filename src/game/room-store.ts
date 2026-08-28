@@ -308,12 +308,15 @@ function toRoomState(snap: Snapshot): RoomState {
     caseId: snap.room.case_id,
     phase: snap.room.phase as RoomState["phase"],
     createdAt: new Date(snap.room.created_at).getTime(),
-    players: (snap.players ?? []).map<Player>((p) => ({
-      id: p.player_id,
-      name: p.name,
-      isHost: p.is_host,
-      joinedAt: new Date(p.joined_at).getTime(),
-    })),
+    players: (snap.players ?? []).map<Player>((p) => {
+      if (p.last_seen_at) lastSeenById.set(p.player_id, new Date(p.last_seen_at).getTime());
+      return {
+        id: p.player_id,
+        name: p.name,
+        isHost: p.is_host,
+        joinedAt: new Date(p.joined_at).getTime(),
+      };
+    }),
     unlockedEvidence: shared.unlockedEvidence ?? [],
     notes: shared.notes ?? [],
     deductions: shared.deductions ?? [],
