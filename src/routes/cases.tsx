@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   Users,
 } from "lucide-react";
+import { AccountMenu } from "@/components/site/account-menu";
 import { ResumeCaseButton } from "@/components/game/resume-case-button";
 import { Eyebrow } from "@/components/game/ui";
 import { GAME_NAME, GAME_TAGLINE } from "@/game/game-meta";
@@ -49,12 +50,7 @@ function CasesPage() {
             <span className="font-display text-sm font-bold">{GAME_NAME}</span>
           </Link>
           <div className="flex items-center gap-3">
-            <Link
-              to="/auth"
-              className="font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {signedIn ? "حسابك" : "دخول"}
-            </Link>
+            <AccountMenu />
             <Link
               to="/"
               className="inline-flex items-center gap-1.5 font-display text-xs text-muted-foreground transition-colors hover:text-foreground"

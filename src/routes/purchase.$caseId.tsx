@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import { AccountMenu } from "@/components/site/account-menu";
 import { Eyebrow, Panel } from "@/components/game/ui";
 import { GAME_NAME, getCaseById } from "@/game/game-meta";
 import { useCaseEntitlement } from "@/game/use-entitlement";
@@ -103,12 +104,15 @@ function PurchasePage() {
             </span>
             <span className="font-display text-sm font-bold">{GAME_NAME}</span>
           </Link>
-          <Link
-            to={backTo}
-            className="inline-flex items-center gap-1.5 font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            {backLabel} <ArrowRight className="size-3.5" />
-          </Link>
+          <div className="flex items-center gap-3">
+            <AccountMenu />
+            <Link
+              to={backTo}
+              className="inline-flex items-center gap-1.5 font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {backLabel} <ArrowRight className="size-3.5" />
+            </Link>
+          </div>
         </header>
 
         <Panel className="cine-in mt-8">
