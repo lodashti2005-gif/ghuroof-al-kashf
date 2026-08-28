@@ -76,36 +76,6 @@ useEffect(() => {
         </div>
       </section>
 
-      <section className="mt-5">
-        <Panel className="cine-in">
-          <Eyebrow>مقطع الاكتشاف</Eyebrow>
-          <h2 className="mt-1.5 text-xl font-bold">كيف انلقى بدر</h2>
-          <div className="group relative mt-4 aspect-video overflow-hidden rounded-2xl border border-border bg-surface-2">
-            <div
-              className="absolute inset-0 opacity-30"
-              aria-hidden="true"
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(0deg, transparent 0 2px, oklch(0 0 0 / 0.6) 2px 3px)",
-              }}
-            />
-            <div className="absolute inset-0 grid place-items-center">
-              <div className="text-center">
-                <span className="mx-auto grid size-16 place-items-center rounded-full file-tape transition-transform duration-500 group-hover:scale-105">
-                  <Play className="size-6" />
-                </span>
-                <p className="mt-3 font-display text-sm">تشغيل المقطع التمهيدي</p>
-                <p className="mt-1 font-mono text-xs text-muted-foreground">
-                  سيتم إضافة الفيديو لاحقاً
-                </p>
-              </div>
-            </div>
-            <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 font-mono text-xs text-primary">
-              <span className="size-1.5 rounded-full bg-primary blink-record" /> REC
-            </span>
-          </div>
-        </Panel>
-      </section>
 
       <section className="mt-8">
         <div className="mb-4 flex items-end justify-between gap-4">
