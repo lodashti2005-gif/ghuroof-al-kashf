@@ -309,10 +309,30 @@ function LastTripInterrogationRoute() {
         setBusy(false);
       }
     },
-    [ask, busy, expired, availableIds, inRoom, isInterrogator, lines, session.confronts, session.contradictions, stress, suspect, suspectId],
+    [
+      ask,
+      busy,
+      expired,
+      availableIds,
+      inRoom,
+      isInterrogator,
+      lines,
+      confronts,
+      contradictionCount,
+      stress,
+      suspect,
+      suspectId,
+    ],
   );
 
   const confrontDisabled = busy || expired || !isInterrogator;
+
+  // توزيع الأدوار صار بدون «المحقق»؟ ما نخلي الشاشة معلقة — نوضح ونرجّع اللاعب.
+  const ltRoles = room?.ltRoles ?? {};
+  const detectiveMissing =
+    inRoom &&
+    Object.keys(ltRoles).length > 0 &&
+    !Object.values(ltRoles).includes("lt-detective");
 
   if (!suspect) {
     return (
@@ -322,6 +342,29 @@ function LastTripInterrogationRoute() {
           <Link to="/last-trip/suspects" className="mt-4 inline-block">
             <ActionButton variant="outline">رجوع للشخصيات</ActionButton>
           </Link>
+        </Panel>
+      </div>
+    );
+  }
+
+  if (detectiveMissing) {
+    return (
+      <div dir="rtl" className="grid min-h-screen place-items-center bg-background px-4 py-10">
+        <Panel className="cine-in w-full max-w-lg text-center">
+          <Eyebrow>غرفة الاستجواب</Eyebrow>
+          <h1 className="mt-3 text-2xl font-bold">ما فيه محقق بالفريق</h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            الاستجواب يحتاج لاعب بدور «المحقق». رجّعوا لصفحة الشخصيات وتأكدوا إن كل
+            اللاعبين داخلين وأخذوا أدوارهم، وبعدها ارجعوا للاستجواب.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            <Link to="/last-trip/suspects">
+              <ActionButton>رجوع للشخصيات</ActionButton>
+            </Link>
+            <Link to="/last-trip/scene">
+              <ActionButton variant="outline">مسرح الجريمة</ActionButton>
+            </Link>
+          </div>
         </Panel>
       </div>
     );
