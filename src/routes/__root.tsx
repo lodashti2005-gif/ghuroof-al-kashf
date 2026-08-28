@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CaseTrialGate } from "@/components/game/case-trial-gate";
 import { SiteFooter } from "@/components/site/footer";
+import { noteRoute } from "@/game/room-store";
 
 function NotFoundComponent() {
   return (
@@ -146,6 +147,13 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const gated = CHALET_PLAY_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
+  // حفظ آخر صفحة داخل القضية بحساب اللاعب حتى يستأنف من نفس النقطة.
+  useEffect(() => {
+    const inPlay =
+      gated || pathname === "/last-trip" || pathname.startsWith("/last-trip/");
+    if (inPlay) noteRoute(pathname);
+  }, [pathname, gated]);
 
   return (
     <QueryClientProvider client={queryClient}>

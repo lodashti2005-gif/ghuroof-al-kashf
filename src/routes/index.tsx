@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertTriangle, ArrowLeft, ShieldAlert } from "lucide-react";
 
 import heroScene from "@/assets/scene-hero.jpg";
+import { ResumeCaseButton } from "@/components/game/resume-case-button";
 import { Eyebrow } from "@/components/game/ui";
 import { GAME_NAME, playableCases } from "@/game/game-meta";
 
@@ -171,6 +172,8 @@ function Welcome() {
             </p>
           </div>
         </div>
+
+        <ResumeCaseButton className="mt-8" />
 
         <Link
           to="/cases"
