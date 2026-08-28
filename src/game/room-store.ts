@@ -626,20 +626,26 @@ export async function createRoom(
   return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
 }
 
+/**
+ * الدخول للغرفة: الحساب المسجل يرجع بنفس هوية اللاعب حتى من جهاز أو متصفح ثاني
+ * (بدون إنشاء صف لاعب جديد)، والغرفة محدودة بـ٦ لاعبين فعليين.
+ */
 export async function joinRoom(code: string, name: string): Promise<{ ok: boolean; error?: string }> {
   const clean = code.trim();
   const playerId = uid();
-  const { data: result, error } = await rpc<string>("room_join", {
+  const { data, error } = await rpc<{ status: string; player_id?: string }>("room_join_v2", {
     _code: clean,
     _player_id: playerId,
     _name: name,
   });
   if (error) return { ok: false, error: "ما قدرنا نتصل بالسيرفر، تحقق من النت" };
+  const result = data?.status;
   if (result === "not_found") return { ok: false, error: "ما لقينا غرفة بهذا الرمز" };
+  if (result === "room_full") return { ok: false, error: "الغرفة مكتملة" };
   if (result === "name_taken") return { ok: false, error: "الاسم مستخدم بالغرفة، جرب اسم ثاني" };
   if (result !== "ok") return { ok: false, error: "تأكد من الاسم وجرب مرة ثانية" };
 
-  session = { code: clean, playerId };
+  session = { code: clean, playerId: data?.player_id ?? playerId };
   saveSession();
   await refresh();
   saveProgress();
