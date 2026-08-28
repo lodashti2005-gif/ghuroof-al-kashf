@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -11,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { CaseTrialGate } from "@/components/game/case-trial-gate";
 import { SiteFooter } from "@/components/site/footer";
 
 function NotFoundComponent() {
@@ -126,13 +128,35 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+/** مسارات لعب قضية الشاليه — تخضع لتجربة الـ١٠ دقائق المربوطة بالحساب. */
+const CHALET_PLAY_PATHS = [
+  "/lobby",
+  "/roles",
+  "/intro",
+  "/case",
+  "/scene",
+  "/dashboard",
+  "/notebook",
+  "/interrogation",
+  "/accusation",
+  "/reveal",
+];
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const gated = CHALET_PLAY_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      {gated ? (
+        <CaseTrialGate caseId="last-night">
+          <Outlet />
+        </CaseTrialGate>
+      ) : (
+        <Outlet />
+      )}
       <SiteFooter />
     </QueryClientProvider>
   );

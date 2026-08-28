@@ -24,6 +24,7 @@ import { Route as PlayRouteImport } from './routes/play'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PurchasesRouteImport } from './routes/purchases'
 import { Route as RefundRouteImport } from './routes/refund'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RevealRouteImport } from './routes/reveal'
 import { Route as RolesRouteImport } from './routes/roles'
 import { Route as SceneRouteImport } from './routes/scene'
@@ -113,6 +114,11 @@ const PurchasesRoute = PurchasesRouteImport.update({
 const RefundRoute = RefundRouteImport.update({
   id: '/refund',
   path: '/refund',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RevealRoute = RevealRouteImport.update({
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/purchases': typeof PurchasesRoute
   '/refund': typeof RefundRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/reveal': typeof RevealRoute
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
@@ -240,6 +247,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/purchases': typeof PurchasesRoute
   '/refund': typeof RefundRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/reveal': typeof RevealRoute
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
@@ -273,6 +281,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/purchases': typeof PurchasesRoute
   '/refund': typeof RefundRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/reveal': typeof RevealRoute
   '/roles': typeof RolesRoute
   '/scene': typeof SceneRoute
@@ -307,6 +316,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/purchases'
     | '/refund'
+    | '/reset-password'
     | '/reveal'
     | '/roles'
     | '/scene'
@@ -339,6 +349,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/purchases'
     | '/refund'
+    | '/reset-password'
     | '/reveal'
     | '/roles'
     | '/scene'
@@ -371,6 +382,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/purchases'
     | '/refund'
+    | '/reset-password'
     | '/reveal'
     | '/roles'
     | '/scene'
@@ -404,6 +416,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   PurchasesRoute: typeof PurchasesRoute
   RefundRoute: typeof RefundRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   RevealRoute: typeof RevealRoute
   RolesRoute: typeof RolesRoute
   SceneRoute: typeof SceneRoute
@@ -526,6 +539,13 @@ declare module '@tanstack/react-router' {
       path: '/refund'
       fullPath: '/refund'
       preLoaderRoute: typeof RefundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reveal': {
@@ -652,6 +672,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   PurchasesRoute: PurchasesRoute,
   RefundRoute: RefundRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   RevealRoute: RevealRoute,
   RolesRoute: RolesRoute,
   SceneRoute: SceneRoute,

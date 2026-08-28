@@ -38,6 +38,12 @@ function AuthPage() {
   useEffect(() => {
     const url = new URL(window.location.href);
     const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
+    if (url.searchParams.get("reset") === "1") {
+      setMode("in");
+      setMsg("تم تغيير كلمة السر بنجاح — سجّل دخولك بكلمة السر الجديدة.");
+      window.history.replaceState({}, "", "/auth");
+      return;
+    }
     const isConfirmed =
       url.searchParams.get("confirmed") === "1" ||
       hash.get("type") === "signup" ||
@@ -90,6 +96,28 @@ function AuthPage() {
     setPending(true);
     setMsg(
       "تم إنشاء الحساب وأرسلنا لك إيميل التأكيد. افتح الإيميل واضغط على سطر «تأكيد البريد الإلكتروني» — كل السطر رابط قابل للضغط، وإذا ما ظهر لك زر واضح انسخ الرابط والصقه في المتصفح. بعد التأكيد ارجع هنا وسجّل دخول.",
+    );
+  };
+
+  /** إرسال رابط إعادة تعيين كلمة السر لنفس نظام المصادقة الحالي. */
+  const sendReset = async () => {
+    setError(null);
+    setMsg(null);
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setError("اكتب إيميلك أولاً عشان نرسل لك رابط إعادة التعيين");
+      return;
+    }
+    setBusy(true);
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setBusy(false);
+    if (err) {
+      setError("ما قدرنا نرسل رابط إعادة التعيين، جرب بعد شوي");
+      return;
+    }
+    setMsg(
+      "أرسلنا لك رابط إعادة تعيين كلمة السر على إيميلك. افتح الرابط واختر كلمة سر جديدة، وإذا ما ظهر لك زر واضح انسخ الرابط والصقه في المتصفح.",
     );
   };
 
@@ -221,6 +249,16 @@ function AuthPage() {
                 dir="ltr"
                 className="w-full rounded-xl border border-input bg-surface-2 px-4 py-3 text-base outline-none focus:border-primary/60"
               />
+              {mode === "in" && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void sendReset()}
+                  className="mt-2 font-display text-xs text-primary transition-colors hover:text-foreground disabled:opacity-60"
+                >
+                  نسيت كلمة السر؟
+                </button>
+              )}
             </label>
 
             {error && (

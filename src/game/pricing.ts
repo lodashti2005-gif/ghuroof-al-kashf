@@ -45,16 +45,20 @@ export const PAYMENT_METHODS: PaymentMethodConfig[] = [
   { id: "apple-pay", label: "Apple Pay", hint: "دفع سريع من الجوال", enabled: false },
 ];
 
+/**
+ * السعر المعروض داخل الواجهة فقط (بالدينار الكويتي).
+ * السعر الحقيقي عند الدفع يبقى كما هو في Paddle (USD) — ما نغيّره من هنا.
+ */
 export const CASE_PRICING: CasePricing[] = [
   {
     caseId: "last-trip",
-    amount: 9.99,
-    currency: "USD",
-    currencyLabel: "$",
+    amount: 3,
+    currency: "KWD",
+    currencyLabel: "د.ك",
   },
   {
     caseId: "last-night",
-    amount: 2.5,
+    amount: 3,
     currency: "KWD",
     currencyLabel: "د.ك",
   },
@@ -63,18 +67,11 @@ export const CASE_PRICING: CasePricing[] = [
 export const getCasePricing = (caseId: string): CasePricing | null =>
   CASE_PRICING.find((p) => p.caseId === caseId) ?? null;
 
-/** نص السعر النهائي — يفضّل سعر القاعدة إذا كان موجوداً. */
-export function formatCasePrice(caseId: string, dbPrice?: number | null): string {
+/** نص السعر المعروض داخل الواجهة. */
+export function formatCasePrice(caseId: string, _dbPrice?: number | null): string {
   const cfg = getCasePricing(caseId);
-  const amount = typeof dbPrice === "number" && dbPrice > 0 ? dbPrice : cfg?.amount;
-  if (!amount) return cfg?.note ?? "السعر يُحدد قريباً";
+  if (!cfg?.amount) return cfg?.note ?? "السعر يُحدد قريباً";
 
-  const currency = cfg?.currency ?? "KWD";
-  const decimals = currency === "USD" ? 2 : 3;
-  const formatted = amount.toFixed(decimals).replace(/\.?0+$/, "");
-  const label = cfg?.currencyLabel ?? (currency === "USD" ? "$" : "د.ك");
-
-  // للدولار نحط الرمز قبل الرقم، للباقي بعد.
-  if (currency === "USD") return `${label}${formatted} ${currency}`;
-  return `${formatted} ${label}`;
+  if (cfg.currency === "USD") return `${cfg.currencyLabel}${cfg.amount.toFixed(2)} USD`;
+  return `${cfg.amount.toFixed(3)} ${cfg.currencyLabel}`;
 }
