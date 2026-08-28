@@ -224,14 +224,30 @@ function LastTripInterrogationRoute() {
         setDenied(LAST_TRIP_DENIED_MESSAGE);
         return;
       }
+      const confrontId = confront?.evidenceId ?? confront?.witnessId ?? null;
+      // مواجهة مستهلكة من أي لاعب بالغرفة ما تتكرر مرة ثانية.
+      if (confrontId && confronts.includes(confrontId)) {
+        setPending(null);
+        setDenied("هذي المواجهة صارت قبل — ما تنفع تتكرر.");
+        return;
+      }
 
       setBusy(true);
       const question: Line = { id: crypto.randomUUID(), role: "investigator", text };
       const history = [...lines, question];
       if (inRoom) {
         store.pushMessage(suspectId, { role: "investigator", author: "المحقق", text });
+        // تُسجّل المواجهة فوراً بالحالة المشتركة قبل انتظار الرد.
+        if (confrontId) store.recordConfront(suspectId, confrontId);
       } else {
-        setSession((s) => ({ ...s, lines: [...s.lines, question] }));
+        setSession((s) => ({
+          ...s,
+          lines: [...s.lines, question],
+          confronts:
+            confrontId && !s.confronts.includes(confrontId)
+              ? [...s.confronts, confrontId]
+              : s.confronts,
+        }));
       }
       setDraft("");
       setPending(null);
@@ -245,8 +261,8 @@ function LastTripInterrogationRoute() {
             unlockedEvidence: availableIds,
             confrontEvidenceId: confront?.evidenceId ?? null,
             confrontWitnessId: confront?.witnessId ?? null,
-            confrontHistory: session.confronts,
-            contradictionCount: session.contradictions,
+            confrontHistory: confronts,
+            contradictionCount,
             transcript: history.slice(-20).map((l) => ({
               role: l.role,
               author: l.role === "investigator" ? "المحقق" : suspect.name,
@@ -254,7 +270,6 @@ function LastTripInterrogationRoute() {
             })),
           },
         });
-        const confrontId = confront?.evidenceId ?? confront?.witnessId;
         if (inRoom) {
           store.pushMessage(suspectId, {
             role: "suspect",
@@ -263,6 +278,7 @@ function LastTripInterrogationRoute() {
             ...(reply.contradiction ? { flagged: true } : {}),
           });
           store.bumpStress(suspectId, reply.stressDelta);
+          store.recordConfront(suspectId, confrontId, reply.contradiction);
           if (reply.contradiction) {
             store.addContradiction({
               suspectId,
@@ -273,16 +289,9 @@ function LastTripInterrogationRoute() {
               author: "المحقق",
             });
           }
-          setSession((s) => ({
-            ...s,
-            confronts:
-              confrontId && !s.confronts.includes(confrontId)
-                ? [...s.confronts, confrontId]
-                : s.confronts,
-            contradictions: s.contradictions + (reply.contradiction ? 1 : 0),
-          }));
         } else {
           setSession((s) => ({
+            ...s,
             stress: Math.max(0, Math.min(100, s.stress + reply.stressDelta)),
             lines: [
               ...history,
@@ -293,9 +302,6 @@ function LastTripInterrogationRoute() {
                 contradiction: reply.contradiction,
               },
             ],
-            confronts: confrontId && !s.confronts.includes(confrontId)
-              ? [...s.confronts, confrontId]
-              : s.confronts,
             contradictions: s.contradictions + (reply.contradiction ? 1 : 0),
           }));
         }
