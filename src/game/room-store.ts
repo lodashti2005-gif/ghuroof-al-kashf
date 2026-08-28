@@ -584,6 +584,7 @@ export async function createRoom(
     session = { code, playerId };
     saveSession();
     await refresh();
+    saveProgress();
     return { ok: true, code };
   }
   return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
@@ -605,11 +606,13 @@ export async function joinRoom(code: string, name: string): Promise<{ ok: boolea
   session = { code: clean, playerId };
   saveSession();
   await refresh();
+  saveProgress();
   return { ok: true };
 }
 
 export function leaveRoom() {
   const current = session;
+  void closeProgress(state?.caseId ?? null);
   if (current) {
     run(
       rpc("room_leave", { _code: current.code, _player_id: current.playerId }),
