@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   Users,
 } from "lucide-react";
+import { ResumeCaseButton } from "@/components/game/resume-case-button";
 import { Eyebrow } from "@/components/game/ui";
 import { GAME_NAME, GAME_TAGLINE } from "@/game/game-meta";
 import { useCaseStore, type StoreCase } from "@/game/entitlements";
@@ -73,6 +74,10 @@ function CasesPage() {
             واحد بس يشتري القضية ويفتح الغرفة — باقي الفريق يدخلون برمز الغرفة بدون شراء.
           </p>
         </div>
+
+        <ResumeCaseButton className="mt-6" />
+
+
 
 
         <section className="mt-8">
