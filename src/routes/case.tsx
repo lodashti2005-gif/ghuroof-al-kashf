@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { AlertTriangle, ArrowLeft, Clock, MapPin, Play, Skull } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Clock, MapPin, Skull } from "lucide-react";
 
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel, SuspectCard } from "@/components/game/ui";
