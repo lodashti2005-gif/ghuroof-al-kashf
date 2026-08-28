@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   Users,
 } from "lucide-react";
+import { ResumeCaseButton } from "@/components/game/resume-case-button";
 import { Eyebrow } from "@/components/game/ui";
 import { GAME_NAME, GAME_TAGLINE } from "@/game/game-meta";
 import { useCaseStore, type StoreCase } from "@/game/entitlements";
