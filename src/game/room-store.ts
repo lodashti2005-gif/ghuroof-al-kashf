@@ -368,6 +368,8 @@ async function refreshNow() {
   }
   state = { ...next, players: applyPresence(next.players) };
   emit();
+  // أي تغيّر بالمرحلة يُحفظ بحساب اللاعب حتى يستأنف من نفس النقطة.
+  if (state.phase !== lastSavedPhase) saveProgress();
 }
 
 /** Coalesce realtime bursts into one fetch. A single room write can otherwise
