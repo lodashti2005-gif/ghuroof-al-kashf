@@ -629,7 +629,7 @@ export async function createRoom(
       _case_id: caseId,
       _host_player_id: playerId,
       _host_name: hostName,
-      _state: freshShared(),
+      _state: freshShared(caseId),
     });
     if (error) return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
     if (result === "code_taken") continue; // code collision, retry
@@ -1068,7 +1068,7 @@ export function resetCase() {
     s.notes = [];
     s.deductions = [];
     s.contradictions = [];
-    s.suspects = freshSuspects();
+    s.suspects = freshSuspects(s.caseId);
     s.roles = {};
     s.ready = [];
     s.votes = {};
