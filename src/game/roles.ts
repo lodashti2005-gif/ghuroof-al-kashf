@@ -82,10 +82,13 @@ function shuffle<T>(list: T[]): T[] {
   return out;
 }
 
+/** الحد الأقصى للاعبين الفعليين داخل الغرفة = عدد الأدوار المختلفة. */
+export const MAX_ROOM_PLAYERS = playerRoles.length;
+
 /**
- * توزيع عشوائي بدون تكرار: كل لاعب يأخذ دور واحد مختلف (ستة أدوار = ستة لاعبين).
+ * توزيع عشوائي بدون أي تكرار: كل لاعب يأخذ دور واحد مختلف (ستة أدوار = ستة لاعبين).
  * الأدوار الموجودة أصلاً ما تتغير — تنحفظ مثل ما هي (Refresh / رجوع للغرفة).
- * لو عدد اللاعبين أكبر من عدد الأدوار، الأدوار القابلة للتكرار بس تتكرر.
+ * لو انتهت الأدوار الستة ما نعيد تدويرها — اللاعب الزائد يبقى بدون دور والغرفة مكتملة.
  */
 export function assignRoles(
   playerIds: string[],
@@ -104,25 +107,12 @@ export function assignRoles(
 
   const pending = shuffle(playerIds.filter((id) => !roles[id]));
   const free = shuffle(playerRoles.filter((r) => !taken.has(r.id)));
-  const repeatable = shuffle(playerRoles.filter((r) => r.repeatable));
-  // عدّاد الاستخدام: لو اللاعبين أكثر من الأدوار، نكرر الأقل استخداماً فقط.
-  const counts = new Map<string, number>();
-  playerRoles.forEach((r) => counts.set(r.id, 0));
-  Object.values(roles).forEach((r) => counts.set(r, (counts.get(r) ?? 0) + 1));
 
   pending.forEach((id) => {
-    const next = free.find((r) => !taken.has(r.id));
-    if (next) {
-      roles[id] = next.id;
-      taken.add(next.id);
-      counts.set(next.id, (counts.get(next.id) ?? 0) + 1);
-      return;
-    }
-    const pick = repeatable.reduce((best, r) =>
-      (counts.get(r.id) ?? 0) < (counts.get(best.id) ?? 0) ? r : best,
-    );
-    roles[id] = pick.id;
-    counts.set(pick.id, (counts.get(pick.id) ?? 0) + 1);
+    const next = free.shift();
+    if (!next) return; // ما فيه دور شاغر — ممنوع تكرار دور موجود.
+    roles[id] = next.id;
+    taken.add(next.id);
   });
 
   return roles;

@@ -111,9 +111,13 @@ function shuffle<T>(list: T[]): T[] {
   return out;
 }
 
+/** الحد الأقصى للاعبين الفعليين داخل غرفة «آخر رحلة» = عدد الأدوار. */
+export const MAX_LAST_TRIP_PLAYERS = lastTripRoles.length;
+
 /**
- * قرعة الأدوار: عشوائية، بدون تكرار، والمحقق موجود دائماً.
+ * قرعة الأدوار: عشوائية، بدون تكرار أبداً، والمحقق موجود دائماً.
  * الأدوار المحفوظة مسبقاً تبقى ثابتة (الـrefresh ما يعيد القرعة).
+ * لو انتهت الأدوار الستة، اللاعب الزائد يبقى بدون دور — الغرفة مكتملة.
  */
 export function assignLastTripRoles(
   playerIds: string[],
@@ -137,15 +141,11 @@ export function assignLastTripRoles(
     ? shuffle(lastTripRoles.filter((r) => !taken.has(r.id)))
     : [detective, ...shuffle(lastTripRoles.filter((r) => r.id !== detective.id && !taken.has(r.id)))];
 
-  pending.forEach((id, index) => {
+  pending.forEach((id) => {
     const next = pool.shift();
-    if (next) {
-      roles[id] = next.id;
-      taken.add(next.id);
-      return;
-    }
-    // أكثر من ٦ لاعبين: نكرر بالترتيب حتى ما يبقى لاعب بدون دور.
-    roles[id] = lastTripRoles[(index + 1) % lastTripRoles.length]!.id;
+    if (!next) return; // ما فيه دور شاغر — ممنوع تكرار دور لاعب ثاني.
+    roles[id] = next.id;
+    taken.add(next.id);
   });
 
   return roles;
