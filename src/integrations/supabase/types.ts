@@ -279,25 +279,31 @@ export type Database = {
           id: string
           is_host: boolean
           joined_at: string
+          last_seen_at: string
           name: string
           player_id: string
           room_code: string
+          user_id: string | null
         }
         Insert: {
           id?: string
           is_host?: boolean
           joined_at?: string
+          last_seen_at?: string
           name: string
           player_id: string
           room_code: string
+          user_id?: string | null
         }
         Update: {
           id?: string
           is_host?: boolean
           joined_at?: string
+          last_seen_at?: string
           name?: string
           player_id?: string
           room_code?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -425,6 +431,10 @@ export type Database = {
         }
         Returns: string
       }
+      room_heartbeat: {
+        Args: { _code: string; _player_id: string }
+        Returns: boolean
+      }
       room_is_member: {
         Args: { _code: string; _player_id: string }
         Returns: boolean
@@ -433,10 +443,15 @@ export type Database = {
         Args: { _code: string; _name: string; _player_id: string }
         Returns: string
       }
+      room_join_v2: {
+        Args: { _code: string; _name: string; _player_id: string }
+        Returns: Json
+      }
       room_leave: {
         Args: { _code: string; _player_id: string }
         Returns: undefined
       }
+      room_prune: { Args: { _code: string }; Returns: undefined }
       room_reset_votes: {
         Args: { _code: string; _player_id: string }
         Returns: boolean
