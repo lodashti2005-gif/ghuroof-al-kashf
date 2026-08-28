@@ -7,6 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, Clock, FileSearch, Loader2, RefreshCw, XCircle } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
+import { AccountMenu } from "@/components/site/account-menu";
 import { Eyebrow, Panel } from "@/components/game/ui";
 import { GAME_NAME } from "@/game/game-meta";
 import { listMyPurchases, type MyPurchasesResult, type PurchaseUiStatus } from "@/lib/my-purchases.functions";
@@ -110,6 +111,7 @@ function PurchasesPage() {
                 <Loader2 className={`size-3.5 ${syncing ? "animate-spin" : ""}`} /> تحديث لحظي
               </span>
             ) : null}
+            <AccountMenu />
             <button
               type="button"
               onClick={() => void load()}
