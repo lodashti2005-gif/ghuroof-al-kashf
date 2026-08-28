@@ -103,7 +103,7 @@ function CasesPage() {
                   <div className="min-w-0">
                     <p className="truncate font-display text-sm font-bold">{item.title}</p>
                     <p className="mt-1 inline-flex items-center gap-1.5 font-mono text-[11px] text-primary">
-                      <BadgeCheck className="size-3.5" /> {item.free ? "متاحة" : "تم الشراء ✓"}
+                      <BadgeCheck className="size-3.5" /> {item.free ? "تجربة ١٠ دقائق" : "تم الشراء ✓"}
                     </p>
                   </div>
                   <Link
@@ -155,7 +155,7 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
         >
           {item.owned ? (
             <>
-              <BadgeCheck className="size-3.5" /> {item.free ? "متاحة" : "تم الشراء ✓"}
+              <BadgeCheck className="size-3.5" /> {item.free ? "تجربة ١٠ دقائق" : "تم الشراء ✓"}
             </>
           ) : (
             <>
@@ -198,11 +198,11 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
 
         <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3">
           <span className="font-display text-sm font-bold">
-            {item.free ? "متاحة للتجربة" : formatCasePrice(item.id)}
+            {formatCasePrice(item.id)}
           </span>
 
           <span className="font-mono text-[11px] text-muted-foreground">
-            {soon ? "قيد التجهيز" : item.owned ? (item.id === "last-trip" ? "متاحة للتجربة" : "متاحة") : "تحتاج شراء"}
+            {soon ? "قيد التجهيز" : item.owned ? "جرّبي أول ١٠ دقائق" : "تحتاج شراء"}
           </span>
         </div>
 
@@ -212,7 +212,7 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
               to={item.id === "last-trip" ? "/last-trip/lobby" : "/play"}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-display text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.02]"
             >
-              <Play className="size-4" /> ابدأ القضية
+              <Play className="size-4" /> {item.free ? "جرّبي أول ١٠ دقائق" : "ابدأ القضية"}
             </Link>
           ) : soon ? (
             <button
