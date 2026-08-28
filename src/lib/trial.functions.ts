@@ -10,6 +10,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { isTrialCase } from "@/game/trial-cases";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const TRIAL_TOTAL_SECONDS = 600;
