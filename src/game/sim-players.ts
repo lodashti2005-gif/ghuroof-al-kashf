@@ -171,7 +171,13 @@ export function buildSimRoom(sim: SimState, caseId = "last-trip"): RoomState {
 export function overlayRoom(room: RoomState | null, sim: SimState): RoomState | null {
   if (!sim.active || sim.players.length === 0) return room;
   const base: RoomState = room ?? buildSimRoom(sim);
-  const takenRoles = new Set(Object.values(base.ltRoles ?? {}));
+  const simIds = new Set(sim.players.map((p) => p.id));
+  // الأدوار المحجوزة باللاعبين الحقيقيين فقط — دور اللاعب الوهمي يبقى كما اخترته.
+  const takenRoles = new Set(
+    Object.entries(base.ltRoles ?? {})
+      .filter(([id]) => !simIds.has(id))
+      .map(([, roleId]) => roleId),
+  );
   const ltRoles = { ...(base.ltRoles ?? {}) };
   sim.players.forEach((p) => {
     const roleId = takenRoles.has(p.roleId) ? freeRole(takenRoles) : p.roleId;
