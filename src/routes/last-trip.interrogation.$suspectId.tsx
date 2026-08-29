@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionButton } from "@/components/game/shell";
 import { ConfrontLab } from "@/components/game/confront-lab";
+import { SimPlayersPanel } from "@/components/game/sim-players-panel";
 
 import { CaseTag, Eyebrow, Panel, StressMeter } from "@/components/game/ui";
 import { LastTripRoleGate } from "@/components/game/last-trip-role-gate";
@@ -615,6 +616,8 @@ function LastTripInterrogationRoute() {
               </p>
             )}
           </Panel>
+
+          <SimPlayersPanel />
 
           <ConfrontLab suspectId={suspectId} suspectName={suspect.name} />
 

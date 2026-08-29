@@ -46,7 +46,7 @@ export function LastTripTrialBadge() {
 }
 
 export function LastTripTrialGate({ children }: { children: React.ReactNode }) {
-  const { room } = useRoom();
+  const { room, sim } = useRoom();
   const [, tick] = useState(0);
   // الملكية تُقرأ من الخادم فقط — الواجهة ما تفتح القضية أبداً من نفسها.
   const { entitlement } = useCaseEntitlement("last-trip");
@@ -70,7 +70,9 @@ export function LastTripTrialGate({ children }: { children: React.ReactNode }) {
     if (purchased && inRoom && trial && !trial.unlocked) void store.unlockLastTripRoom();
   }, [purchased, inRoom, trial]);
 
+  // وضع محاكاة اللاعبين محلي للاختبار — يتجاوز قفل التجربة على هذا الجهاز فقط.
   const expired =
+    !sim.active &&
     !purchased && !!trial && !trial.unlocked && store.remainingLastTripTrial(trial) <= 0;
   if (!expired) return <>{children}</>;
 
