@@ -170,7 +170,7 @@ export function buildSimRoom(sim: SimState, caseId = "last-trip"): RoomState {
  */
 export function overlayRoom(room: RoomState | null, sim: SimState): RoomState | null {
   if (!sim.active || sim.players.length === 0) return room;
-  const base = room ?? buildSimRoom(sim, room?.caseId);
+  const base: RoomState = room ?? buildSimRoom(sim);
   const takenRoles = new Set(Object.values(base.ltRoles ?? {}));
   const ltRoles = { ...(base.ltRoles ?? {}) };
   sim.players.forEach((p) => {
