@@ -253,6 +253,36 @@ export type Database = {
         }
         Relationships: []
       }
+      player_events: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          path: string | null
+          room_code: string | null
+          user_id: string | null
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          path?: string | null
+          room_code?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          path?: string | null
+          room_code?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
