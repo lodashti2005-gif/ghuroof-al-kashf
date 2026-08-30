@@ -31,6 +31,8 @@ export function AccountMenu() {
   const [email, setEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const fetchIsAdmin = useServerFn(checkIsAdmin);
 
   useEffect(() => {
     let active = true;
@@ -39,11 +41,22 @@ export function AccountMenu() {
       if (!active) return;
       setEmail(data.user?.email ?? null);
       setLoading(false);
+      if (!data.user) {
+        setIsAdmin(false);
+        return;
+      }
+      try {
+        const res = await fetchIsAdmin({ data: undefined });
+        if (active) setIsAdmin(res.isAdmin);
+      } catch {
+        if (active) setIsAdmin(false);
+      }
     };
     void load();
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
         setEmail(null);
+        setIsAdmin(false);
       } else if (event === "SIGNED_IN" || event === "USER_UPDATED") {
         void load();
       }
@@ -52,7 +65,7 @@ export function AccountMenu() {
       active = false;
       sub.subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchIsAdmin]);
 
   const handleSignOut = async () => {
     if (signingOut) return;
@@ -107,6 +120,17 @@ export function AccountMenu() {
             القضايا
           </Link>
         </DropdownMenuItem>
+        {isAdmin ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link to="/admin" className="cursor-pointer">
+                <ShieldCheck className="size-4" />
+                لوحة المالك
+              </Link>
+            </DropdownMenuItem>
+          </>
+        ) : null}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={(e) => {

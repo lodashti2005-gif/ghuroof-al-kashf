@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CaseTrialGate } from "@/components/game/case-trial-gate";
 import { SiteFooter } from "@/components/site/footer";
 import { noteRoute } from "@/game/room-store";
+import { trackEvent } from "@/lib/activity";
 
 function NotFoundComponent() {
   return (
@@ -147,6 +148,11 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const gated = CHALET_PLAY_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
+  // تتبّع بسيط: فتح الموقع (بدون معلومات حساسة).
+  useEffect(() => {
+    void trackEvent("site_open", { path: pathname });
+  }, [pathname]);
 
   // حفظ آخر صفحة داخل القضية بحساب اللاعب حتى يستأنف من نفس النقطة.
   useEffect(() => {
