@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LogOut, User } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { LogOut, ShieldCheck, User } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import {
@@ -12,7 +13,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { GAME_NAME } from "@/game/game-meta";
+import { checkIsAdmin } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
+
 
 /**
  * زر الحساب في الهيدر:

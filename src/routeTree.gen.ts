@@ -29,6 +29,7 @@ import { Route as RevealRouteImport } from './routes/reveal'
 import { Route as RolesRouteImport } from './routes/roles'
 import { Route as SceneRouteImport } from './routes/scene'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminPaddleEventsRouteImport } from './routes/admin.paddle-events'
 import { Route as InterrogationSuspectIdRouteImport } from './routes/interrogation.$suspectId'
 import { Route as LastTripAccusationRouteImport } from './routes/last-trip.accusation'
@@ -141,6 +142,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminPaddleEventsRoute = AdminPaddleEventsRouteImport.update({
   id: '/admin/paddle-events',
   path: '/admin/paddle-events',
@@ -228,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/last-trip/scene': typeof LastTripSceneRoute
   '/last-trip/suspects': typeof LastTripSuspectsRoute
   '/purchase/$caseId': typeof PurchaseCaseIdRoute
+  '/admin/': typeof AdminIndexRoute
   '/api/public/paddle-webhook': typeof ApiPublicPaddleWebhookRoute
   '/last-trip/interrogation/$suspectId': typeof LastTripInterrogationSuspectIdRoute
 }
@@ -261,6 +268,7 @@ export interface FileRoutesByTo {
   '/last-trip/scene': typeof LastTripSceneRoute
   '/last-trip/suspects': typeof LastTripSuspectsRoute
   '/purchase/$caseId': typeof PurchaseCaseIdRoute
+  '/admin': typeof AdminIndexRoute
   '/api/public/paddle-webhook': typeof ApiPublicPaddleWebhookRoute
   '/last-trip/interrogation/$suspectId': typeof LastTripInterrogationSuspectIdRoute
 }
@@ -295,6 +303,7 @@ export interface FileRoutesById {
   '/last-trip/scene': typeof LastTripSceneRoute
   '/last-trip/suspects': typeof LastTripSuspectsRoute
   '/purchase/$caseId': typeof PurchaseCaseIdRoute
+  '/admin/': typeof AdminIndexRoute
   '/api/public/paddle-webhook': typeof ApiPublicPaddleWebhookRoute
   '/last-trip/interrogation/$suspectId': typeof LastTripInterrogationSuspectIdRoute
 }
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/last-trip/scene'
     | '/last-trip/suspects'
     | '/purchase/$caseId'
+    | '/admin/'
     | '/api/public/paddle-webhook'
     | '/last-trip/interrogation/$suspectId'
   fileRoutesByTo: FileRoutesByTo
@@ -363,6 +373,7 @@ export interface FileRouteTypes {
     | '/last-trip/scene'
     | '/last-trip/suspects'
     | '/purchase/$caseId'
+    | '/admin'
     | '/api/public/paddle-webhook'
     | '/last-trip/interrogation/$suspectId'
   id:
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/last-trip/scene'
     | '/last-trip/suspects'
     | '/purchase/$caseId'
+    | '/admin/'
     | '/api/public/paddle-webhook'
     | '/last-trip/interrogation/$suspectId'
   fileRoutesById: FileRoutesById
@@ -430,6 +442,7 @@ export interface RootRouteChildren {
   LastTripSceneRoute: typeof LastTripSceneRoute
   LastTripSuspectsRoute: typeof LastTripSuspectsRoute
   PurchaseCaseIdRoute: typeof PurchaseCaseIdRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   ApiPublicPaddleWebhookRoute: typeof ApiPublicPaddleWebhookRoute
   LastTripInterrogationSuspectIdRoute: typeof LastTripInterrogationSuspectIdRoute
 }
@@ -576,6 +589,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/paddle-events': {
       id: '/admin/paddle-events'
       path: '/admin/paddle-events'
@@ -686,6 +706,7 @@ const rootRouteChildren: RootRouteChildren = {
   LastTripSceneRoute: LastTripSceneRoute,
   LastTripSuspectsRoute: LastTripSuspectsRoute,
   PurchaseCaseIdRoute: PurchaseCaseIdRoute,
+  AdminIndexRoute: AdminIndexRoute,
   ApiPublicPaddleWebhookRoute: ApiPublicPaddleWebhookRoute,
   LastTripInterrogationSuspectIdRoute: LastTripInterrogationSuspectIdRoute,
 }
