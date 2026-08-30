@@ -6,78 +6,14 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 
+import {
+  emptyAdminOverview,
+  type AdminActivityRow,
+  type AdminCaseStat,
+  type AdminOverview,
+  type AdminRoomRow,
+} from "@/lib/admin-overview";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-export interface AdminCaseStat {
-  caseId: string;
-  title: string | null;
-  paidPurchases: number;
-  pendingPurchases: number;
-  failedPurchases: number;
-  trialPlayers: number;
-}
-
-export interface AdminActivityRow {
-  id: string;
-  eventType: string;
-  caseId: string | null;
-  roomCode: string | null;
-  path: string | null;
-  userId: string | null;
-  createdAt: string;
-}
-
-export interface AdminRoomRow {
-  code: string;
-  caseId: string;
-  phase: string;
-  players: number;
-  updatedAt: string;
-}
-
-export interface AdminOverview {
-  allowed: boolean;
-  /** إجمالي الحسابات المسجّلة (من جدول الملفات الشخصية). */
-  totalProfiles: number | null;
-  /** حسابات أُنشئت خلال آخر ٧ أيام. */
-  newProfiles7d: number | null;
-  totalPurchases: number | null;
-  paidPurchases: number | null;
-  totalRevenue: { amount: number; currency: string }[] | null;
-  totalRooms: number | null;
-  activeRooms: number | null;
-  totalRoomPlayers: number | null;
-  activeProgress: number | null;
-  trialRows: number | null;
-  webhookEvents: number | null;
-  cases: AdminCaseStat[];
-  rooms: AdminRoomRow[] | null;
-  activity: AdminActivityRow[] | null;
-  activityTotal: number | null;
-  activity7dByType: { eventType: string; count: number }[] | null;
-  contactSubmissions: number | null;
-}
-
-const EMPTY: AdminOverview = {
-  allowed: false,
-  totalProfiles: null,
-  newProfiles7d: null,
-  totalPurchases: null,
-  paidPurchases: null,
-  totalRevenue: null,
-  totalRooms: null,
-  activeRooms: null,
-  totalRoomPlayers: null,
-  activeProgress: null,
-  trialRows: null,
-  webhookEvents: null,
-  cases: [],
-  rooms: null,
-  activity: null,
-  activityTotal: null,
-  activity7dByType: null,
-  contactSubmissions: null,
-};
 
 /** هل المستخدم الحالي مشرف؟ يستخدمه زر «لوحة المالك» بالهيدر. */
 export const checkIsAdmin = createServerFn({ method: "POST" })
@@ -97,7 +33,7 @@ export const getAdminOverview = createServerFn({ method: "POST" })
       _user_id: context.userId,
       _role: "admin",
     });
-    if (isAdmin !== true) return EMPTY;
+    if (isAdmin !== true) return emptyAdminOverview;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
