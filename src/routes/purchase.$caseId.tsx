@@ -25,6 +25,7 @@ import { GAME_NAME, getCaseById } from "@/game/game-meta";
 import { useCaseEntitlement } from "@/game/use-entitlement";
 import { formatCasePrice, getCasePricing } from "@/game/pricing";
 import { startCasePurchase, type PurchaseIntentResult } from "@/lib/purchase.functions";
+import { trackEvent } from "@/lib/activity";
 
 export const Route = createFileRoute("/purchase/$caseId")({
   validateSearch: (search: Record<string, unknown>) => ({
