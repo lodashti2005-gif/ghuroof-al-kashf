@@ -256,6 +256,7 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
         </div>
       </div>
     </article>
+  );
 }
 
 /**
