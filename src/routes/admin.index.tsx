@@ -11,9 +11,12 @@ import {
   Activity,
   CreditCard,
   DoorOpen,
+  Filter,
   Loader2,
+  Megaphone,
   RefreshCw,
   ShieldCheck,
+  TrendingUp,
   Users,
 } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
@@ -22,6 +25,12 @@ import { Eyebrow, Panel } from "@/components/game/ui";
 import { GAME_NAME } from "@/game/game-meta";
 import { getAdminOverview } from "@/lib/admin.functions";
 import type { AdminOverview } from "@/lib/admin-overview";
+import { getAnalyticsReport } from "@/lib/analytics.functions";
+import {
+  ADS_LAUNCH_DATE,
+  SOURCE_LABEL,
+  type AnalyticsReport,
+} from "@/lib/analytics-overview";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({
