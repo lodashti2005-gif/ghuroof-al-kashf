@@ -17,7 +17,7 @@ import {
   ShieldAlert,
   ShoppingCart,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { AccountMenu } from "@/components/site/account-menu";
 import { Eyebrow, Panel } from "@/components/game/ui";
@@ -25,6 +25,7 @@ import { GAME_NAME, getCaseById } from "@/game/game-meta";
 import { useCaseEntitlement } from "@/game/use-entitlement";
 import { formatCasePrice, getCasePricing } from "@/game/pricing";
 import { startCasePurchase, type PurchaseIntentResult } from "@/lib/purchase.functions";
+import { trackEvent } from "@/lib/activity";
 
 export const Route = createFileRoute("/purchase/$caseId")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -67,7 +68,16 @@ function PurchasePage() {
   const backTo = room ? "/last-trip/scene" : "/cases";
   const backLabel = room ? "رجوع للغرفة" : "رجوع للقضايا";
 
+  // تتبّع تسويقي فقط — ما يأثر على الشراء ولا على فتح القضية.
+  useEffect(() => {
+    void trackEvent("purchase_view", { caseId, path: "/purchase" });
+  }, [caseId]);
+  useEffect(() => {
+    if (owned) void trackEvent("case_unlocked", { caseId, path: "/purchase" });
+  }, [owned, caseId]);
+
   async function onPay() {
+    void trackEvent("pay_click", { caseId, path: "/purchase" });
     setBusy(true);
     try {
       const result = await requestPurchase({ data: { caseId, room } });

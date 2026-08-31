@@ -6,6 +6,7 @@ import { ActionButton } from "@/components/game/shell";
 import { Eyebrow } from "@/components/game/ui";
 import { GAME_NAME } from "@/game/game-meta";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/activity";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -93,6 +94,7 @@ function AuthPage() {
       setError("ما قدرنا نسجّل الحساب، جرب إيميل ثاني");
       return;
     }
+    void trackEvent("signup", { path: "/auth" });
     setPending(true);
     setMsg(
       "تم إنشاء الحساب وأرسلنا لك إيميل التأكيد. افتح الإيميل واضغط على سطر «تأكيد البريد الإلكتروني» — كل السطر رابط قابل للضغط، وإذا ما ظهر لك زر واضح انسخ الرابط والصقه في المتصفح. بعد التأكيد ارجع هنا وسجّل دخول.",

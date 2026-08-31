@@ -13,6 +13,7 @@ import { AccountMenu } from "@/components/site/account-menu";
 import { Eyebrow, Panel } from "@/components/game/ui";
 import { GAME_NAME } from "@/game/game-meta";
 import { getPaddleClientConfig } from "@/lib/paddle-client.functions";
+import { trackEvent } from "@/lib/activity";
 
 declare global {
   interface Window {
@@ -104,6 +105,8 @@ function CheckoutPage() {
           },
         });
         setReady(true);
+        // تتبّع تسويقي فقط — بدون أي تأثير على الدفع.
+        void trackEvent("checkout_open", { path: "/checkout" });
       } catch {
         if (!cancelled) setError("ما قدرنا نفتح صفحة الدفع. جرّب مرة ثانية بعد شوي.");
       }

@@ -11,9 +11,12 @@ import {
   Activity,
   CreditCard,
   DoorOpen,
+  Filter,
   Loader2,
+  Megaphone,
   RefreshCw,
   ShieldCheck,
+  TrendingUp,
   Users,
 } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
@@ -22,6 +25,12 @@ import { Eyebrow, Panel } from "@/components/game/ui";
 import { GAME_NAME } from "@/game/game-meta";
 import { getAdminOverview } from "@/lib/admin.functions";
 import type { AdminOverview } from "@/lib/admin-overview";
+import { getAnalyticsReport } from "@/lib/analytics.functions";
+import {
+  ADS_LAUNCH_DATE,
+  SOURCE_LABEL,
+  type AnalyticsReport,
+} from "@/lib/analytics-overview";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({
@@ -91,28 +100,39 @@ function Section({
   );
 }
 
+const LAUNCH_ISO = `${ADS_LAUNCH_DATE}T00:00:00.000Z`;
+const ALL_TIME_ISO = "2000-01-01T00:00:00.000Z";
+
 function AdminDashboardPage() {
   const fetchOverview = useServerFn(getAdminOverview);
+  const fetchAnalytics = useServerFn(getAnalyticsReport);
   const navigate = useNavigate();
   const [state, setState] = useState<AdminOverview | null>(null);
+  const [report, setReport] = useState<AnalyticsReport | null>(null);
+  const [range, setRange] = useState<"launch" | "all">("launch");
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await fetchOverview({ data: undefined });
+      const since = range === "launch" ? LAUNCH_ISO : ALL_TIME_ISO;
+      const [result, analytics] = await Promise.all([
+        fetchOverview({ data: undefined }),
+        fetchAnalytics({ data: { since } }),
+      ]);
       if (!result.allowed) {
         navigate({ to: "/" });
         return;
       }
       setState(result);
+      setReport(analytics.allowed ? analytics : null);
     } catch {
       navigate({ to: "/" });
       return;
     } finally {
       setLoading(false);
     }
-  }, [fetchOverview, navigate]);
+  }, [fetchOverview, fetchAnalytics, navigate, range]);
 
   useEffect(() => {
     void load();
@@ -197,6 +217,195 @@ function AdminDashboardPage() {
             </p>
           )}
         </Panel>
+
+        {/* ===== أرقام التسويق والمبيعات الحقيقية ===== */}
+        <Section icon={<Megaphone className="size-4" />} title="أرقام العملاء الحقيقيين">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            {(["launch", "all"] as const).map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRange(r)}
+                className={`rounded-lg border px-3 py-1.5 font-display text-[11px] font-bold transition-colors ${
+                  range === r
+                    ? "border-primary/60 bg-primary/15 text-primary"
+                    : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {r === "launch" ? "من إطلاق الإعلانات (٢٩/٠٨/٢٠٢٦)" : "كل الفترة"}
+              </button>
+            ))}
+            <span className="inline-flex items-center gap-1.5 font-display text-[11px] text-muted-foreground">
+              <Filter className="size-3.5" /> مستبعد: حساب المالك وحسابات الاختبار
+            </span>
+          </div>
+
+          {report == null ? (
+            <p className="text-sm text-muted-foreground">
+              {loading ? "جاري التحميل..." : "غير متاح."}
+            </p>
+          ) : (
+            <>
+              <div className="rounded-xl border border-border bg-surface-2 px-4 py-3 text-[11px] leading-relaxed text-muted-foreground">
+                <p>
+                  أقدم حدث تتبّع موجود فعلياً:{" "}
+                  <span className="font-mono">
+                    {report.earliestEventAt
+                      ? new Date(report.earliestEventAt).toLocaleString("ar-KW")
+                      : "لا يوجد"}
+                  </span>
+                </p>
+                <p className="mt-1">
+                  أحداث لها بيانات تاريخية:{" "}
+                  <span className="font-mono">
+                    {report.recordedEventTypes.join(", ") || "لا شيء"}
+                  </span>
+                </p>
+                <p className="mt-1">
+                  بدأ تسجيلها من الآن (لا توجد بيانات تاريخية):{" "}
+                  <span className="font-mono">
+                    {report.newlyTrackedEventTypes.join(", ") || "لا شيء"}
+                  </span>
+                </p>
+                <p className="mt-1">
+                  مصادر الزيارات:{" "}
+                  {report.sourcesTracked
+                    ? "تُسجَّل الآن (UTM + الموقع المُحوِّل)"
+                    : "لم تكن تُسجَّل سابقاً — بدأ تسجيلها من الآن."}
+                </p>
+                <p className="mt-1">
+                  المستبعد: {report.excluded.users} حساب · {report.excluded.visitors} جهاز ·{" "}
+                  {report.excluded.ownerPurchases} عملية شراء للمالك/الاختبار ·{" "}
+                  {report.excluded.excludedEvents} حدث.
+                </p>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {report.metrics.map((m) => (
+                  <div
+                    key={m.key}
+                    className="rounded-xl border border-border bg-surface-2 px-4 py-3"
+                  >
+                    <p className="font-display text-[11px] text-muted-foreground">{m.label}</p>
+                    <p className="mt-1 font-display text-xl font-extrabold">
+                      {m.value == null ? (
+                        <span className="text-sm font-medium text-muted-foreground">
+                          غير متاح
+                        </span>
+                      ) : (
+                        m.value.toLocaleString("ar-KW")
+                      )}
+                    </p>
+                    <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">
+                      {m.note}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-border bg-surface-2 px-4 py-3">
+                  <p className="font-display text-[11px] text-muted-foreground">
+                    إيراد العملاء الحقيقيين
+                  </p>
+                  <p className="mt-1 font-mono text-sm">
+                    {report.revenue.length > 0
+                      ? report.revenue
+                          .map((r) => `${r.amount.toFixed(2)} ${r.currency}`)
+                          .join(" · ")
+                      : "٠"}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border bg-surface-2 px-4 py-3">
+                  <p className="font-display text-[11px] text-muted-foreground">
+                    مشتريات المالك/الاختبار (غير محتسبة)
+                  </p>
+                  <p className="mt-1 font-mono text-sm">
+                    {report.ownerRevenue.length > 0
+                      ? report.ownerRevenue
+                          .map((r) => `${r.amount.toFixed(2)} ${r.currency}`)
+                          .join(" · ")
+                      : "٠"}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+        </Section>
+
+        <Section icon={<TrendingUp className="size-4" />} title="مسار التحويل (Funnel)">
+          {report == null ? (
+            <p className="text-sm text-muted-foreground">غير متاح.</p>
+          ) : (
+            <ul className="space-y-2">
+              {report.funnel.map((s) => (
+                <li
+                  key={s.key}
+                  className="rounded-xl border border-border bg-surface-2 px-4 py-3"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-display text-xs font-bold">{s.label}</span>
+                    <span className="font-display text-sm font-extrabold">
+                      {s.count == null ? (
+                        <span className="text-xs font-medium text-muted-foreground">
+                          غير متاح
+                        </span>
+                      ) : (
+                        s.count.toLocaleString("ar-KW")
+                      )}
+                    </span>
+                  </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-background">
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{ width: `${Math.min(100, s.overallPct ?? 0)}%` }}
+                    />
+                  </div>
+                  <p className="mt-1.5 font-mono text-[11px] text-muted-foreground">
+                    من المرحلة السابقة:{" "}
+                    {s.fromPrevPct == null ? "غير متاح" : `${s.fromPrevPct}%`} · من الزائر:{" "}
+                    {s.overallPct == null ? "غير متاح" : `${s.overallPct}%`}
+                  </p>
+                  {!s.available ? (
+                    <p className="mt-1 text-[10px] text-muted-foreground">{s.note}</p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </Section>
+
+        <Section icon={<Activity className="size-4" />} title="مصدر الزيارات">
+          {report == null || report.sources == null || report.sources.length === 0 ? (
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              لا توجد بيانات تاريخية لمصادر الزيارات — بدأ تسجيلها من الآن (TikTok،
+              Snapchat، Instagram، دخول مباشر، أخرى) عبر UTM والموقع المُحوِّل.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {report.sources.map((s) => (
+                <li
+                  key={s.source}
+                  className="rounded-xl border border-border bg-surface-2 px-4 py-3"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-display text-xs font-bold">
+                      {SOURCE_LABEL[s.source] ?? s.source}
+                    </span>
+                    <span className="font-mono text-[11px] text-muted-foreground">
+                      تحويل: {s.conversionPct}%
+                    </span>
+                  </div>
+                  <p className="mt-1.5 font-mono text-[11px] text-muted-foreground">
+                    زوار: {s.visitors} · زيارات: {s.sessions} · بدأ التجربة: {s.startedTrial} ·
+                    وصل للشراء: {s.reachedPurchase} · مشترون: {s.buyers}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Section>
+
 
         <Section icon={<Users className="size-4" />} title="القضايا">
           {state.cases.length === 0 ? (
