@@ -211,6 +211,13 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
           {item.owned ? (
             <Link
               to={item.id === "last-trip" ? "/last-trip/lobby" : "/play"}
+              onClick={() => {
+                // تتبّع تسويقي فقط.
+                void trackEvent(item.free ? "trial_click" : "case_start", {
+                  caseId: item.id,
+                  path: "/cases",
+                });
+              }}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-display text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.02]"
             >
               <Play className="size-4" /> {item.free ? "جرّبي أول ١٠ دقائق" : "ابدأ القضية"}
