@@ -17,7 +17,7 @@ import {
   ShieldAlert,
   ShoppingCart,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { AccountMenu } from "@/components/site/account-menu";
 import { Eyebrow, Panel } from "@/components/game/ui";
