@@ -68,7 +68,16 @@ function PurchasePage() {
   const backTo = room ? "/last-trip/scene" : "/cases";
   const backLabel = room ? "رجوع للغرفة" : "رجوع للقضايا";
 
+  // تتبّع تسويقي فقط — ما يأثر على الشراء ولا على فتح القضية.
+  useEffect(() => {
+    void trackEvent("purchase_view", { caseId, path: "/purchase" });
+  }, [caseId]);
+  useEffect(() => {
+    if (owned) void trackEvent("case_unlocked", { caseId, path: "/purchase" });
+  }, [owned, caseId]);
+
   async function onPay() {
+    void trackEvent("pay_click", { caseId, path: "/purchase" });
     setBusy(true);
     try {
       const result = await requestPurchase({ data: { caseId, room } });
