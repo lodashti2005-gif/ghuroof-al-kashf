@@ -10,6 +10,7 @@
  * `createRoom`/`joinRoom`/`hydrate` now being async.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { getDeviceId } from "@/lib/activity";
 import { INTERROGATION_SECONDS, caseFile } from "./case-data";
 import { CASE_INTERROGATION_SECONDS, suspectIdsForCase } from "./case-suspects";
 import { assignRoles, playerRoles } from "./roles";
