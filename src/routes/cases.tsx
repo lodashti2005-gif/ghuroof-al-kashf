@@ -16,6 +16,7 @@ import { Eyebrow } from "@/components/game/ui";
 import { GAME_NAME, GAME_TAGLINE } from "@/game/game-meta";
 import { useCaseStore, type StoreCase } from "@/game/entitlements";
 import { formatCasePrice } from "@/game/pricing";
+import { trackEvent } from "@/lib/activity";
 
 export const Route = createFileRoute("/cases")({
   head: () => ({
