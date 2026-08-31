@@ -50,6 +50,13 @@ export function DeviceTrialGate({
   const [busy, setBusy] = useState(false);
 
   const purchased = entitlement?.purchased === true;
+
+  // تتبّع تسويقي فقط: انتهاء التجربة.
+  const expiredNow = !!trial?.started && trial.expired && !purchased;
+  useEffect(() => {
+    if (expiredNow) void trackEvent("trial_end", { caseId });
+  }, [expiredNow, caseId]);
+
   // لاعب دخل برمز غرفة (غير مضيف) — ما نحسب عليه تجربة جهازه.
   const guest = !!room && room.caseId === caseId && !isHost;
 
