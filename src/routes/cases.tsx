@@ -232,16 +232,19 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
               <Lock className="size-4" /> قيد التجهيز
             </button>
           ) : (
-            <Link
-              to="/purchase/$caseId"
-              params={{ caseId: item.id }}
-              search={{ room: undefined }}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary/50 bg-primary/10 px-5 py-3 font-display text-sm font-bold text-primary transition-colors hover:bg-primary/20"
-            >
-              <ShoppingCart className="size-4" /> شراء القضية — {formatCasePrice(item.id)}
-            </Link>
-
+            <div className="space-y-2">
+              <TrialCta item={item} />
+              <Link
+                to="/purchase/$caseId"
+                params={{ caseId: item.id }}
+                search={{ room: undefined }}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary/50 bg-primary/10 px-5 py-3 font-display text-sm font-bold text-primary transition-colors hover:bg-primary/20"
+              >
+                <ShoppingCart className="size-4" /> شراء القضية — {formatCasePrice(item.id)}
+              </Link>
+            </div>
           )}
+
           {!item.owned && !soon && !signedIn && (
             <p className="mt-2 text-center font-mono text-[11px] text-muted-foreground">
               الشراء يحتاج حساب — <Link to="/auth" className="text-primary">دخول</Link>
