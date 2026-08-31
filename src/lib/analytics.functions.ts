@@ -143,6 +143,31 @@ export const getAnalyticsReport = createServerFn({ method: "POST" })
       cleanTrials.filter((t) => (t.consumed_seconds ?? 0) >= 600).map((t) => t.user_id),
     ).size;
 
+    // ٤.١) تجارب الأجهزة (بدون حساب) — بيانات حقيقية من جدول تجارب الأجهزة.
+    const { data: deviceRows } = await supabaseAdmin
+      .from("device_trials")
+      .select("device_id, case_id, started_at, last_seen_at")
+      .limit(20000);
+    const cleanDevice = (deviceRows ?? []).filter(
+      (t) => t.started_at >= since && !excludedVisitors.has(t.device_id),
+    );
+    const nowMs = Date.now();
+    const endedAt = (startedAt: string) => new Date(startedAt).getTime() + 600_000;
+    const deviceStarted = new Set(cleanDevice.map((t) => t.device_id)).size;
+    const deviceEnded = new Set(
+      cleanDevice.filter((t) => nowMs >= endedAt(t.started_at)).map((t) => t.device_id),
+    ).size;
+    // «أكمل التجربة» = بقي فاعلاً حتى قرب نهاية الـ١٠ دقائق (آخر ظهور ≥ ٩:٣٠).
+    const deviceCompleted = new Set(
+      cleanDevice
+        .filter((t) => new Date(t.last_seen_at).getTime() >= endedAt(t.started_at) - 30_000)
+        .map((t) => t.device_id),
+    ).size;
+
+    const startedTrialTotal = trialStarted + deviceStarted;
+    const completedTrialTotal = trialCompleted + deviceCompleted;
+
+
     // ٥) المشتريات والإيراد — عملاء حقيقيون فقط.
     const { data: purchaseRows } = await supabaseAdmin
       .from("case_purchases")
