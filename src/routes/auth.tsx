@@ -6,6 +6,7 @@ import { ActionButton } from "@/components/game/shell";
 import { Eyebrow } from "@/components/game/ui";
 import { GAME_NAME } from "@/game/game-meta";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/activity";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
