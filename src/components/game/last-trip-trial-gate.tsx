@@ -74,6 +74,19 @@ export function LastTripTrialGate({ children }: { children: React.ReactNode }) {
   const expired =
     !sim.active &&
     !purchased && !!trial && !trial.unlocked && store.remainingLastTripTrial(trial) <= 0;
+
+  // تتبّع تسويقي فقط — ما يغيّر التجربة ولا الوقت ولا التقدّم.
+  useEffect(() => {
+    if (inRoom && trial && !trial.unlocked) {
+      void trackEvent("trial_start", { caseId: "last-trip", roomCode: room?.code ?? null });
+    }
+  }, [inRoom, trial, room?.code]);
+  useEffect(() => {
+    if (expired) {
+      void trackEvent("trial_end", { caseId: "last-trip", roomCode: room?.code ?? null });
+    }
+  }, [expired, room?.code]);
+
   if (!expired) return <>{children}</>;
 
 
