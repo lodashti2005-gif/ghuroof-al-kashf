@@ -105,6 +105,8 @@ function CheckoutPage() {
           },
         });
         setReady(true);
+        // تتبّع تسويقي فقط — بدون أي تأثير على الدفع.
+        void trackEvent("checkout_open", { path: "/checkout" });
       } catch {
         if (!cancelled) setError("ما قدرنا نفتح صفحة الدفع. جرّب مرة ثانية بعد شوي.");
       }
