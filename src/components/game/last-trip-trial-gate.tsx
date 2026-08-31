@@ -14,6 +14,7 @@ import { Eyebrow, Panel } from "@/components/game/ui";
 import * as store from "@/game/room-store";
 import { useRoom } from "@/game/use-room";
 import { useCaseEntitlement } from "@/game/use-entitlement";
+import { trackEvent } from "@/lib/activity";
 
 
 function clock(seconds: number) {
