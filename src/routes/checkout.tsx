@@ -13,6 +13,7 @@ import { AccountMenu } from "@/components/site/account-menu";
 import { Eyebrow, Panel } from "@/components/game/ui";
 import { GAME_NAME } from "@/game/game-meta";
 import { getPaddleClientConfig } from "@/lib/paddle-client.functions";
+import { trackEvent } from "@/lib/activity";
 
 declare global {
   interface Window {
