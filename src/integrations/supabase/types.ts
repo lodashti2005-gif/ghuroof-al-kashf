@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_excluded_users: {
+        Row: {
+          created_at: string
+          note: string | null
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          note?: string | null
+          reason?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          note?: string | null
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       case_purchases: {
         Row: {
           amount: number | null
@@ -260,8 +281,15 @@ export type Database = {
           event_type: string
           id: string
           path: string | null
+          referrer: string | null
           room_code: string | null
+          session_id: string | null
+          source: string | null
           user_id: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          visitor_id: string | null
         }
         Insert: {
           case_id?: string | null
@@ -269,8 +297,15 @@ export type Database = {
           event_type: string
           id?: string
           path?: string | null
+          referrer?: string | null
           room_code?: string | null
+          session_id?: string | null
+          source?: string | null
           user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          visitor_id?: string | null
         }
         Update: {
           case_id?: string | null
@@ -278,8 +313,15 @@ export type Database = {
           event_type?: string
           id?: string
           path?: string | null
+          referrer?: string | null
           room_code?: string | null
+          session_id?: string | null
+          source?: string | null
           user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          visitor_id?: string | null
         }
         Relationships: []
       }
