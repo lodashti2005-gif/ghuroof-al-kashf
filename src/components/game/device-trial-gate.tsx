@@ -12,7 +12,7 @@
  */
 import { Link } from "@tanstack/react-router";
 import { Clock, Lock, Play, ShoppingCart } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Eyebrow, Panel } from "@/components/game/ui";
 import { formatTrialClock, useDeviceTrial } from "@/game/device-trial";
