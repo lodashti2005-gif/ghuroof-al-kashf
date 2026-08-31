@@ -100,28 +100,39 @@ function Section({
   );
 }
 
+const LAUNCH_ISO = `${ADS_LAUNCH_DATE}T00:00:00.000Z`;
+const ALL_TIME_ISO = "2000-01-01T00:00:00.000Z";
+
 function AdminDashboardPage() {
   const fetchOverview = useServerFn(getAdminOverview);
+  const fetchAnalytics = useServerFn(getAnalyticsReport);
   const navigate = useNavigate();
   const [state, setState] = useState<AdminOverview | null>(null);
+  const [report, setReport] = useState<AnalyticsReport | null>(null);
+  const [range, setRange] = useState<"launch" | "all">("launch");
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await fetchOverview({ data: undefined });
+      const since = range === "launch" ? LAUNCH_ISO : ALL_TIME_ISO;
+      const [result, analytics] = await Promise.all([
+        fetchOverview({ data: undefined }),
+        fetchAnalytics({ data: { since } }),
+      ]);
       if (!result.allowed) {
         navigate({ to: "/" });
         return;
       }
       setState(result);
+      setReport(analytics.allowed ? analytics : null);
     } catch {
       navigate({ to: "/" });
       return;
     } finally {
       setLoading(false);
     }
-  }, [fetchOverview, navigate]);
+  }, [fetchOverview, fetchAnalytics, navigate, range]);
 
   useEffect(() => {
     void load();
