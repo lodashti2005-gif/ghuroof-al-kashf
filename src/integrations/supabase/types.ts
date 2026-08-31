@@ -196,6 +196,30 @@ export type Database = {
         }
         Relationships: []
       }
+      device_trials: {
+        Row: {
+          case_id: string
+          created_at: string
+          device_id: string
+          last_seen_at: string
+          started_at: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          device_id: string
+          last_seen_at?: string
+          started_at?: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          device_id?: string
+          last_seen_at?: string
+          started_at?: string
+        }
+        Relationships: []
+      }
       game_progress: {
         Row: {
           active: boolean
@@ -478,6 +502,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      device_trial_start: {
+        Args: { _case_id: string; _device_id: string }
+        Returns: Json
+      }
+      device_trial_state: {
+        Args: { _case_id: string; _device_id: string }
+        Returns: Json
+      }
+      has_active_device_trial: {
+        Args: { _case_id: string; _device_id: string }
+        Returns: boolean
+      }
       has_case_entitlement: {
         Args: { _case_id: string; _user_id: string }
         Returns: boolean
@@ -497,6 +533,17 @@ export type Database = {
         Args: {
           _case_id: string
           _code: string
+          _host_name: string
+          _host_player_id: string
+          _state: Json
+        }
+        Returns: string
+      }
+      room_create_v2: {
+        Args: {
+          _case_id: string
+          _code: string
+          _device_id: string
           _host_name: string
           _host_player_id: string
           _state: Json
@@ -542,6 +589,7 @@ export type Database = {
         Args: { _code: string; _player_id: string }
         Returns: Json
       }
+      trial_duration_seconds: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "admin" | "user"
