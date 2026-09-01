@@ -17,15 +17,17 @@ export default function Floor13Canvas({
   return (
     <Canvas
       dpr={[1, 1.6]}
+      shadows="soft"
       gl={{ antialias: false, powerPreference: "high-performance" }}
       camera={{ fov: 72, near: 0.05, far: 60 }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.1;
+        gl.toneMappingExposure = 1.28;
+        gl.shadowMap.type = THREE.PCFSoftShadowMap;
       }}
     >
-      <color attach="background" args={["#0b0a09"]} />
-      <fog attach="fog" args={["#0b0a09", 4, 26]} />
+      <color attach="background" args={["#100e0d"]} />
+      <fog attach="fog" args={["#151210", 6, 32]} />
       <Floor13World found={found} />
       <Floor13Player controls={controls} keys={keys} onNearChange={onNearChange} />
     </Canvas>
