@@ -46,44 +46,55 @@ export const FLOOR13_SPAWN: [number, number, number] = [0, FLOOR13_LAYOUT.eyeHei
 /** يبدأ اللاعب ناظر ناحية عمق الممر (-z). */
 export const FLOOR13_SPAWN_YAW = 0;
 
+/**
+ * ٦ أدلة مستقلة تمامًا — كل واحد له معرّف فريد وموقع منفصل (بينها مسافة كافية
+ * حتى لا يتنافس دليلان على نفس نقطة الفحص).
+ */
 export const FLOOR13_EVIDENCE: Floor13EvidencePoint[] = [
   {
-    id: "f13-elevator-card",
+    id: "f13-elevator-keycard",
     title: "بطاقة مفتاح مرمية",
-    description: "بطاقة غرفة بلاستيك قرب المصعد، مكتوب عليها رقم ممسوح. (وصف مؤقت)",
+    description: "بطاقة غرفة بلاستيكية عند المصعد، رقمها ممسوح بخدش عمودي.",
     position: [-0.85, 0.06, -1.6],
+    radius: 1.7,
   },
   {
     id: "f13-corridor-stain",
     title: "أثر رطب على السجادة",
-    description: "بقعة رطبة طازجة بمنتصف الممر… أحد مرّ من هنا مستعجل. (وصف مؤقت)",
-    position: [0.6, 0.04, -10.2],
+    description: "بقعة رطبة طازجة بمنتصف الممر، تمتد ناحية نهاية الطابق.",
+    position: [0.55, 0.04, -10.2],
+    radius: 1.7,
   },
   {
-    id: "f13-hall-phone",
+    id: "f13-corridor-phone",
     title: "هاتف مطفي",
-    description: "جهاز مطفي متروك جنب الطوفة قبل باب ١٣٠٦. (وصف مؤقت)",
-    position: [-1.15, 0.1, -16.4],
+    description: "جهاز مطفي متروك جنب الطوفة قبل باب ١٣٠٦، شاشته مشقوقة.",
+    position: [-1.02, 0.12, -15.4],
+    radius: 1.6,
   },
   {
-    id: "f13-door-scratch",
+    id: "f13-door-lock-scratch",
     title: "خدوش على قفل الباب",
-    description: "خدوش معدن حديثة حول قفل غرفة ١٣٠٦. (وصف مؤقت)",
-    position: [1.5, 1.05, -18.0],
+    description: "خدوش معدنية حديثة حول قفل غرفة ١٣٠٦ — الباب فُتح بالقوة.",
+    position: [1.62, 1.05, -18.0],
+    radius: 1.3,
   },
   {
     id: "f13-desk-note",
     title: "ورقة على المكتب",
-    description: "ورقة مكتوب فيها سطر واحد بخط مستعجل. (وصف مؤقت)",
-    position: [6.6, 0.79, -22.1],
+    description: "ورقة عند النافذة مكتوب فيها سطر واحد بخط مستعجل: «لا تفتح».",
+    position: [6.8, 0.8, -23.75],
+    radius: 1.4,
   },
   {
-    id: "f13-chair-cloth",
-    title: "قماش ممزّق",
-    description: "قطعة قماش صغيرة معلقة بحرف الكرسي. (وصف مؤقت)",
-    position: [6.4, 0.55, -20.6],
+    id: "f13-nightstand-earring",
+    title: "حلق ذهبي صغير",
+    description: "حلق مفرد على الكومدينة جانب السرير، قفله مكسور.",
+    position: [8.5, 0.74, -18.1],
+    radius: 1.4,
   },
 ];
+
 
 export const FLOOR13_EVIDENCE_TOTAL = FLOOR13_EVIDENCE.length;
 
