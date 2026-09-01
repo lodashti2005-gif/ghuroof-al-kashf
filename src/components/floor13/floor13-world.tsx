@@ -130,7 +130,7 @@ function Sconce({ position, rotationY = 0 }: { position: [number, number, number
         <sphereGeometry args={[0.045, 10, 8]} />
         <meshStandardMaterial color="#fff1da" emissive="#ffdcae" emissiveIntensity={1.1} toneMapped={false} />
       </mesh>
-      <pointLight color="#ffcfa0" intensity={2.4} distance={6.5} decay={2} position={[0, 0.05, 0.24]} />
+      <pointLight color="#ffd6b0" intensity={2.0} distance={6.0} decay={2} position={[0, 0.05, 0.24]} />
     </group>
   );
 }
@@ -153,9 +153,9 @@ function Chandelier({
         <meshStandardMaterial color="#fff4e2" emissive="#ffe3bd" emissiveIntensity={1.2} toneMapped={false} />
       </mesh>
       <pointLight
-        color="#ffd9ae"
+        color="#ffe0c0"
         intensity={intensity}
-        distance={11}
+        distance={13}
         decay={2}
         position={[0, -0.6, 0]}
         castShadow={castShadow}
@@ -274,21 +274,21 @@ export function Floor13World({ found }: { found: Set<string> }) {
       {/* ===== أرضيات (سجاد فندق حقيقي بخامة PBR) ===== */}
       <mesh rotation-x={-Math.PI / 2} position={[0, 0, (c.z0 + c.z1) / 2]} receiveShadow>
         <planeGeometry args={[c.x1 - c.x0, corridorLen]} />
-        <meshStandardMaterial {...corridorCarpet} color="#7a5f52" roughness={1} normalScale={[1.3, 1.3]} />
+        <meshStandardMaterial {...corridorCarpet} color="#9d8175" roughness={1} normalScale={[1.15, 1.15]} />
       </mesh>
       <mesh rotation-x={-Math.PI / 2} position={[roomCx, 0, roomCz]} receiveShadow>
         <planeGeometry args={[roomW, roomLen]} />
-        <meshStandardMaterial {...roomCarpet} color="#6f5850" roughness={1} normalScale={[1.2, 1.2]} />
+        <meshStandardMaterial {...roomCarpet} color="#94776d" roughness={1} normalScale={[1.05, 1.05]} />
       </mesh>
 
       {/* ===== أسقف (جبس/بلاستر) ===== */}
       <mesh rotation-x={Math.PI / 2} position={[0, H, (c.z0 + c.z1) / 2]} receiveShadow>
         <planeGeometry args={[c.x1 - c.x0, corridorLen]} />
-        <meshStandardMaterial {...ceiling} color="#8d857a" roughness={0.95} />
+        <meshStandardMaterial {...ceiling} color="#7e7871" roughness={0.95} />
       </mesh>
       <mesh rotation-x={Math.PI / 2} position={[roomCx, H, roomCz]} receiveShadow>
         <planeGeometry args={[roomW, roomLen]} />
-        <meshStandardMaterial {...roomCeiling} color="#8f877c" roughness={0.95} />
+        <meshStandardMaterial {...roomCeiling} color="#807a72" roughness={0.95} />
       </mesh>
 
       {/* ===== طوفات الممر ===== */}
@@ -434,9 +434,13 @@ export function Floor13World({ found }: { found: Set<string> }) {
       <LightSwitch position={[2.05, 1.15, -19.05]} rotationY={Math.PI / 2} />
 
       {/* ===== إضاءة فندق سينمائية ===== */}
-      <ambientLight intensity={0.28} color="#9aa2b2" />
-      <hemisphereLight args={["#a8b0c4", "#4a3a30", 0.5]} />
+      <ambientLight intensity={0.42} color="#9fa7b6" />
+      <hemisphereLight args={["#aab2c6", "#6b564a", 0.72]} />
       <Chandelier position={[0, H - 0.12, -3]} intensity={6.5} />
+      {/* ضوء أرضي خفيف يبرز نقشة السجاد بدون إحراق السقف */}
+      {[-2, -7, -12, -17, -22].map((z) => (
+        <pointLight key={z} position={[0, 0.5, z]} color="#f0d7bd" intensity={0.55} distance={5.5} decay={2} />
+      ))}
       <Chandelier position={[0, H - 0.12, -10]} intensity={6.5} />
       <Chandelier position={[0, H - 0.12, -16.5]} intensity={6} castShadow />
       <Zone z={-11}>
