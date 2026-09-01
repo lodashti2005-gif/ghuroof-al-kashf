@@ -451,7 +451,7 @@ export function Floor13World({ found }: { found: Set<string> }) {
       {/* نافذة + ستائر على الطوفة البعيدة */}
       <mesh position={[(r.x0 + r.x1) / 2 + 1.2, 1.55, r.z0 + 0.12]}>
         <planeGeometry args={[1.6, 1.5]} />
-        <meshStandardMaterial color="#121821" emissive="#28405e" emissiveIntensity={0.5} roughness={0.4} />
+        <meshStandardMaterial color="#121821" emissive="#2a3a4d" emissiveIntensity={0.22} roughness={0.4} />
       </mesh>
       <Curtain position={[(r.x0 + r.x1) / 2 + 1.2, 1.35, r.z0 + 0.24]} width={2.1} fabric={velvet} />
 
