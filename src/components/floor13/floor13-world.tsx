@@ -766,8 +766,8 @@ export function Floor13World() {
       <LightSwitch position={[2.0, 1.15, -13.9]} rotationY={Math.PI / 2} />
 
       {/* ===== الإضاءة: دافئة خافتة غير متساوية، نهاية الممر أغمق ===== */}
-      <ambientLight intensity={1.02} color="#a2aab8" />
-      <hemisphereLight args={["#a3abba", "#8b7563", 1.05]} />
+      <ambientLight intensity={1.02} color="#b3aa9a" />
+      <hemisphereLight args={["#b0a897", "#8b7563", 1.05]} />
       <CeilingLamp position={[0, H - 0.06, -3.0]} intensity={3.6} />
       <CeilingLamp position={[0, H - 0.06, -10.6]} intensity={2.9} />
       {/* fill قريب من السجادة حتى تبقى أرضية الممر مقروءة بدون فقدان الجو */}

@@ -55,9 +55,9 @@ export const FLOOR13_WALKABLE: Floor13Rect[] = [
   { x0: 5.35, x1: 7.2, z0: -16.5, z1: -13.35 },
 ];
 
-export const FLOOR13_SPAWN: [number, number, number] = [2.5, FLOOR13_LAYOUT.eyeHeight, -14.3]; // TEMP-TEST
+export const FLOOR13_SPAWN: [number, number, number] = [0, FLOOR13_LAYOUT.eyeHeight, -0.4];
 /** يبدأ اللاعب ناظر ناحية عمق الممر (-z). */
-export const FLOOR13_SPAWN_YAW = -0.88; // TEMP-TEST
+export const FLOOR13_SPAWN_YAW = 0;
 
 /**
  * ٦ أدلة مستقلة تمامًا — كل واحد له معرّف فريد وموقع منفصل بمسافة كافية
