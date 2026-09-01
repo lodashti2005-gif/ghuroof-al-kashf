@@ -43,7 +43,7 @@ export default function Floor13Canvas({
         />
       </Environment>
       <Suspense fallback={null}>
-        <Floor13World found={found} />
+        <Floor13World />
       </Suspense>
       <Floor13Player controls={controls} keys={keys} found={found} onNearChange={onNearChange} />
     </Canvas>

@@ -209,7 +209,7 @@ export function Floor13Experience({ onExit }: { onExit: () => void }) {
 
             {completed && (
               <div className="absolute left-1/2 top-16 w-max max-w-[90vw] -translate-x-1/2 rounded-full border border-emerald-300/35 bg-emerald-950/70 px-5 py-2 text-center text-sm font-semibold text-emerald-100 backdrop-blur">
-                اكتشفت كل الأدلة في مسرح الجريمة
+                تم جمع جميع الأدلة
               </div>
             )}
 

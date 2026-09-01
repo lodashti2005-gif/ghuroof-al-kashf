@@ -1,7 +1,7 @@
 import { Suspense, useMemo, useRef, useState, type ReactNode } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { FLOOR13_EVIDENCE, FLOOR13_LAYOUT } from "@/game/cases/floor13/scene-data";
+import { FLOOR13_LAYOUT } from "@/game/cases/floor13/scene-data";
 import { signTexture } from "./textures";
 import { usePbr } from "./pbr";
 import { Prop } from "./prop";
@@ -43,7 +43,7 @@ function Wall({
     <group>
       <mesh position={[cx, y + height / 2, cz]} receiveShadow>
         <boxGeometry args={[w, height, d]} />
-        <meshStandardMaterial {...paper} color="#a89b8c" roughness={0.95} normalScale={[0.9, 0.9]} />
+        <meshStandardMaterial {...paper} color="#a9a094" roughness={0.95} normalScale={[0.85, 0.85]} />
       </mesh>
       {/* وزرة خشب */}
       <mesh position={[cx, y + 0.085, cz]} receiveShadow>
@@ -53,7 +53,7 @@ function Wall({
       {/* حافة علوية (كرنيش) */}
       <mesh position={[cx, y + height - 0.07, cz]} receiveShadow>
         <boxGeometry args={[bw, 0.12, bd]} />
-        <meshStandardMaterial color="#a2968a" roughness={0.85} />
+        <meshStandardMaterial color="#a9a096" roughness={0.85} />
       </mesh>
     </group>
   );
@@ -121,16 +121,64 @@ function DoorUnit({
   );
 }
 
-/** شمعدان حائط (موديل واقعي) + ضوء دافئ. */
-function Sconce({ position, rotationY = 0 }: { position: [number, number, number]; rotationY?: number }) {
+/** شمعدان حائط (موديل واقعي) + ضوء دافئ محايد. لمبة واحدة فقط تعمل flicker نادر. */
+function Sconce({
+  position,
+  rotationY = 0,
+  intensity = 2.1,
+  flicker = false,
+}: {
+  position: [number, number, number];
+  rotationY?: number;
+  intensity?: number;
+  flicker?: boolean;
+}) {
+  const light = useRef<THREE.PointLight>(null);
+  const glow = useRef<THREE.Mesh>(null);
+  const next = useRef(6 + Math.random() * 10);
+  const t = useRef(0);
+  const dip = useRef(0);
+
+  useFrame((_, delta) => {
+    if (!flicker) return;
+    t.current += delta;
+    if (dip.current > 0) {
+      dip.current -= delta;
+      const f = 0.35 + Math.random() * 0.45;
+      if (light.current) light.current.intensity = intensity * f;
+      if (glow.current) {
+        (glow.current.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.4 + f;
+      }
+      if (dip.current <= 0) {
+        if (light.current) light.current.intensity = intensity;
+        if (glow.current) {
+          (glow.current.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.1;
+        }
+      }
+      return;
+    }
+    if (t.current > next.current) {
+      t.current = 0;
+      next.current = 9 + Math.random() * 14;
+      dip.current = 0.22 + Math.random() * 0.3;
+    }
+  });
+
   return (
     <group position={position} rotation-y={rotationY}>
       <Prop name="industrial_wall_sconce" height={0.42} anchor="origin" />
-      <mesh position={[0, 0.02, 0.14]}>
+      <mesh ref={glow} position={[0, 0.02, 0.14]}>
         <sphereGeometry args={[0.045, 10, 8]} />
-        <meshStandardMaterial color="#fff1da" emissive="#ffdcae" emissiveIntensity={1.1} toneMapped={false} />
+        <meshStandardMaterial color="#fff3e2" emissive="#ffe3c2" emissiveIntensity={1.1} toneMapped={false} />
       </mesh>
-      <pointLight color="#ffd6b0" intensity={2.0} distance={6.0} decay={2} position={[0, 0.05, 0.24]} />
+      <pointLight
+        ref={light}
+        color="#ffdec2"
+        intensity={intensity}
+        distance={6.5}
+        decay={2}
+        position={[0, 0.05, 0.24]}
+      />
     </group>
   );
 }
@@ -139,7 +187,7 @@ function Sconce({ position, rotationY = 0 }: { position: [number, number, number
 function Chandelier({
   position,
   castShadow = false,
-  intensity = 7,
+  intensity = 6,
 }: {
   position: [number, number, number];
   castShadow?: boolean;
@@ -147,17 +195,17 @@ function Chandelier({
 }) {
   return (
     <group position={position}>
-      <Prop name="Chandelier_03" height={0.85} anchor="origin" shadows={false} />
-      <mesh position={[0, -0.55, 0]}>
+      <Prop name="Chandelier_03" height={0.8} anchor="origin" shadows={false} />
+      <mesh position={[0, -0.52, 0]}>
         <sphereGeometry args={[0.07, 10, 8]} />
-        <meshStandardMaterial color="#fff4e2" emissive="#ffe3bd" emissiveIntensity={1.2} toneMapped={false} />
+        <meshStandardMaterial color="#fff6ea" emissive="#ffe9d0" emissiveIntensity={1.15} toneMapped={false} />
       </mesh>
       <pointLight
-        color="#ffe0c0"
+        color="#ffe6cd"
         intensity={intensity}
         distance={13}
         decay={2}
-        position={[0, -0.6, 0]}
+        position={[0, -0.58, 0]}
         castShadow={castShadow}
         shadow-mapSize-width={512}
         shadow-mapSize-height={512}
@@ -183,49 +231,26 @@ function LightSwitch({ position, rotationY = 0 }: { position: [number, number, n
   );
 }
 
-/** ستارة مخمل بخامة PBR (طيّات أسطوانية ناعمة + قضيب نحاسي). */
+/** ستارة داكنة بخامة PBR (طيّات أسطوانية ناعمة + قضيب نحاسي). */
 function Curtain({ position, width = 2.1 }: { position: [number, number, number]; width?: number }) {
   const velvet = usePbr("velour_velvet", [0.6, 2.2]);
   const folds = 9;
   return (
     <group position={position}>
-      <mesh position={[0, 1.18, 0]} rotation-z={Math.PI / 2} castShadow>
+      <mesh position={[0, 1.16, 0]} rotation-z={Math.PI / 2} castShadow>
         <cylinderGeometry args={[0.022, 0.022, width + 0.3, 10]} />
-        <meshStandardMaterial color="#b0904f" metalness={0.9} roughness={0.28} />
+        <meshStandardMaterial color="#a98c52" metalness={0.9} roughness={0.3} />
       </mesh>
       {Array.from({ length: folds }).map((_, i) => {
         const x = -width / 2 + (i / (folds - 1)) * width;
         const r = 0.05 + (i % 2 === 0 ? 0.018 : 0);
         return (
-          <mesh key={i} position={[x, 0.05, 0]} castShadow receiveShadow>
-            <cylinderGeometry args={[r, r * 1.2, 2.25, 8]} />
-            <meshStandardMaterial {...velvet} color="#7b4c40" roughness={0.95} />
+          <mesh key={i} position={[x, 0.04, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[r, r * 1.2, 2.22, 8]} />
+            <meshStandardMaterial {...velvet} color="#4d3a38" roughness={0.96} />
           </mesh>
         );
       })}
-    </group>
-  );
-}
-
-function EvidenceGlint({ position, found }: { position: [number, number, number]; found: boolean }) {
-  return (
-    <group position={position}>
-      <mesh>
-        <sphereGeometry args={[0.05, 10, 8]} />
-        <meshStandardMaterial
-          color={found ? "#6f9c7a" : "#e8cf9c"}
-          emissive={found ? "#4a7d59" : "#d8ab55"}
-          emissiveIntensity={found ? 0.6 : 1.3}
-          roughness={0.35}
-          toneMapped={false}
-        />
-      </mesh>
-      <pointLight
-        color={found ? "#6f9c7a" : "#ffd79a"}
-        intensity={found ? 0.35 : 0.8}
-        distance={1.5}
-        decay={2}
-      />
     </group>
   );
 }
@@ -248,7 +273,96 @@ function Zone({ z, children }: { z: number; children: ReactNode }) {
   return active ? <Suspense fallback={null}>{children}</Suspense> : null;
 }
 
-export function Floor13World({ found }: { found: Set<string> }) {
+/* ============ أغراض الأدلة: مجسمات طبيعية بدون أي علامات عائمة ============ */
+
+/** بطاقة مفتاح على السجادة قرب المصعد. */
+function KeycardProp() {
+  return (
+    <group position={[-0.72, 0.012, -1.5]} rotation-y={0.6}>
+      <mesh rotation-x={-Math.PI / 2} castShadow receiveShadow>
+        <boxGeometry args={[0.055, 0.086, 0.004]} />
+        <meshStandardMaterial color="#2c2f38" roughness={0.35} metalness={0.15} />
+      </mesh>
+      <mesh position={[0, 0.004, 0.02]} rotation-x={-Math.PI / 2}>
+        <planeGeometry args={[0.04, 0.012]} />
+        <meshStandardMaterial color="#b8a271" roughness={0.4} metalness={0.5} />
+      </mesh>
+    </group>
+  );
+}
+
+/** هاتف مطفي جنب طوفة الممر. */
+function PhoneProp() {
+  return (
+    <group position={[-0.95, 0.02, -12.9]} rotation-y={-0.35}>
+      <mesh rotation-x={-Math.PI / 2} castShadow receiveShadow>
+        <boxGeometry args={[0.07, 0.145, 0.011]} />
+        <meshStandardMaterial color="#14161a" roughness={0.28} metalness={0.35} />
+      </mesh>
+      <mesh position={[0, 0.007, 0]} rotation-x={-Math.PI / 2}>
+        <planeGeometry args={[0.062, 0.132]} />
+        <meshStandardMaterial color="#0a0c10" roughness={0.12} metalness={0.5} />
+      </mesh>
+    </group>
+  );
+}
+
+/** ورقة على المكتب. */
+function DeskNoteProp() {
+  return (
+    <group position={[3.05, 0.775, -19.0]} rotation-y={0.18}>
+      <mesh rotation-x={-Math.PI / 2} receiveShadow castShadow>
+        <planeGeometry args={[0.19, 0.26]} />
+        <meshStandardMaterial color="#ddd2bc" roughness={0.9} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0, 0.002, 0]} rotation-x={-Math.PI / 2}>
+        <planeGeometry args={[0.12, 0.012]} />
+        <meshStandardMaterial color="#3a3128" roughness={0.9} />
+      </mesh>
+    </group>
+  );
+}
+
+/** حلق ذهبي صغير على الكومدينة. */
+function EarringProp() {
+  return (
+    <group position={[7.05, 0.725, -16.35]}>
+      <mesh rotation-x={Math.PI / 2.4} castShadow>
+        <torusGeometry args={[0.021, 0.005, 8, 18]} />
+        <meshStandardMaterial color="#d8b464" metalness={1} roughness={0.22} />
+      </mesh>
+      <mesh position={[0.015, -0.012, 0.008]} castShadow>
+        <sphereGeometry args={[0.008, 8, 8]} />
+        <meshStandardMaterial color="#e6c67c" metalness={1} roughness={0.25} />
+      </mesh>
+    </group>
+  );
+}
+
+/** خدوش معدنية حول قفل الباب (تفصيلة سطحية على لوحة الباب). */
+function LockScratchProp() {
+  return (
+    <group position={[1.5, 1.05, -14.5]} rotation-y={-Math.PI / 2}>
+      {[
+        [-0.05, 0.03, 0.5],
+        [0.02, -0.01, -0.35],
+        [0.05, 0.05, 0.15],
+        [-0.02, -0.05, 0.9],
+      ].map(([x, y, rot], i) => (
+        <mesh key={i} position={[x!, y!, 0.004]} rotation-z={rot!}>
+          <planeGeometry args={[0.075, 0.006]} />
+          <meshStandardMaterial color="#cbb894" roughness={0.3} metalness={0.6} />
+        </mesh>
+      ))}
+      <mesh position={[0, -0.09, 0.005]}>
+        <cylinderGeometry args={[0.026, 0.026, 0.012, 14]} />
+        <meshStandardMaterial color="#8e7a4f" metalness={0.9} roughness={0.35} />
+      </mesh>
+    </group>
+  );
+}
+
+export function Floor13World() {
   const c = FLOOR13_LAYOUT.corridor;
   const r = FLOOR13_LAYOUT.room;
   const corridorLen = c.z1 - c.z0;
@@ -257,11 +371,11 @@ export function Floor13World({ found }: { found: Set<string> }) {
   const roomCx = (r.x0 + r.x1) / 2;
   const roomCz = (r.z0 + r.z1) / 2;
 
-  const corridorCarpet = usePbr("dirty_carpet", [2.4, 18], [0, 0]);
-  const roomCarpet = usePbr("dirty_carpet", [6, 8.5], [0.4, 0.2]);
-  const roomRug = usePbr("quatrefoil_jacquard_fabric", [2.4, 1.8]);
-  const ceiling = usePbr("beige_wall_001", [4, 14]);
-  const roomCeiling = usePbr("beige_wall_001", [4, 5]);
+  const corridorCarpet = usePbr("dirty_carpet", [2.2, 15], [0, 0]);
+  const roomCarpet = usePbr("dirty_carpet", [5, 5.5], [0.4, 0.2]);
+  const roomRug = usePbr("quatrefoil_jacquard_fabric", [2.2, 1.8]);
+  const ceiling = usePbr("beige_wall_001", [4, 12]);
+  const roomCeiling = usePbr("beige_wall_001", [3.5, 4]);
   const elevatorMetal = usePbr("beige_wall_001", [1, 1]);
 
   const floorSign = useMemo(() => signTexture("١٣", "الطابق"), []);
@@ -274,27 +388,27 @@ export function Floor13World({ found }: { found: Set<string> }) {
       {/* ===== أرضيات (سجاد فندق حقيقي بخامة PBR) ===== */}
       <mesh rotation-x={-Math.PI / 2} position={[0, 0, (c.z0 + c.z1) / 2]} receiveShadow>
         <planeGeometry args={[c.x1 - c.x0, corridorLen]} />
-        <meshStandardMaterial {...corridorCarpet} color="#9d8175" roughness={1} normalScale={[1.15, 1.15]} />
+        <meshStandardMaterial {...corridorCarpet} color="#9c8478" roughness={1} normalScale={[1.1, 1.1]} />
       </mesh>
       <mesh rotation-x={-Math.PI / 2} position={[roomCx, 0, roomCz]} receiveShadow>
         <planeGeometry args={[roomW, roomLen]} />
-        <meshStandardMaterial {...roomCarpet} color="#94776d" roughness={1} normalScale={[1.05, 1.05]} />
+        <meshStandardMaterial {...roomCarpet} color="#8f7a70" roughness={1} normalScale={[1, 1]} />
       </mesh>
 
       {/* ===== أسقف (جبس/بلاستر) ===== */}
       <mesh rotation-x={Math.PI / 2} position={[0, H, (c.z0 + c.z1) / 2]} receiveShadow>
         <planeGeometry args={[c.x1 - c.x0, corridorLen]} />
-        <meshStandardMaterial {...ceiling} color="#7e7871" roughness={0.95} />
+        <meshStandardMaterial {...ceiling} color="#867f77" roughness={0.95} />
       </mesh>
       <mesh rotation-x={Math.PI / 2} position={[roomCx, H, roomCz]} receiveShadow>
         <planeGeometry args={[roomW, roomLen]} />
-        <meshStandardMaterial {...roomCeiling} color="#807a72" roughness={0.95} />
+        <meshStandardMaterial {...roomCeiling} color="#888078" roughness={0.95} />
       </mesh>
 
       {/* ===== طوفات الممر ===== */}
       <Wall a={[c.x0, c.z0]} b={[c.x0, c.z1]} />
-      <Wall a={[c.x1, c.z1]} b={[c.x1, -16.8]} />
-      <Wall a={[c.x1, -19.2]} b={[c.x1, c.z0]} />
+      <Wall a={[c.x1, c.z1]} b={[c.x1, -13.8]} />
+      <Wall a={[c.x1, -15.2]} b={[c.x1, c.z0]} />
       <Wall a={[c.x0, c.z0]} b={[c.x1, c.z0]} />
       <Wall a={[c.x0, c.z1]} b={[c.x1, c.z1]} />
 
@@ -329,132 +443,136 @@ export function Floor13World({ found }: { found: Set<string> }) {
         <boxGeometry args={[0.09, 0.15, 0.03]} />
         <meshStandardMaterial color="#c9a869" metalness={0.85} roughness={0.3} />
       </mesh>
-      <mesh position={[0, 2.62, c.z1 - 0.11]}>
-        <planeGeometry args={[0.66, 0.66]} />
+      <mesh position={[0, 2.6, c.z1 - 0.11]}>
+        <planeGeometry args={[0.62, 0.62]} />
         <meshStandardMaterial map={floorSign} roughness={0.45} metalness={0.35} />
       </mesh>
 
-      {/* ===== تفاصيل الممر ===== */}
-      <DoorUnit position={[c.x0 + 0.1, 0, -5.4]} rotationY={Math.PI / 2} sign={sign1302} />
-      <DoorUnit position={[c.x0 + 0.1, 0, -12.6]} rotationY={Math.PI / 2} sign={sign1304} />
-      <Sconce position={[c.x0 + 0.1, 1.95, -2.4]} rotationY={Math.PI / 2} />
-      <Sconce position={[c.x0 + 0.1, 1.95, -9.2]} rotationY={Math.PI / 2} />
-      <Sconce position={[c.x1 - 0.1, 1.95, -6.4]} rotationY={-Math.PI / 2} />
-      <Sconce position={[c.x1 - 0.1, 1.95, -13.4]} rotationY={-Math.PI / 2} />
+      {/* ===== تفاصيل الممر: أبواب متناسقة + إضاءة موزعة بانتظام ===== */}
+      <DoorUnit position={[c.x0 + 0.1, 0, -4.5]} rotationY={Math.PI / 2} sign={sign1302} />
+      <DoorUnit position={[c.x0 + 0.1, 0, -9.5]} rotationY={Math.PI / 2} sign={sign1304} />
+      <Sconce position={[c.x1 - 0.1, 1.95, -2.6]} rotationY={-Math.PI / 2} intensity={2.2} />
+      <Sconce position={[c.x0 + 0.1, 1.95, -6.9]} rotationY={Math.PI / 2} intensity={1.5} flicker />
+      <Sconce position={[c.x1 - 0.1, 1.95, -11.2]} rotationY={-Math.PI / 2} intensity={2.1} />
+      <Sconce position={[c.x0 + 0.1, 1.95, -15.6]} rotationY={Math.PI / 2} intensity={1.7} />
       <Prop
         name="hanging_picture_frame_02"
-        position={[c.x1 - 0.11, 1.62, -3.6]}
+        position={[c.x1 - 0.11, 1.6, -5.9]}
         rotationY={-Math.PI / 2}
         anchor="origin"
-        width={0.78}
+        width={0.72}
       />
       <Prop
         name="fancy_picture_frame_01"
-        position={[c.x0 + 0.11, 1.62, -15.4]}
+        position={[c.x0 + 0.11, 1.6, -12.2]}
         rotationY={Math.PI / 2}
         anchor="origin"
-        width={0.66}
+        width={0.62}
       />
-      <LightSwitch position={[c.x1 - 0.1, 1.15, -16.05]} rotationY={-Math.PI / 2} />
+      <LightSwitch position={[c.x1 - 0.1, 1.15, -13.6]} rotationY={-Math.PI / 2} />
 
-      {/* طاولة كونسول الممر + أباجورة ومرآة */}
-      <group position={[c.x0 + 0.42, 0, -8.2]}>
-        <Prop name="ClassicConsole_01" rotationY={Math.PI / 2} height={0.86} />
-        <Prop name="vintage_oil_lamp" position={[0, 0.86, 0.28]} height={0.42} />
-        <mesh position={[0, 1.16, 0.28]}>
+      {/* طاولة كونسول الممر + أباجورة ومرآة (على الطوفة اليمنى بين البابين) */}
+      <group position={[c.x1 - 0.42, 0, -8.6]}>
+        <Prop name="ClassicConsole_01" rotationY={-Math.PI / 2} height={0.84} />
+        <Prop name="vintage_oil_lamp" position={[0, 0.84, -0.26]} height={0.4} />
+        <mesh position={[0, 1.13, -0.26]}>
           <sphereGeometry args={[0.05, 10, 8]} />
-          <meshStandardMaterial color="#fff2dd" emissive="#ffdcae" emissiveIntensity={1} toneMapped={false} />
+          <meshStandardMaterial color="#fff6ea" emissive="#ffe6cb" emissiveIntensity={1} toneMapped={false} />
         </mesh>
-        <pointLight position={[0.1, 1.18, 0.28]} color="#ffcb96" intensity={2.2} distance={5} decay={2} />
+        <pointLight position={[-0.08, 1.15, -0.26]} color="#ffd9b4" intensity={2.1} distance={5} decay={2} />
         <Prop
           name="ornate_mirror_01"
-          position={[-0.28, 1.72, 0]}
-          rotationY={Math.PI / 2}
+          position={[0.3, 1.68, 0]}
+          rotationY={-Math.PI / 2}
           anchor="origin"
-          height={0.85}
+          height={0.82}
         />
       </group>
+
+      {/* الحقيبة المتروكة في الممر (دليل) */}
+      <Prop name="vintage_suitcase" position={[0.92, 0, -7.2]} rotationY={-0.4} width={0.64} />
+      <KeycardProp />
+      <PhoneProp />
 
       {/* ===== غرفة ١٣٠٦ ===== */}
       <Wall a={[r.x1, r.z0]} b={[r.x1, r.z1]} />
       <Wall a={[r.x0, r.z1]} b={[r.x1, r.z1]} />
       <Wall a={[r.x0, r.z0]} b={[r.x1, r.z0]} />
+      <Wall a={[r.x0, r.z0]} b={[r.x0, -15.2]} />
+      <Wall a={[r.x0, -13.8]} b={[r.x0, r.z1]} />
 
-      <DoorUnit position={[1.95, 0, -18.0]} rotationY={-Math.PI / 2} open={-1.15} />
-      <mesh position={[c.x1 - 0.1, 1.75, -16.35]} rotation-y={-Math.PI / 2}>
-        <planeGeometry args={[0.4, 0.4]} />
+      <DoorUnit position={[1.95, 0, -14.5]} rotationY={-Math.PI / 2} open={-1.2} />
+      <LockScratchProp />
+      <mesh position={[c.x1 - 0.1, 1.72, -13.4]} rotation-y={-Math.PI / 2}>
+        <planeGeometry args={[0.38, 0.38]} />
         <meshStandardMaterial map={roomSign} roughness={0.45} metalness={0.35} />
       </mesh>
 
-      {/* نافذة ليلية + ستائر مخمل */}
-      <mesh position={[roomCx + 1.2, 1.55, r.z0 + 0.12]}>
-        <planeGeometry args={[1.7, 1.55]} />
-        <meshStandardMaterial color="#131a24" emissive="#28384b" emissiveIntensity={0.3} roughness={0.25} metalness={0.4} />
+      {/* نافذة ليلية على الطوفة المقابلة + ستائر داكنة */}
+      <mesh position={[4.5, 1.5, r.z0 + 0.12]}>
+        <planeGeometry args={[1.8, 1.5]} />
+        <meshStandardMaterial
+          color="#161d27"
+          emissive="#2b3c50"
+          emissiveIntensity={0.34}
+          roughness={0.25}
+          metalness={0.4}
+        />
       </mesh>
-      <Curtain position={[roomCx + 1.2, 1.35, r.z0 + 0.26]} width={2.2} />
+      <Curtain position={[4.5, 1.34, r.z0 + 0.26]} width={2.3} />
 
-      {/* ===== أثاث الغرفة (توزيع غرفة فندق حقيقية: ممشى واضح بالوسط) ===== */}
+      {/* ===== أثاث الغرفة (تخطيط جناح فندق حقيقي) ===== */}
       <Zone z={-11}>
-        {/* السرير ملاصق للطوفة اليمنى + مخدات، وكومدينة على كل جانب */}
-        <Prop name="GothicBed_01" position={[8.25, 0, -19.5]} rotationY={-Math.PI / 2} height={1.35} />
-        <Prop name="throw_pillows_01" position={[8.95, 0.62, -19.5]} rotationY={-Math.PI / 2} width={1.0} />
-        <Prop name="ClassicNightstand_01" position={[8.6, 0, -18.1]} rotationY={-Math.PI / 2} height={0.7} />
-        <Prop name="ClassicNightstand_01" position={[8.6, 0, -21.0]} rotationY={-Math.PI / 2} height={0.7} />
-        <Prop name="vintage_oil_lamp" position={[8.6, 0.7, -21.0]} height={0.44} />
-        <Prop name="alarm_clock_01" position={[8.6, 0.7, -18.55]} rotationY={2.1} height={0.14} />
-        <mesh position={[8.6, 1.02, -21.0]}>
+        {/* السرير برأسه على الطوفة اليمنى + كومدينة على كل جانب */}
+        <Prop name="GothicBed_01" position={[6.6, 0, -17.6]} rotationY={-Math.PI / 2} height={1.3} />
+        <Prop name="throw_pillows_01" position={[7.15, 0.6, -17.6]} rotationY={-Math.PI / 2} width={0.95} />
+        <Prop name="ClassicNightstand_01" position={[7.15, 0, -16.35]} rotationY={-Math.PI / 2} height={0.7} />
+        <Prop name="ClassicNightstand_01" position={[7.15, 0, -18.85]} rotationY={-Math.PI / 2} height={0.7} />
+        <Prop name="vintage_oil_lamp" position={[7.15, 0.7, -18.85]} height={0.42} />
+        <Prop name="alarm_clock_01" position={[7.2, 0.7, -16.0]} rotationY={2.2} height={0.13} />
+        <EarringProp />
+        <mesh position={[7.15, 1.0, -18.85]}>
           <sphereGeometry args={[0.05, 10, 8]} />
-          <meshStandardMaterial color="#fff2dd" emissive="#ffdcae" emissiveIntensity={1} toneMapped={false} />
+          <meshStandardMaterial color="#fff6ea" emissive="#ffe6cb" emissiveIntensity={1} toneMapped={false} />
         </mesh>
-        <pointLight position={[8.35, 1.05, -21.0]} color="#ffc891" intensity={2.6} distance={5.5} decay={2} />
+        <pointLight position={[6.9, 1.04, -18.85]} color="#ffd6ae" intensity={2.4} distance={5.5} decay={2} />
 
         {/* المكتب تحت النافذة + الكرسي أمامه */}
-        <Prop name="WoodenTable_01" position={[6.8, 0, -23.95]} rotationY={0} height={0.78} />
-        <Prop name="WoodenChair_01" position={[6.8, 0, -22.9]} rotationY={Math.PI} height={1.05} />
+        <Prop name="WoodenTable_01" position={[3.05, 0, -19.15] } rotationY={0} height={0.76} />
+        <Prop name="WoodenChair_01" position={[3.05, 0, -18.35]} rotationY={Math.PI} height={1.02} />
+        <DeskNoteProp />
 
-        {/* الدولاب على الطوفة المقابلة للسرير + حقيبة جانبه */}
-        <Prop name="GothicCabinet_01" position={[4.5, 0, -14.25]} rotationY={Math.PI} height={2.12} />
-        <Prop name="vintage_suitcase" position={[3.0, 0, -14.9]} rotationY={0.5} width={0.62} />
+        {/* الدولاب قريب من المدخل على طوفة الدخول + حقيبة جانبه */}
+        <Prop name="GothicCabinet_01" position={[3.4, 0, -13.4] } rotationY={Math.PI} height={2.05} />
 
-        {/* سجادة وسط الممشى + لوحة على طوفة النافذة */}
-        <mesh rotation-x={-Math.PI / 2} position={[5.1, 0.014, -19.2]} receiveShadow>
-          <planeGeometry args={[3.2, 3.0]} />
-          <meshStandardMaterial {...roomRug} color="#7d5b52" roughness={1} normalScale={[1.1, 1.1]} />
+        {/* سجادة بمقاس مناسب أمام السرير */}
+        <mesh rotation-x={-Math.PI / 2} position={[4.9, 0.014, -17.2]} receiveShadow>
+          <planeGeometry args={[2.6, 3.0]} />
+          <meshStandardMaterial {...roomRug} color="#7a5b53" roughness={1} normalScale={[1.05, 1.05]} />
         </mesh>
         <Prop
           name="hanging_picture_frame_02"
-          position={[4.1, 1.72, r.z0 + 0.1]}
-          rotationY={0}
+          position={[r.x1 - 0.11, 1.72, -15.1]}
+          rotationY={-Math.PI / 2}
           anchor="origin"
-          width={0.95}
+          width={0.85}
         />
       </Zone>
-      <LightSwitch position={[2.05, 1.15, -19.05]} rotationY={Math.PI / 2} />
+      <LightSwitch position={[2.0, 1.15, -13.9]} rotationY={Math.PI / 2} />
 
-      {/* ===== إضاءة فندق سينمائية (fill أعلى قليلاً مع الحفاظ على الغموض) ===== */}
-      <ambientLight intensity={0.62} color="#a4abba" />
-      <hemisphereLight args={["#b0b8ca", "#7a6255", 0.98]} />
-      <Chandelier position={[0, H - 0.12, -3]} intensity={6.5} />
-      {/* ضوء أرضي خفيف يبرز نقشة السجاد بدون إحراق السقف */}
-      {[-2, -7, -12, -17, -22].map((z) => (
-        <pointLight key={z} position={[0, 0.5, z]} color="#f0d7bd" intensity={0.8} distance={6} decay={2} />
-      ))}
-      <Chandelier position={[0, H - 0.12, -10]} intensity={6.5} />
-      <Chandelier position={[0, H - 0.12, -16.5]} intensity={6} castShadow />
+      {/* ===== إضاءة فندق سينمائية: دافئة محايدة، مقروءة، بدون highlights محروقة ===== */}
+      <ambientLight intensity={0.78} color="#aab0bd" />
+      <hemisphereLight args={["#b6bccb", "#846f60", 1.05]} />
+      <Chandelier position={[0, H - 0.12, -3.2]} intensity={5.6} />
+      <Chandelier position={[0, H - 0.12, -9.6]} intensity={5.2} />
+      <Chandelier position={[0, H - 0.12, -16.4]} intensity={4.4} castShadow />
       <Zone z={-11}>
-        <Chandelier position={[5.1, H - 0.12, -18.9]} intensity={7} castShadow />
-        <Chandelier position={[6.8, H - 0.12, -22.6]} intensity={6.5} />
-        {/* fill لزوايا الغرفة حتى تبقى الأدلة والأثاث واضحة */}
-        <pointLight position={[3.0, 1.5, -15.2]} color="#e9d3ba" intensity={1.5} distance={7} decay={2} />
-        <pointLight position={[8.4, 1.4, -23.2]} color="#e9d3ba" intensity={1.3} distance={7} decay={2} />
-        <pointLight position={[2.6, 1.3, -23.2]} color="#e3cdb6" intensity={1.2} distance={7} decay={2} />
+        <Chandelier position={[4.6, H - 0.12, -16.6]} intensity={6.2} castShadow />
+        {/* fill ناعم للزوايا حتى تبقى الأدلة والأثاث واضحة بدون فقدان الغموض */}
+        <pointLight position={[2.6, 1.6, -14.4]} color="#e9d7c1" intensity={1.3} distance={7} decay={2} />
+        <pointLight position={[2.7, 1.5, -18.6]} color="#e4d1bb" intensity={1.2} distance={7} decay={2} />
+        <pointLight position={[6.4, 1.5, -14.2]} color="#e4d1bb" intensity={1.1} distance={7} decay={2} />
       </Zone>
-
-
-      {/* ===== نقاط الأدلة ===== */}
-      {FLOOR13_EVIDENCE.map((e) => (
-        <EvidenceGlint key={e.id} position={e.position} found={found.has(e.id)} />
-      ))}
     </group>
   );
 }
