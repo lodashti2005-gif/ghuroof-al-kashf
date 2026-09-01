@@ -252,15 +252,17 @@ export const getAnalyticsReport = createServerFn({ method: "POST" })
 
     const purchaseViews = visitorsOf("purchase_view");
     const checkoutOpens = visitorsOf("checkout_open");
+    // التجربة صارت بدون حساب، فمرحلة «أنشأ حساب» ما هي شرط قبل التجربة.
     const funnel: FunnelStage[] = [
       stage("visit", "زار الموقع", uniqueVisitors, uniqueVisitors, uniqueVisitors, "زوار فريدون."),
-      stage("signup", "أنشأ حساب", signups, uniqueVisitors, uniqueVisitors, "بيانات حقيقية."),
-      stage("trial", "بدأ التجربة", trialStarted, signups, uniqueVisitors, "بيانات حقيقية."),
-      stage("trial_done", "أكمل التجربة", trialCompleted, trialStarted, uniqueVisitors, "بيانات حقيقية."),
-      stage("purchase_view", "وصل للشراء", purchaseViews, trialCompleted, uniqueVisitors, purchaseViews == null ? NA : "زوار فريدون."),
+      stage("trial", "بدأ التجربة", startedTrialTotal, uniqueVisitors, uniqueVisitors, "أجهزة + حسابات — بيانات حقيقية."),
+      stage("trial_done", "أكمل التجربة", completedTrialTotal, startedTrialTotal, uniqueVisitors, "بيانات حقيقية."),
+      stage("purchase_view", "وصل للشراء", purchaseViews, completedTrialTotal, uniqueVisitors, purchaseViews == null ? NA : "زوار فريدون."),
       stage("checkout", "فتح صفحة الدفع", checkoutOpens, purchaseViews, uniqueVisitors, checkoutOpens == null ? NA : "زوار فريدون."),
-      stage("paid", "دفع", paid.length, checkoutOpens ?? trialCompleted, uniqueVisitors, "بيانات حقيقية."),
+      stage("paid", "دفع", paid.length, checkoutOpens ?? completedTrialTotal, uniqueVisitors, "بيانات حقيقية."),
+      stage("signup", "أنشأ حساب (بعد الشراء عادةً)", signups, uniqueVisitors, uniqueVisitors, "بيانات حقيقية."),
     ];
+
 
     // ٩) مصادر الزيارات.
     let sources: SourceRow[] | null = null;
