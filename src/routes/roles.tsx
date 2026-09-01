@@ -158,13 +158,37 @@ function RolesScreen() {
                 )}
               </ActionButton>
               {isHost && allReady && allRolesAssigned && (
-  <ActionButton
-    className="mt-3 w-full py-3.5 text-base"
-    onClick={() => actions.setPhase("intro")}
-  >
-    ابدأ التحقيق للجميع
-  </ActionButton>
-)}
+                <ActionButton
+                  className="mt-3 w-full py-3.5 text-base"
+                  onClick={() => actions.setPhase("intro")}
+                >
+                  ابدأ التحقيق للجميع
+                </ActionButton>
+              )}
+
+              {iAmReady && !allReady && waitStuck && (
+                <div className="mt-4 rounded-xl border border-border bg-secondary/50 p-4 text-right">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    الانتظار طال أكثر من اللازم — يمكن الاتصال انقطع. جرب إعادة الاتصال، أو ارجع
+                    لغرفة الانتظار وابدأوا من جديد.
+                  </p>
+                  <div className="mt-3 flex flex-wrap justify-end gap-2">
+                    <ActionButton
+                      disabled={syncing}
+                      onClick={() => {
+                        void resync();
+                        setWaitStuck(false);
+                      }}
+                    >
+                      {syncing ? <Loader2 className="size-4 animate-spin" /> : null} إعادة الاتصال
+                    </ActionButton>
+                    <ActionButton variant="outline" onClick={() => navigate({ to: "/lobby" })}>
+                      العودة للغرفة
+                    </ActionButton>
+                  </div>
+                </div>
+              )}
+
             </>
           ) : (
             <p className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
