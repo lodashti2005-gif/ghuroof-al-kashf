@@ -567,21 +567,21 @@ function HotelDesk({ position, rotationY = 0 }: { position: [number, number, num
   return (
     <group position={position} rotation-y={rotationY}>
       <RoundedBox args={[1.5, 0.05, 0.62]} radius={0.014} smoothness={3} position={[0, 0.745, 0]} castShadow receiveShadow>
-        <meshStandardMaterial {...veneer} color="#8a7460" roughness={0.55} />
+        <meshStandardMaterial {...veneer} color="#6b5d51" roughness={0.72} />
       </RoundedBox>
       {[-0.7, 0.7].map((x) => (
         <mesh key={x} position={[x, 0.36, 0]} castShadow receiveShadow>
           <boxGeometry args={[0.06, 0.72, 0.58]} />
-          <meshStandardMaterial {...veneerSide} color="#7d6a58" roughness={0.6} />
+          <meshStandardMaterial {...veneerSide} color="#61554a" roughness={0.75} />
         </mesh>
       ))}
       <mesh position={[0, 0.2, -0.02]} castShadow receiveShadow>
         <boxGeometry args={[1.34, 0.04, 0.5]} />
-        <meshStandardMaterial {...veneer} color="#75634f" roughness={0.65} />
+        <meshStandardMaterial {...veneer} color="#5b5045" roughness={0.78} />
       </mesh>
       <mesh position={[0, 0.56, -0.27]} receiveShadow>
         <boxGeometry args={[1.36, 0.3, 0.03]} />
-        <meshStandardMaterial {...veneer} color="#6f5e4c" roughness={0.7} />
+        <meshStandardMaterial {...veneer} color="#564c42" roughness={0.8} />
       </mesh>
     </group>
   );
@@ -594,7 +594,7 @@ function HotelWardrobe({ position, rotationY = 0 }: { position: [number, number,
   return (
     <group position={position} rotation-y={rotationY}>
       <RoundedBox args={[1.32, 2.06, 0.62]} radius={0.02} smoothness={3} position={[0, 1.03, 0]} castShadow receiveShadow>
-        <meshStandardMaterial {...veneer} color="#7f6c58" roughness={0.6} />
+        <meshStandardMaterial {...veneer} color="#645749" roughness={0.76} />
       </RoundedBox>
       {[-0.32, 0.32].map((x) => (
         <group key={x}>
@@ -606,7 +606,7 @@ function HotelWardrobe({ position, rotationY = 0 }: { position: [number, number,
             castShadow
             receiveShadow
           >
-            <meshStandardMaterial {...door} color="#8b7662" roughness={0.52} />
+            <meshStandardMaterial {...door} color="#6d5f51" roughness={0.7} />
           </RoundedBox>
           <mesh position={[x + (x > 0 ? -0.24 : 0.24), 1.06, 0.37]} rotation-x={Math.PI / 2} castShadow>
             <cylinderGeometry args={[0.012, 0.012, 0.22, 10]} />
@@ -733,7 +733,7 @@ export function Floor13World() {
 
       {/* كونسول الممر + أباجورة ومرآة */}
       <group position={[c.x1 - 0.42, 0, -8.6]}>
-        <Prop name="side_table_01" rotationY={-Math.PI / 2} height={0.72} tint="#8a7057" />
+        <Prop name="side_table_01" rotationY={-Math.PI / 2} height={0.72} tint="#6d5c4a" />
         <Prop name="desk_lamp_arm_01" position={[0, 0.72, -0.2]} rotationY={-Math.PI / 2} height={0.44} />
         <mesh position={[0.05, 1.02, -0.2]}>
           <sphereGeometry args={[0.045, 10, 8]} />
@@ -775,8 +775,8 @@ export function Floor13World() {
       <Zone z={-11}>
         {/* السرير Queen برأسه على الطوفة اليمنى + كومدينتان وأباجورتان */}
         <HotelBed position={[6.5, 0, -17.6]} rotationY={-Math.PI / 2} />
-        <Prop name="side_table_01" position={[7.15, 0, -16.3]} rotationY={-Math.PI / 2} height={0.68} tint="#8d7a64" />
-        <Prop name="side_table_01" position={[7.15, 0, -18.9]} rotationY={-Math.PI / 2} height={0.68} tint="#8d7a64" />
+        <Prop name="side_table_01" position={[7.15, 0, -16.3]} rotationY={-Math.PI / 2} height={0.68} tint="#6f6152" />
+        <Prop name="side_table_01" position={[7.15, 0, -18.9]} rotationY={-Math.PI / 2} height={0.68} tint="#6f6152" />
         <Prop name="desk_lamp_arm_01" position={[7.2, 0.68, -18.9]} rotationY={-Math.PI / 2} height={0.42} />
         <Prop name="desk_lamp_arm_01" position={[7.2, 0.68, -16.05]} rotationY={-Math.PI / 2} height={0.4} />
         <HotelPhone position={[7.18, 0.68, -16.6]} rotationY={-Math.PI / 2} />
@@ -798,12 +798,12 @@ export function Floor13World() {
         <DeskNoteProp />
 
         {/* تلفزيون على كونسول منخفض مقابل السرير */}
-        <Prop name="side_table_01" position={[2.15, 0, -16.9]} rotationY={Math.PI / 2} height={0.66} tint="#8a7259" />
+        <Prop name="side_table_01" position={[2.15, 0, -16.9]} rotationY={Math.PI / 2} height={0.66} tint="#6d5e4d" />
         <Prop name="television_02" position={[2.2, 0.66, -16.9]} rotationY={Math.PI / 2} width={0.72} />
 
         {/* الدولاب قريب من المدخل + طاولة صغيرة وحقيبة */}
         <HotelWardrobe position={[3.5, 0, -13.42]} rotationY={Math.PI} />
-        <Prop name="side_table_01" position={[5.7, 0, -13.6]} rotationY={Math.PI} height={0.52} tint="#8d7a64" />
+        <Prop name="side_table_01" position={[5.7, 0, -13.6]} rotationY={Math.PI} height={0.52} tint="#6f6152" />
         <Prop name="vintage_suitcase" position={[4.5, 0, -13.6]} rotationY={0.5} width={0.6} />
 
         <Prop
