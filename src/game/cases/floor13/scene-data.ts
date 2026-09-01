@@ -55,7 +55,7 @@ export const FLOOR13_WALKABLE: Floor13Rect[] = [
   { x0: 5.35, x1: 7.2, z0: -16.5, z1: -13.35 },
 ];
 
-export const FLOOR13_SPAWN: [number, number, number] = [2.3, FLOOR13_LAYOUT.eyeHeight, -14.5];
+export const FLOOR13_SPAWN: [number, number, number] = [3.6, FLOOR13_LAYOUT.eyeHeight, -16.2];
 /** يبدأ اللاعب ناظر ناحية عمق الممر (-z). */
 export const FLOOR13_SPAWN_YAW = -Math.PI / 2;
 
