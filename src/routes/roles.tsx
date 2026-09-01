@@ -30,19 +30,24 @@ function RolesScreen() {
   const navigate = useNavigate();
   const [stuck, setStuck] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [waitStuck, setWaitStuck] = useState(false);
 
   const myRole = roleById(me ? room?.roles?.[me.id] : undefined);
-const readyCount = room?.ready?.length ?? 0;
-const total = Math.max(
-  room?.players.length ?? 0,
-  Object.keys(room?.roles ?? {}).length
-);
-  const iAmReady = !!me && !!room?.ready?.includes(me.id);
+  // أعضاء الجولة الحالية فقط: لاعب غادر أو مات اتصاله ما يُحسب ضمن الانتظار.
+  const players = room?.players ?? [];
+  const memberIds = players.map((p) => p.id);
+  const readyIds = (room?.ready ?? []).filter((id) => memberIds.includes(id));
+  const readyCount = readyIds.length;
+  const total = players.length;
+  const iAmReady = !!me && readyIds.includes(me.id);
   const allReady = total > 0 && readyCount >= total;
   // كل اللاعبين النشطين عندهم دور محفوظ بالحالة المشتركة.
-  const allRolesAssigned =
-    (room?.players.length ?? 0) > 0 &&
-    (room?.players ?? []).every((p) => !!room?.roles?.[p.id]);
+  const allRolesAssigned = total > 0 && players.every((p) => !!room?.roles?.[p.id]);
+  // بقايا جولة قديمة: أدوار/جاهزية لأشخاص ما هم بالغرفة الآن.
+  const staleMembers =
+    Object.keys(room?.roles ?? {}).some((id) => !memberIds.includes(id)) ||
+    (room?.ready ?? []).some((id) => !memberIds.includes(id));
+  const sessionId = room?.sessionId ?? 1;
 
   useEffect(() => {
     if (!room) return;
@@ -50,9 +55,20 @@ const total = Math.max(
       navigate({ to: "/lobby" });
       return;
     }
-    // ما ننقل اللاعب من بطاقة دوره إلا بعد ما يضغط «فهمت دوري».
-    if (room.phase !== "roles" && iAmReady) navigate({ to: "/case" });
-  }, [room, iAmReady, navigate]);
+    // الغرفة تقدّمت فعلاً → نلتحق بالمرحلة الحالية حتى لو الجهاز كان عالق على
+    // شاشة الدور من جولة سابقة.
+    if (room.phase === "intro") {
+      navigate({ to: "/intro" });
+      return;
+    }
+    if (room.phase !== "roles") navigate({ to: "/case" });
+  }, [room, navigate]);
+
+  // أي جولة جديدة (إعادة القضية) تصفّر حالة الانتظار المحلية.
+  useEffect(() => {
+    setWaitStuck(false);
+    setStuck(false);
+  }, [sessionId]);
 
   // لو ما وصل الدور (اللاعب دخل متأخر أو فوّت الحدث): مزامنة ثم يعطي نفسه دور ناقص.
   useEffect(() => {
@@ -79,10 +95,33 @@ const total = Math.max(
     setSyncing(false);
   };
 
-  // كل اللاعبين جاهزين → المضيف يفتح القضية للفريق كله.
+  // مهلة آمنة لشاشة «بانتظار باقي الفريق»: نعيد جلب snapshot من السيرفر (لو
+  // انقطع realtime)، وبعد مهلة معقولة نعرض أزرار بدل دوران لا نهائي.
   useEffect(() => {
-   // if (isHost && allReady && room?.phase === "roles") actions.setPhase("intro");
-  }, [isHost, allReady, room?.phase, actions]);
+    if (!iAmReady || allReady) {
+      setWaitStuck(false);
+      return;
+    }
+    let alive = true;
+    const poll = window.setInterval(() => void actions.resync(), 4000);
+    const t = window.setTimeout(() => alive && setWaitStuck(true), 20000);
+    return () => {
+      alive = false;
+      window.clearInterval(poll);
+      window.clearTimeout(t);
+    };
+  }, [iAmReady, allReady, actions, sessionId]);
+
+  // بقايا الجولة السابقة تمنع «كل الفريق جاهز» — قائد الغرفة ينظّفها تلقائياً.
+  useEffect(() => {
+    if (isHost && staleMembers && room?.phase === "roles") actions.pruneRoundMembers();
+  }, [isHost, staleMembers, room?.phase, actions]);
+
+  // كل اللاعبين جاهزين → المضيف يفتح القضية للفريق كله تلقائياً (وزر احتياطي أدناه).
+  useEffect(() => {
+    if (isHost && allReady && allRolesAssigned && room?.phase === "roles") actions.setPhase("intro");
+  }, [isHost, allReady, allRolesAssigned, room?.phase, actions]);
+
 
 
   return (
