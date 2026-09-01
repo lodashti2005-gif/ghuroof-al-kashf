@@ -238,11 +238,12 @@ export function Floor13World({ found }: { found: Set<string> }) {
       </mesh>
 
       {/* ===== إضاءة ===== */}
-      <ambientLight intensity={0.16} color="#6b7080" />
+      <ambientLight intensity={0.22} color="#6b7080" />
       <CeilingLamp position={[0, H - 0.08, -3]} />
       <CeilingLamp position={[0, H - 0.08, -10]} />
       <CeilingLamp position={[0, H - 0.08, -17.5]} />
-      <CeilingLamp position={[5.6, H - 0.08, -19]} />
+      <CeilingLamp position={[4.4, H - 0.08, -17.5]} />
+      <CeilingLamp position={[6.6, H - 0.08, -21.5]} />
 
       {/* ===== نقاط الأدلة ===== */}
       {FLOOR13_EVIDENCE.map((e) => (

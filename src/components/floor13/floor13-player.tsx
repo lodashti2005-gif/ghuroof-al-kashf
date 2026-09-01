@@ -86,12 +86,6 @@ export function Floor13Player({
     }
     camera.position.y = FLOOR13_LAYOUT.eyeHeight;
 
-    (window as unknown as Record<string, unknown>).__f13 = {
-      p: camera.position.toArray(),
-      yaw: yaw.current,
-      fwd,
-      keys: [...k],
-    };
     // ==== أقرب دليل ====
     let best: string | null = null;
     let bestD = Infinity;
