@@ -217,8 +217,11 @@ export const getAnalyticsReport = createServerFn({ method: "POST" })
       { key: "pageviews", label: "مشاهدات الصفحات", value: clean.length, note: "أحداث فتح الصفحات المسجّلة." },
       { key: "signups", label: "حسابات جديدة", value: signups, note: "من نظام الحسابات — بيانات تاريخية حقيقية." },
       { key: "trial_click", label: "ضغط «ابدأ التجربة»", value: visitorsOf("trial_click"), note: recordedEventTypes.includes("trial_click") ? "زوار فريدون." : NA },
-      { key: "trial_start", label: "بدأ تجربة الـ١٠ دقائق فعلياً", value: trialStarted, note: "من جدول التجارب — بيانات تاريخية حقيقية." },
-      { key: "trial_done", label: "استهلك التجربة كاملة", value: trialCompleted, note: "١٠ دقائق مستهلكة — بيانات تاريخية حقيقية." },
+      { key: "trial_start", label: "بدأ التجربة (١٠ دقائق)", value: startedTrialTotal, note: "أجهزة بدون حساب + حسابات — بيانات حقيقية." },
+      { key: "trial_done", label: "أكمل التجربة كاملة", value: completedTrialTotal, note: "بقي فاعلاً حتى نهاية الـ١٠ دقائق." },
+      { key: "trial_expired", label: "انتهت تجربته", value: deviceEnded + trialCompleted, note: "انتهى وقت تجربته ولازم يشتري لفتح القضية." },
+      { key: "trial_device", label: "تجارب بدون حساب (أجهزة)", value: deviceStarted, note: "أجهزة/متصفحات فريدة بدأت التجربة بدون تسجيل." },
+
       { key: "purchase_view", label: "وصل لصفحة الشراء", value: visitorsOf("purchase_view"), note: recordedEventTypes.includes("purchase_view") ? "زوار فريدون." : NA },
       { key: "pay_click", label: "ضغط «ادفع وافتح القضية»", value: visitorsOf("pay_click"), note: recordedEventTypes.includes("pay_click") ? "زوار فريدون." : NA },
       { key: "checkout_open", label: "فتح صفحة الدفع (Checkout)", value: visitorsOf("checkout_open"), note: recordedEventTypes.includes("checkout_open") ? "زوار فريدون." : NA },
