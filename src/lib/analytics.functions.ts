@@ -17,11 +17,15 @@ import {
   type AnalyticsReport,
   type FunnelStage,
   type SourceRow,
+  type DropoffStage,
+  type VisitorJourney,
 } from "@/lib/analytics-overview";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /** الأحداث اللي أُضيفت مع هذا التحديث (ما لها بيانات تاريخية). */
 const NEW_EVENT_TYPES = [
+  "cases_view",
+  "case_view",
   "signup",
   "trial_click",
   "trial_start",
@@ -38,6 +42,10 @@ interface EventRow {
   visitor_id: string | null;
   session_id: string | null;
   source: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  referrer: string | null;
   created_at: string;
 }
 
@@ -70,7 +78,9 @@ export const getAnalyticsReport = createServerFn({ method: "POST" })
     // ٢) كل أحداث التتبّع (نحتاج التاريخ الكامل لتحديد الزوار المستبعدين).
     const { data: allEvents } = await supabaseAdmin
       .from("player_events")
-      .select("event_type, user_id, visitor_id, session_id, source, created_at")
+      .select(
+        "event_type, user_id, visitor_id, session_id, source, utm_source, utm_medium, utm_campaign, referrer, created_at",
+      )
       .order("created_at", { ascending: true })
       .limit(50000);
     const events: EventRow[] = (allEvents ?? []) as EventRow[];
@@ -303,6 +313,146 @@ export const getAnalyticsReport = createServerFn({ method: "POST" })
         .sort((a, b) => b.visitors - a.visitors);
     }
 
+
+    // ٩.٥) «أين توقف الزوار؟» — رحلة كل زائر حقيقي بالترتيب.
+    const visitorsWith = (type: string) =>
+      new Set(
+        clean
+          .filter((e) => e.event_type === type)
+          .map((e) => e.visitor_id)
+          .filter((v): v is string => !!v),
+      );
+
+    const allVisitors = new Set(
+      clean.map((e) => e.visitor_id).filter((v): v is string => !!v),
+    );
+    const storeVisitors = visitorsWith("cases_view");
+    const caseVisitors = visitorsWith("case_view");
+    const trialClickVisitors = visitorsWith("trial_click");
+    const trialStartVisitors = new Set<string>([
+      ...visitorsWith("trial_start"),
+      ...cleanDevice.map((t) => t.device_id),
+    ]);
+    const trialDoneVisitors = new Set<string>(
+      cleanDevice
+        .filter((t) => new Date(t.last_seen_at).getTime() >= endedAt(t.started_at) - 30_000)
+        .map((t) => t.device_id),
+    );
+    const purchaseVisitors = visitorsWith("purchase_view");
+    const payClickVisitors = visitorsWith("pay_click");
+    const checkoutVisitors = visitorsWith("checkout_open");
+    const paidVisitors = new Set(
+      clean
+        .filter((e) => e.user_id != null && buyers.has(e.user_id))
+        .map((e) => e.visitor_id)
+        .filter((v): v is string => !!v),
+    );
+
+    const totalVisitors = allVisitors.size;
+    const journeyOrder: { key: string; label: string; set: Set<string> | null }[] = [
+      { key: "visit", label: "دخول الموقع", set: allVisitors },
+      {
+        key: "cases_view",
+        label: "مشاهدة متجر القضايا",
+        set: recordedEventTypes.includes("cases_view") ? storeVisitors : null,
+      },
+      {
+        key: "case_view",
+        label: "فتح قضية",
+        set: recordedEventTypes.includes("case_view") ? caseVisitors : null,
+      },
+      {
+        key: "trial_click",
+        label: "ضغط «ابدأ التجربة»",
+        set: recordedEventTypes.includes("trial_click") ? trialClickVisitors : null,
+      },
+      { key: "trial_start", label: "بدأت التجربة", set: trialStartVisitors },
+      { key: "trial_done", label: "أكمل التجربة", set: trialDoneVisitors },
+      {
+        key: "purchase_view",
+        label: "وصل لصفحة الشراء",
+        set: recordedEventTypes.includes("purchase_view") ? purchaseVisitors : null,
+      },
+      {
+        key: "pay_click",
+        label: "ضغط شراء",
+        set: recordedEventTypes.includes("pay_click") ? payClickVisitors : null,
+      },
+      {
+        key: "checkout_open",
+        label: "فتح Paddle Checkout",
+        set: recordedEventTypes.includes("checkout_open") ? checkoutVisitors : null,
+      },
+      { key: "paid", label: "دفع بنجاح", set: paidVisitors },
+    ];
+
+    const dropoff: DropoffStage[] = journeyOrder.map((stageDef, i) => {
+      const next = journeyOrder[i + 1];
+      const reached = stageDef.set ? stageDef.set.size : null;
+      let dropped: number | null = null;
+      if (stageDef.set && next?.set) {
+        dropped = [...stageDef.set].filter((v) => !next.set!.has(v)).length;
+      } else if (stageDef.set && !next) {
+        dropped = 0;
+      }
+      const label = next
+        ? `${stageDef.label} ولم ${
+            next.key === "paid" ? "يدفع" : `يصل إلى «${next.label}»`
+          }`
+        : stageDef.label;
+      return {
+        key: stageDef.key,
+        label,
+        reached,
+        droppedHere: dropped,
+        reachedPct: pct(reached, totalVisitors),
+        droppedPct: pct(dropped, totalVisitors),
+        available: stageDef.set != null && (next ? next.set != null : true),
+        note:
+          stageDef.set == null
+            ? NA
+            : next && next.set == null
+              ? `المرحلة التالية «${next.label}» ما لها بيانات تاريخية — يبدأ تسجيلها من الآن.`
+              : "بيانات حقيقية بعد استبعاد المالك والاختبار.",
+      };
+    });
+
+    // رحلة كل زائر (آخر ١٥٠ زائر بحسب آخر نشاط).
+    const journeyMap = new Map<string, VisitorJourney>();
+    for (const e of clean) {
+      if (!e.visitor_id) continue;
+      const existing = journeyMap.get(e.visitor_id);
+      if (!existing) {
+        journeyMap.set(e.visitor_id, {
+          visitorId: e.visitor_id,
+          source: e.source ?? "unknown",
+          utmSource: e.utm_source,
+          utmMedium: e.utm_medium,
+          utmCampaign: e.utm_campaign,
+          referrer: e.referrer,
+          stages: [],
+          lastStageLabel: "",
+          firstSeen: e.created_at,
+          lastSeen: e.created_at,
+        });
+      } else {
+        existing.lastSeen = e.created_at;
+        if (existing.source === "unknown" && e.source) existing.source = e.source;
+        existing.utmSource = existing.utmSource ?? e.utm_source;
+      }
+    }
+    for (const [visitorId, j] of journeyMap) {
+      for (const stageDef of journeyOrder) {
+        if (stageDef.set?.has(visitorId)) {
+          j.stages.push(stageDef.label);
+          j.lastStageLabel = stageDef.label;
+        }
+      }
+    }
+    const journeys = [...journeyMap.values()]
+      .sort((a, b) => (a.lastSeen < b.lastSeen ? 1 : -1))
+      .slice(0, 150);
+
     return {
       allowed: true,
       since,
@@ -314,6 +464,8 @@ export const getAnalyticsReport = createServerFn({ method: "POST" })
       funnel,
       sources,
       sourcesTracked,
+      dropoff,
+      journeys,
       revenue: sumBy(customerPurchases),
       ownerRevenue: sumBy(ownerPurchaseRows),
       excluded: {
