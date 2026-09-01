@@ -114,35 +114,52 @@ export function DeviceTrialGate({
 
   if (trial.expired) {
     return (
-      <div dir="rtl" className="grid min-h-screen place-items-center bg-background px-4 py-10">
+      <div
+        dir="rtl"
+        data-testid="trial-expired"
+        className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-background px-4 py-10"
+      >
         <Panel className="cine-in w-full max-w-lg text-center">
           <span className="mx-auto grid size-12 place-items-center rounded-2xl border border-border bg-secondary/60">
             <Lock className="size-5 text-primary" />
           </span>
-          <Eyebrow>انتهت التجربة المجانية</Eyebrow>
-          <h1 className="mt-3 text-2xl font-extrabold sm:text-3xl">خلصت العشر دقايق</h1>
+          <Eyebrow>التجربة المجانية</Eyebrow>
+          <h1 className="mt-3 text-2xl font-extrabold sm:text-3xl">انتهت تجربتك المجانية</h1>
           <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-            التجربة المجانية مرة واحدة لكل جهاز، وتقدّمكم والأدلة محفوظة. افتح
-            القضية كاملة وتكمل من نفس المكان.
+            اشتري القضية وكمل التحقيق من نفس المكان
           </p>
+
+          <div className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-border bg-secondary/50 px-4 py-3.5 text-right">
+            <div>
+              <p className="font-display text-xs text-muted-foreground">سعر القضية</p>
+              <p className="mt-1 font-display text-xl font-extrabold">{priceText}</p>
+            </div>
+            <p className="max-w-[9.5rem] font-mono text-[11px] leading-relaxed text-muted-foreground">
+              دفعة واحدة — تقدّمك والأدلة محفوظة وتكمل من نفس النقطة.
+            </p>
+          </div>
+
           <Link
             to="/purchase/$caseId"
             params={{ caseId }}
             search={{ room: room?.code }}
-            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 font-display text-base font-bold text-primary-foreground"
+            onClick={() => void trackEvent("pay_click", { caseId, path: "/trial-expired" })}
+            data-testid="trial-expired-buy"
+            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-4 font-display text-base font-bold text-primary-foreground"
           >
-            <ShoppingCart className="size-4.5" /> افتح القضية كاملة
+            <ShoppingCart className="size-4.5" /> اشترِ القضية وكمل اللعب
           </Link>
           <Link
-            to="/"
+            to="/cases"
             className="mt-3 inline-block font-display text-xs text-muted-foreground hover:text-foreground"
           >
-            رجوع للرئيسية
+            العودة للقضايا
           </Link>
         </Panel>
       </div>
     );
   }
+
 
   return <>{children}</>;
 }
