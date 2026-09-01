@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Environment, Lightformer } from "@react-three/drei";
+import { EffectComposer, Bloom, Vignette, Noise, BrightnessContrast, HueSaturation } from "@react-three/postprocessing";
+import { BlendFunction } from "postprocessing";
 import * as THREE from "three";
 import { Floor13World } from "./floor13-world";
 import { Floor13Player, type Floor13Controls } from "./floor13-player";
@@ -46,6 +48,15 @@ export default function Floor13Canvas({
         <Floor13World />
       </Suspense>
       <Floor13Player controls={controls} keys={keys} found={found} onNearChange={onNearChange} />
+      {/* تدرّج سينمائي خفيف: تلاشي حواف + توهج ناعم + حبيبة فيلم (يكسر إحساس CGI) */}
+      <EffectComposer multisampling={0} enableNormalPass={false}>
+        <Bloom intensity={0.15} luminanceThreshold={0.82} luminanceSmoothing={0.3} mipmapBlur radius={0.5} />
+        <HueSaturation saturation={-0.06} />
+        <BrightnessContrast brightness={0.012} contrast={0.1} />
+        <Vignette offset={0.28} darkness={0.62} eskil={false} />
+        <Noise premultiply blendFunction={BlendFunction.OVERLAY} opacity={0.16} />
+      </EffectComposer>
     </Canvas>
   );
 }
+

@@ -35,7 +35,10 @@ export type PropName =
   | "modern_ceiling_lamp_01"
   | "side_table_01"
   | "desk_lamp_arm_01"
-  | "hotel_desk_chair";
+  | "hotel_desk_chair"
+  | "modern_wooden_cabinet"
+  | "drawer_cabinet"
+  | "side_table_tall_01";
 
 const src = (n: PropName) => `/models/${n}.glb`;
 
