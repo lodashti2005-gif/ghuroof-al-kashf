@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { isTrialCase } from "./trial-cases";
 import { caseRegistry, type CaseSummary } from "./game-meta";
+
 
 /**
  * ملكية القضايا (Entitlements).
