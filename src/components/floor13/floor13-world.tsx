@@ -485,7 +485,7 @@ function puffy(w: number, h: number, d: number, amp: number, seg = 22): THREE.Bu
  */
 function HotelBed({ position, rotationY = 0 }: { position: [number, number, number]; rotationY?: number }) {
   const linen = usePbr("rough_linen", [2.6, 2.6]);
-  const sheet = usePbr("rough_linen", [2.0, 2.0]);
+const sheet = usePbr("rough_linen", [2.0, 2.0]); // مخدات
   const duvet = usePbr("rough_linen", [1.7, 1.2]);
   const upholstery = usePbr("rough_linen", [2.6, 1.3]);
   const headFabric = usePbr("rough_linen", [1.9, 1.5]);
@@ -494,7 +494,6 @@ function HotelBed({ position, rotationY = 0 }: { position: [number, number, numb
   const geo = useMemo(
     () => ({
       mattress: puffy(1.98, 0.28, 2.06, 0.02, 18),
-      sheet: puffy(2.02, 0.07, 2.04, 0.015, 20),
       duvet: puffy(2.06, 0.13, 1.9, 0.045, 30),
       runner: puffy(1.99, 0.1, 0.44, 0.035, 20),
       pillowBig: puffy(0.8, 0.2, 0.46, 0.055, 18),
@@ -532,15 +531,12 @@ function HotelBed({ position, rotationY = 0 }: { position: [number, number, numb
       <mesh position={[0, 0.55, 0]} geometry={geo.mattress} castShadow receiveShadow>
         <meshStandardMaterial {...linen} color="#c9bda6" roughness={1} normalScale={[1.2, 1.2]} />
       </mesh>
-      <mesh position={[0, 0.69, -0.02]} geometry={geo.sheet} castShadow receiveShadow>
-        <meshStandardMaterial {...sheet} color="#cfc3ab" roughness={1} normalScale={[1.3, 1.3]} />
-      </mesh>
       {/* duvet مطوي على الثلثين السفليين + runner عند الأرجل */}
       <mesh position={[0, 0.735, 0.06]} rotation-x={-0.008} geometry={geo.duvet} castShadow receiveShadow>
         <meshStandardMaterial {...duvet} color="#cdc1a9" roughness={1} normalScale={[1.4, 1.4]} />
       </mesh>
-      <mesh position={[0, 0.805, 0.72]} rotation-x={0.02} geometry={geo.runner} castShadow receiveShadow>
-        <meshStandardMaterial {...upholstery} color="#4b463f" roughness={0.98} />
+      <mesh position={[0, 0.795, 0.74]} rotation-x={0.02} geometry={geo.runner} castShadow receiveShadow>
+        <meshStandardMaterial {...upholstery} color="#7b7264" roughness={0.97} />
       </mesh>
       {/* مخدات فندقية: صف خلفي مسنود + صف أمامي */}
       {[-0.47, 0.47].map((x) => (
