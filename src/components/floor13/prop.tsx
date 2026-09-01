@@ -24,7 +24,17 @@ export type PropName =
   | "vintage_oil_lamp"
   | "vintage_suitcase"
   | "throw_pillows_01"
-  | "alarm_clock_01";
+  | "alarm_clock_01"
+  | "old_bed_frame"
+  | "painted_wooden_nightstand"
+  | "painted_wooden_table"
+  | "painted_wooden_chair_01"
+  | "television_02"
+  | "vintage_cabinet_01"
+  | "industrial_caged_sconce"
+  | "modern_ceiling_lamp_01"
+  | "side_table_01"
+  | "desk_lamp_arm_01";
 
 const src = (n: PropName) => `/models/${n}.glb`;
 
@@ -38,6 +48,7 @@ export function Prop({
   /** إن كان الموديل يتعلّق على الحائط/السقف: لا نُنزل القاعدة على الأرض. */
   anchor = "floor",
   shadows = true,
+  tint,
 }: {
   name: PropName;
   position?: [number, number, number];
@@ -47,6 +58,8 @@ export function Prop({
   width?: number;
   anchor?: "floor" | "origin";
   shadows?: boolean;
+  /** يضرب لون الخامة لتهدئة الأخشاب الفاتحة/الصفراء (بدون تغيير الخامات). */
+  tint?: string;
 }) {
   const { scene } = useGLTF(src(name));
 
@@ -66,12 +79,18 @@ export function Prop({
       mesh.receiveShadow = shadows;
       const mat = mesh.material as THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[];
       const list = Array.isArray(mat) ? mat : [mat];
-      for (const m of list) {
-        if (m && "envMapIntensity" in m) m.envMapIntensity = 0.55;
-      }
+      const next = list.map((m) => {
+        if (!m) return m;
+        const out = tint ? (m.clone() as THREE.MeshStandardMaterial) : m;
+        if ("envMapIntensity" in out) out.envMapIntensity = 0.5;
+        if (tint && out.color) out.color.multiply(new THREE.Color(tint));
+        return out;
+      });
+      mesh.material = Array.isArray(mat) ? next : next[0]!;
+
     });
     return { object: clone, offsetY: anchor === "floor" ? -box.min.y * s : 0 };
-  }, [scene, height, width, anchor, shadows]);
+  }, [scene, height, width, anchor, shadows, tint]);
 
   return (
     <group position={position} rotation-y={rotationY} rotation-x={rotationX}>
