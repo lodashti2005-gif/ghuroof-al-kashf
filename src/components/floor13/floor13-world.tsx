@@ -9,19 +9,21 @@ import { Prop } from "./prop";
 const H = FLOOR13_LAYOUT.wallHeight;
 const T = 0.16;
 
-/** طوفة مبنية بخامة PBR واقعية + وزرة خشب وحافة علوية. */
+/** طوفة بخامة PBR واقعية + وزرة خشب وحافة علوية. */
 function Wall({
   a,
   b,
   height = H,
   y = 0,
   repeatScale = 0.55,
+  plaster = false,
 }: {
   a: [number, number];
   b: [number, number];
   height?: number;
   y?: number;
   repeatScale?: number;
+  plaster?: boolean;
 }) {
   const cx = (a[0] + b[0]) / 2;
   const cz = (a[1] + b[1]) / 2;
@@ -31,35 +33,40 @@ function Wall({
   const d = Math.max(dz, T);
   const along = dx > dz;
   const len = Math.max(dx, dz);
-  const paper = usePbr(
-    "decrepit_wallpaper",
-    [Math.max(1, len * repeatScale), Math.max(1, height * repeatScale * 1.1)],
+  const surface = usePbr(
+    plaster ? "beige_wall_001" : "decrepit_wallpaper",
+    [Math.max(1, len * repeatScale * (plaster ? 2.2 : 1)), Math.max(1, height * repeatScale * 1.1 * (plaster ? 2.2 : 1))],
     [(cx + cz) * 0.13, 0],
   );
-  const wood = usePbr("wood_floor", [Math.max(1, len * 0.5), 1]);
+  const wood = usePbr("oak_veneer_01", [Math.max(1, len * 0.5), 1]);
   const bw = along ? w : T * 1.35;
   const bd = along ? T * 1.35 : d;
   return (
     <group>
       <mesh position={[cx, y + height / 2, cz]} receiveShadow>
         <boxGeometry args={[w, height, d]} />
-        <meshStandardMaterial {...paper} color="#a9a094" roughness={0.95} normalScale={[0.85, 0.85]} />
+        <meshStandardMaterial
+          {...surface}
+          color={plaster ? "#9d9488" : "#a09687"}
+          roughness={0.97}
+          normalScale={[0.9, 0.9]}
+        />
       </mesh>
       {/* وزرة خشب */}
       <mesh position={[cx, y + 0.085, cz]} receiveShadow>
         <boxGeometry args={[bw, 0.17, bd]} />
-        <meshStandardMaterial {...wood} color="#8a7561" roughness={0.75} />
+        <meshStandardMaterial {...wood} color="#7d6a56" roughness={0.72} />
       </mesh>
-      {/* حافة علوية (كرنيش) */}
+      {/* حافة علوية */}
       <mesh position={[cx, y + height - 0.07, cz]} receiveShadow>
         <boxGeometry args={[bw, 0.12, bd]} />
-        <meshStandardMaterial color="#a9a096" roughness={0.85} />
+        <meshStandardMaterial color="#9c948a" roughness={0.9} />
       </mesh>
     </group>
   );
 }
 
-/** إطار باب خشبي واقعي + لوحة باب بخامة خشب PBR + مقبض نحاسي. */
+/** باب غرفة فندق واقعي: خشب PBR + لوحة رقم + مقبض رافعة + قارئ بطاقة. */
 function DoorUnit({
   position,
   rotationY = 0,
@@ -73,59 +80,75 @@ function DoorUnit({
 }) {
   const w = 1.0;
   const h = 2.15;
-  const wood = usePbr("wood_floor", [1.4, 2.4]);
-  const frameWood = usePbr("wood_floor", [0.4, 2.6]);
+  const wood = usePbr("oak_veneer_01", [1.2, 2.2]);
+  const frameWood = usePbr("oak_veneer_01", [0.4, 2.6]);
   return (
     <group position={position} rotation-y={rotationY}>
       <mesh position={[-(w / 2 + 0.06), h / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[0.12, h + 0.12, 0.18]} />
-        <meshStandardMaterial {...frameWood} color="#9c8873" roughness={0.7} />
+        <meshStandardMaterial {...frameWood} color="#8a7663" roughness={0.68} />
       </mesh>
       <mesh position={[w / 2 + 0.06, h / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[0.12, h + 0.12, 0.18]} />
-        <meshStandardMaterial {...frameWood} color="#9c8873" roughness={0.7} />
+        <meshStandardMaterial {...frameWood} color="#8a7663" roughness={0.68} />
       </mesh>
       <mesh position={[0, h + 0.06, 0]} castShadow receiveShadow>
         <boxGeometry args={[w + 0.24, 0.12, 0.18]} />
-        <meshStandardMaterial {...frameWood} color="#9c8873" roughness={0.7} />
+        <meshStandardMaterial {...frameWood} color="#8a7663" roughness={0.68} />
       </mesh>
       <group position={[-w / 2, 0, 0]} rotation-y={open}>
         <group position={[w / 2, 0, 0]}>
           <mesh position={[0, h / 2, 0]} castShadow receiveShadow>
-            <boxGeometry args={[w, h, 0.055]} />
-            <meshStandardMaterial {...wood} color="#7d6853" roughness={0.55} />
+            <boxGeometry args={[w, h, 0.052]} />
+            <meshStandardMaterial {...wood} color="#6f5c4a" roughness={0.5} />
           </mesh>
-          {[0.68, 0.3].map((f) => (
-            <mesh key={f} position={[0, h * f, 0.032]} receiveShadow>
-              <boxGeometry args={[w * 0.66, h * 0.28, 0.014]} />
-              <meshStandardMaterial {...wood} color="#5f4d3c" roughness={0.6} />
+          {[0.7, 0.32].map((f) => (
+            <mesh key={f} position={[0, h * f, 0.03]} receiveShadow>
+              <boxGeometry args={[w * 0.7, h * 0.3, 0.012]} />
+              <meshStandardMaterial {...wood} color="#5b4a3a" roughness={0.55} />
             </mesh>
           ))}
-          <mesh position={[w * 0.36, 1.05, 0.075]} rotation-x={Math.PI / 2} castShadow>
-            <cylinderGeometry args={[0.024, 0.024, 0.13, 12]} />
-            <meshStandardMaterial color="#c9a869" metalness={0.95} roughness={0.22} />
+          {/* مقبض رافعة (hotel lever handle) */}
+          <mesh position={[w * 0.35, 1.04, 0.05]} castShadow>
+            <cylinderGeometry args={[0.026, 0.026, 0.055, 14]} />
+            <meshStandardMaterial color="#9d8a63" metalness={0.9} roughness={0.28} />
           </mesh>
-          <mesh position={[w * 0.36, 1.05, 0.035]}>
-            <cylinderGeometry args={[0.048, 0.048, 0.02, 14]} />
-            <meshStandardMaterial color="#b0904f" metalness={0.9} roughness={0.3} />
+          <mesh position={[w * 0.28, 1.04, 0.085]} rotation-z={Math.PI / 2} castShadow>
+            <cylinderGeometry args={[0.017, 0.014, 0.16, 12]} />
+            <meshStandardMaterial color="#a89563" metalness={0.92} roughness={0.26} />
+          </mesh>
+          {/* قارئ بطاقة */}
+          <mesh position={[w * 0.35, 1.28, 0.035]} castShadow>
+            <boxGeometry args={[0.085, 0.15, 0.026]} />
+            <meshStandardMaterial color="#26262a" roughness={0.42} metalness={0.25} />
+          </mesh>
+          <mesh position={[w * 0.35, 1.33, 0.05]}>
+            <sphereGeometry args={[0.008, 8, 6]} />
+            <meshStandardMaterial color="#8f2f2a" emissive="#a3352c" emissiveIntensity={1.3} toneMapped={false} />
           </mesh>
         </group>
       </group>
       {sign && (
-        <mesh position={[w / 2 + 0.3, 1.72, 0.11]}>
-          <planeGeometry args={[0.3, 0.3]} />
-          <meshStandardMaterial map={sign} roughness={0.5} metalness={0.3} />
-        </mesh>
+        <group position={[w / 2 + 0.32, 1.66, 0.11]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.24, 0.24, 0.012]} />
+            <meshStandardMaterial color="#8c7a52" metalness={0.85} roughness={0.34} />
+          </mesh>
+          <mesh position={[0, 0, 0.008]}>
+            <planeGeometry args={[0.21, 0.21]} />
+            <meshStandardMaterial map={sign} roughness={0.5} metalness={0.2} />
+          </mesh>
+        </group>
       )}
     </group>
   );
 }
 
-/** شمعدان حائط (موديل واقعي) + ضوء دافئ محايد. لمبة واحدة فقط تعمل flicker نادر. */
+/** شمعدان حائط قديم + ضوء دافئ خافت. flicker نادر جدًا للمبة واحدة. */
 function Sconce({
   position,
   rotationY = 0,
-  intensity = 2.1,
+  intensity = 1.7,
   flicker = false,
 }: {
   position: [number, number, number];
@@ -135,7 +158,7 @@ function Sconce({
 }) {
   const light = useRef<THREE.PointLight>(null);
   const glow = useRef<THREE.Mesh>(null);
-  const next = useRef(6 + Math.random() * 10);
+  const next = useRef(8 + Math.random() * 12);
   const t = useRef(0);
   const dip = useRef(0);
 
@@ -144,7 +167,7 @@ function Sconce({
     t.current += delta;
     if (dip.current > 0) {
       dip.current -= delta;
-      const f = 0.35 + Math.random() * 0.45;
+      const f = 0.4 + Math.random() * 0.4;
       if (light.current) light.current.intensity = intensity * f;
       if (glow.current) {
         (glow.current.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.4 + f;
@@ -159,35 +182,35 @@ function Sconce({
     }
     if (t.current > next.current) {
       t.current = 0;
-      next.current = 9 + Math.random() * 14;
-      dip.current = 0.22 + Math.random() * 0.3;
+      next.current = 12 + Math.random() * 16;
+      dip.current = 0.2 + Math.random() * 0.3;
     }
   });
 
   return (
     <group position={position} rotation-y={rotationY}>
-      <Prop name="industrial_wall_sconce" height={0.42} anchor="origin" />
-      <mesh ref={glow} position={[0, 0.02, 0.14]}>
-        <sphereGeometry args={[0.045, 10, 8]} />
-        <meshStandardMaterial color="#fff3e2" emissive="#ffe3c2" emissiveIntensity={1.1} toneMapped={false} />
+      <Prop name="industrial_caged_sconce" height={0.38} anchor="origin" tint="#b7a894" />
+      <mesh ref={glow} position={[0, 0.0, 0.13]}>
+        <sphereGeometry args={[0.04, 10, 8]} />
+        <meshStandardMaterial color="#ffeed8" emissive="#ffdcb4" emissiveIntensity={1.1} toneMapped={false} />
       </mesh>
       <pointLight
         ref={light}
-        color="#ffdec2"
+        color="#ffd9b3"
         intensity={intensity}
-        distance={6.5}
+        distance={5.6}
         decay={2}
-        position={[0, 0.05, 0.24]}
+        position={[0, 0.04, 0.22]}
       />
     </group>
   );
 }
 
-/** ثريّة سقف واقعية + ضوء الغرفة/الممر. */
-function Chandelier({
+/** إنارة سقف بسيطة (fixture فندق) بدل الثريات المتكررة. */
+function CeilingLamp({
   position,
   castShadow = false,
-  intensity = 6,
+  intensity = 3.4,
 }: {
   position: [number, number, number];
   castShadow?: boolean;
@@ -195,17 +218,17 @@ function Chandelier({
 }) {
   return (
     <group position={position}>
-      <Prop name="Chandelier_03" height={0.8} anchor="origin" shadows={false} />
-      <mesh position={[0, -0.52, 0]}>
-        <sphereGeometry args={[0.07, 10, 8]} />
-        <meshStandardMaterial color="#fff6ea" emissive="#ffe9d0" emissiveIntensity={1.15} toneMapped={false} />
+      <Prop name="modern_ceiling_lamp_01" position={[0, -0.02, 0]} height={0.26} anchor="origin" shadows={false} tint="#a89c8b" />
+      <mesh position={[0, -0.19, 0]}>
+        <sphereGeometry args={[0.038, 10, 8]} />
+        <meshStandardMaterial color="#fff2e0" emissive="#ffe2c2" emissiveIntensity={1.05} toneMapped={false} />
       </mesh>
       <pointLight
-        color="#ffe6cd"
+        color="#ffdfbf"
         intensity={intensity}
-        distance={13}
+        distance={11}
         decay={2}
-        position={[0, -0.58, 0]}
+        position={[0, -0.26, 0]}
         castShadow={castShadow}
         shadow-mapSize-width={512}
         shadow-mapSize-height={512}
@@ -221,36 +244,95 @@ function LightSwitch({ position, rotationY = 0 }: { position: [number, number, n
     <group position={position} rotation-y={rotationY}>
       <mesh castShadow>
         <boxGeometry args={[0.085, 0.125, 0.014]} />
-        <meshStandardMaterial color="#cdc7ba" roughness={0.45} />
+        <meshStandardMaterial color="#c5bfb3" roughness={0.5} />
       </mesh>
       <mesh position={[0, 0, 0.012]}>
         <boxGeometry args={[0.036, 0.055, 0.01]} />
-        <meshStandardMaterial color="#a49d90" roughness={0.4} />
+        <meshStandardMaterial color="#9c968b" roughness={0.45} />
       </mesh>
     </group>
   );
 }
 
-/** ستارة داكنة بخامة PBR (طيّات أسطوانية ناعمة + قضيب نحاسي). */
-function Curtain({ position, width = 2.1 }: { position: [number, number, number]; width?: number }) {
-  const velvet = usePbr("velour_velvet", [0.6, 2.2]);
-  const folds = 9;
+/** هاتف فندق على الكومدينة (غرض صغير). */
+function HotelPhone({ position, rotationY = 0 }: { position: [number, number, number]; rotationY?: number }) {
+  return (
+    <group position={position} rotation-y={rotationY}>
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[0.15, 0.045, 0.11]} />
+        <meshStandardMaterial color="#20211f" roughness={0.55} />
+      </mesh>
+      <mesh position={[0, 0.055, 0.005]} castShadow>
+        <boxGeometry args={[0.155, 0.04, 0.05]} />
+        <meshStandardMaterial color="#2a2b28" roughness={0.45} />
+      </mesh>
+      <mesh position={[-0.055, 0.075, 0.005]} castShadow>
+        <boxGeometry args={[0.04, 0.03, 0.05]} />
+        <meshStandardMaterial color="#2a2b28" roughness={0.45} />
+      </mesh>
+      <mesh position={[0.055, 0.075, 0.005]} castShadow>
+        <boxGeometry args={[0.04, 0.03, 0.05]} />
+        <meshStandardMaterial color="#2a2b28" roughness={0.45} />
+      </mesh>
+    </group>
+  );
+}
+
+/** نافذة فندق: إطار + زجاج ليلي + طبقة sheer + ستارة blackout ثقيلة مغلقة جزئيًا. */
+function HotelWindow({ position }: { position: [number, number, number] }) {
+  const velvet = usePbr("velour_velvet", [1.1, 2.4]);
+  const sheer = usePbr("rough_linen", [1.6, 2.2]);
+  const frame = usePbr("oak_veneer_01", [1, 1]);
+  const w = 2.0;
+  const h = 1.6;
   return (
     <group position={position}>
-      <mesh position={[0, 1.16, 0]} rotation-z={Math.PI / 2} castShadow>
-        <cylinderGeometry args={[0.022, 0.022, width + 0.3, 10]} />
-        <meshStandardMaterial color="#a98c52" metalness={0.9} roughness={0.3} />
+      {/* زجاج ليلي داكن */}
+      <mesh position={[0, 0, 0.01]}>
+        <planeGeometry args={[w, h]} />
+        <meshStandardMaterial color="#0b1119" emissive="#182636" emissiveIntensity={0.22} roughness={0.15} metalness={0.5} />
       </mesh>
-      {Array.from({ length: folds }).map((_, i) => {
-        const x = -width / 2 + (i / (folds - 1)) * width;
-        const r = 0.05 + (i % 2 === 0 ? 0.018 : 0);
-        return (
-          <mesh key={i} position={[x, 0.04, 0]} castShadow receiveShadow>
-            <cylinderGeometry args={[r, r * 1.2, 2.22, 8]} />
-            <meshStandardMaterial {...velvet} color="#4d3a38" roughness={0.96} />
-          </mesh>
-        );
-      })}
+      {/* إطار */}
+      {[
+        [0, h / 2 + 0.05, 0.03, w + 0.2, 0.1, 0.08],
+        [0, -h / 2 - 0.05, 0.03, w + 0.2, 0.1, 0.08],
+        [-w / 2 - 0.05, 0, 0.03, 0.1, h + 0.2, 0.08],
+        [w / 2 + 0.05, 0, 0.03, 0.1, h + 0.2, 0.08],
+        [0, 0, 0.03, 0.05, h, 0.06],
+      ].map((f, i) => (
+        <mesh key={i} position={[f[0]!, f[1]!, f[2]!]} castShadow receiveShadow>
+          <boxGeometry args={[f[3]!, f[4]!, f[5]!]} />
+          <meshStandardMaterial {...frame} color="#6f6055" roughness={0.7} />
+        </mesh>
+      ))}
+      {/* طبقة sheer شفافة */}
+      <mesh position={[0, -0.05, 0.13]}>
+        <planeGeometry args={[w + 0.25, h + 0.5]} />
+        <meshStandardMaterial
+          {...sheer}
+          color="#cfc6b6"
+          transparent
+          opacity={0.42}
+          roughness={1}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      {/* قضيب الستارة */}
+      <mesh position={[0, h / 2 + 0.28, 0.24]} rotation-z={Math.PI / 2} castShadow>
+        <cylinderGeometry args={[0.02, 0.02, w + 0.75, 10]} />
+        <meshStandardMaterial color="#5d5348" metalness={0.7} roughness={0.45} />
+      </mesh>
+      {/* ستارتان blackout ثقيلتان مغلقتان جزئيًا */}
+      {[-1, 1].map((s) => (
+        <group key={s} position={[s * (w / 2 + 0.02), -0.12, 0.24]}>
+          {[0, 1, 2, 3].map((i) => (
+            <mesh key={i} position={[s * (i * 0.11 - 0.16), 0, (i % 2) * 0.025]} castShadow receiveShadow>
+              <boxGeometry args={[0.12, h + 0.85, 0.075 + (i % 2) * 0.02]} />
+              <meshStandardMaterial {...velvet} color="#3b3330" roughness={0.98} />
+            </mesh>
+          ))}
+        </group>
+      ))}
     </group>
   );
 }
@@ -339,7 +421,7 @@ function EarringProp() {
   );
 }
 
-/** خدوش معدنية حول قفل الباب (تفصيلة سطحية على لوحة الباب). */
+/** خدوش معدنية حول قفل الباب. */
 function LockScratchProp() {
   return (
     <group position={[1.5, 1.05, -14.5]} rotation-y={-Math.PI / 2}>
@@ -362,6 +444,39 @@ function LockScratchProp() {
   );
 }
 
+/** سرير فندق واقعي: هيكل GLB + مرتبة وملاءة ولحاف ومخدات بخامة كتان. */
+function HotelBed({ position, rotationY = 0 }: { position: [number, number, number]; rotationY?: number }) {
+  const linen = usePbr("rough_linen", [2.4, 1.6]);
+  const linenSoft = usePbr("rough_linen", [1.2, 1.2]);
+  return (
+    <group position={position} rotation-y={rotationY}>
+      <Prop name="old_bed_frame" width={2.05} />
+      {/* المرتبة */}
+      <mesh position={[0, 0.44, 0]} castShadow receiveShadow>
+        <boxGeometry args={[1.85, 0.26, 1.98]} />
+        <meshStandardMaterial {...linen} color="#cfc6b4" roughness={1} />
+      </mesh>
+      {/* ملاءة بيج غير مثالية */}
+      <mesh position={[0, 0.575, -0.06]} rotation-x={0.008} castShadow receiveShadow>
+        <boxGeometry args={[1.88, 0.02, 1.86]} />
+        <meshStandardMaterial {...linenSoft} color="#ded5c2" roughness={1} />
+      </mesh>
+      {/* لحاف مطوي عند الأرجل */}
+      <mesh position={[0, 0.62, 0.6]} rotation-x={-0.02} castShadow receiveShadow>
+        <boxGeometry args={[1.86, 0.12, 0.8]} />
+        <meshStandardMaterial {...linenSoft} color="#b9ae9a" roughness={1} />
+      </mesh>
+      {/* مخدات فندقية بسيطة */}
+      {[-0.44, 0.44].map((x) => (
+        <mesh key={x} position={[x, 0.66, -0.72]} rotation-x={-0.18} rotation-z={x > 0 ? 0.04 : -0.05} castShadow>
+          <boxGeometry args={[0.76, 0.16, 0.42]} />
+          <meshStandardMaterial {...linenSoft} color="#e6ddca" roughness={1} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 export function Floor13World() {
   const c = FLOOR13_LAYOUT.corridor;
   const r = FLOOR13_LAYOUT.room;
@@ -374,8 +489,8 @@ export function Floor13World() {
   const corridorCarpet = usePbr("dirty_carpet", [2.2, 15], [0, 0]);
   const roomCarpet = usePbr("dirty_carpet", [5, 5.5], [0.4, 0.2]);
   const roomRug = usePbr("quatrefoil_jacquard_fabric", [2.2, 1.8]);
-  const ceiling = usePbr("beige_wall_001", [4, 12]);
-  const roomCeiling = usePbr("beige_wall_001", [3.5, 4]);
+  const ceiling = usePbr("beige_wall_001", [6, 20]);
+  const roomCeiling = usePbr("beige_wall_001", [6, 6]);
   const elevatorMetal = usePbr("beige_wall_001", [1, 1]);
 
   const floorSign = useMemo(() => signTexture("١٣", "الطابق"), []);
@@ -385,24 +500,24 @@ export function Floor13World() {
 
   return (
     <group>
-      {/* ===== أرضيات (سجاد فندق حقيقي بخامة PBR) ===== */}
+      {/* ===== أرضيات ===== */}
       <mesh rotation-x={-Math.PI / 2} position={[0, 0, (c.z0 + c.z1) / 2]} receiveShadow>
         <planeGeometry args={[c.x1 - c.x0, corridorLen]} />
-        <meshStandardMaterial {...corridorCarpet} color="#9c8478" roughness={1} normalScale={[1.1, 1.1]} />
+        <meshStandardMaterial {...corridorCarpet} color="#8e7a6d" roughness={1} normalScale={[1.15, 1.15]} />
       </mesh>
       <mesh rotation-x={-Math.PI / 2} position={[roomCx, 0, roomCz]} receiveShadow>
         <planeGeometry args={[roomW, roomLen]} />
-        <meshStandardMaterial {...roomCarpet} color="#8f7a70" roughness={1} normalScale={[1, 1]} />
+        <meshStandardMaterial {...roomCarpet} color="#867168" roughness={1} normalScale={[1.05, 1.05]} />
       </mesh>
 
-      {/* ===== أسقف (جبس/بلاستر) ===== */}
+      {/* ===== أسقف ===== */}
       <mesh rotation-x={Math.PI / 2} position={[0, H, (c.z0 + c.z1) / 2]} receiveShadow>
         <planeGeometry args={[c.x1 - c.x0, corridorLen]} />
-        <meshStandardMaterial {...ceiling} color="#867f77" roughness={0.95} />
+        <meshStandardMaterial {...ceiling} color="#8c8478" roughness={0.98} />
       </mesh>
       <mesh rotation-x={Math.PI / 2} position={[roomCx, H, roomCz]} receiveShadow>
         <planeGeometry args={[roomW, roomLen]} />
-        <meshStandardMaterial {...roomCeiling} color="#888078" roughness={0.95} />
+        <meshStandardMaterial {...roomCeiling} color="#8f877b" roughness={0.98} />
       </mesh>
 
       {/* ===== طوفات الممر ===== */}
@@ -417,10 +532,10 @@ export function Floor13World() {
         <boxGeometry args={[1.72, 2.24, 0.06]} />
         <meshStandardMaterial
           {...elevatorMetal}
-          color="#8d8f94"
-          metalness={0.9}
-          roughness={0.32}
-          normalScale={[0.4, 0.4]}
+          color="#83858a"
+          metalness={0.88}
+          roughness={0.36}
+          normalScale={[0.45, 0.45]}
         />
       </mesh>
       <mesh position={[0, 1.12, c.z1 - 0.14]}>
@@ -429,32 +544,32 @@ export function Floor13World() {
       </mesh>
       <mesh position={[0, 2.28, c.z1 - 0.12]} castShadow>
         <boxGeometry args={[1.92, 0.12, 0.1]} />
-        <meshStandardMaterial color="#b0904f" metalness={0.9} roughness={0.3} />
+        <meshStandardMaterial color="#8f7746" metalness={0.85} roughness={0.35} />
       </mesh>
       <mesh position={[-0.9, 1.12, c.z1 - 0.13]} castShadow>
         <boxGeometry args={[0.1, 2.3, 0.09]} />
-        <meshStandardMaterial color="#a5874c" metalness={0.85} roughness={0.35} />
+        <meshStandardMaterial color="#8b7444" metalness={0.82} roughness={0.4} />
       </mesh>
       <mesh position={[0.9, 1.12, c.z1 - 0.13]} castShadow>
         <boxGeometry args={[0.1, 2.3, 0.09]} />
-        <meshStandardMaterial color="#a5874c" metalness={0.85} roughness={0.35} />
+        <meshStandardMaterial color="#8b7444" metalness={0.82} roughness={0.4} />
       </mesh>
       <mesh position={[1.15, 1.15, c.z1 - 0.12]}>
         <boxGeometry args={[0.09, 0.15, 0.03]} />
-        <meshStandardMaterial color="#c9a869" metalness={0.85} roughness={0.3} />
+        <meshStandardMaterial color="#b0925c" metalness={0.85} roughness={0.32} />
       </mesh>
       <mesh position={[0, 2.6, c.z1 - 0.11]}>
         <planeGeometry args={[0.62, 0.62]} />
         <meshStandardMaterial map={floorSign} roughness={0.45} metalness={0.35} />
       </mesh>
 
-      {/* ===== تفاصيل الممر: أبواب متناسقة + إضاءة موزعة بانتظام ===== */}
+      {/* ===== الممر: أبواب فندق + إضاءة حائطية غير متساوية ===== */}
       <DoorUnit position={[c.x0 + 0.1, 0, -4.5]} rotationY={Math.PI / 2} sign={sign1302} />
       <DoorUnit position={[c.x0 + 0.1, 0, -9.5]} rotationY={Math.PI / 2} sign={sign1304} />
-      <Sconce position={[c.x1 - 0.1, 1.95, -2.6]} rotationY={-Math.PI / 2} intensity={2.2} />
-      <Sconce position={[c.x0 + 0.1, 1.95, -6.9]} rotationY={Math.PI / 2} intensity={1.5} flicker />
-      <Sconce position={[c.x1 - 0.1, 1.95, -11.2]} rotationY={-Math.PI / 2} intensity={2.1} />
-      <Sconce position={[c.x0 + 0.1, 1.95, -15.6]} rotationY={Math.PI / 2} intensity={1.7} />
+      <Sconce position={[c.x1 - 0.1, 1.98, -2.6]} rotationY={-Math.PI / 2} intensity={1.9} />
+      <Sconce position={[c.x0 + 0.1, 1.98, -6.9]} rotationY={Math.PI / 2} intensity={1.1} flicker />
+      <Sconce position={[c.x1 - 0.1, 1.98, -11.2]} rotationY={-Math.PI / 2} intensity={1.5} />
+      <Sconce position={[c.x0 + 0.1, 1.98, -16.4]} rotationY={Math.PI / 2} intensity={0.85} />
       <Prop
         name="hanging_picture_frame_02"
         position={[c.x1 - 0.11, 1.6, -5.9]}
@@ -471,15 +586,15 @@ export function Floor13World() {
       />
       <LightSwitch position={[c.x1 - 0.1, 1.15, -13.6]} rotationY={-Math.PI / 2} />
 
-      {/* طاولة كونسول الممر + أباجورة ومرآة (على الطوفة اليمنى بين البابين) */}
+      {/* كونسول الممر + أباجورة ومرآة */}
       <group position={[c.x1 - 0.42, 0, -8.6]}>
-        <Prop name="ClassicConsole_01" rotationY={-Math.PI / 2} height={0.84} />
-        <Prop name="vintage_oil_lamp" position={[0, 0.84, -0.26]} height={0.4} />
-        <mesh position={[0, 1.13, -0.26]}>
-          <sphereGeometry args={[0.05, 10, 8]} />
-          <meshStandardMaterial color="#fff6ea" emissive="#ffe6cb" emissiveIntensity={1} toneMapped={false} />
+        <Prop name="side_table_01" rotationY={-Math.PI / 2} height={0.72} tint="#8a7057" />
+        <Prop name="desk_lamp_arm_01" position={[0, 0.72, -0.2]} rotationY={-Math.PI / 2} height={0.44} />
+        <mesh position={[0.05, 1.02, -0.2]}>
+          <sphereGeometry args={[0.045, 10, 8]} />
+          <meshStandardMaterial color="#fff2e2" emissive="#ffdcb8" emissiveIntensity={0.95} toneMapped={false} />
         </mesh>
-        <pointLight position={[-0.08, 1.15, -0.26]} color="#ffd9b4" intensity={2.1} distance={5} decay={2} />
+        <pointLight position={[-0.05, 1.02, -0.2]} color="#ffd3a8" intensity={1.5} distance={4.2} decay={2} />
         <Prop
           name="ornate_mirror_01"
           position={[0.3, 1.68, 0]}
@@ -495,11 +610,11 @@ export function Floor13World() {
       <PhoneProp />
 
       {/* ===== غرفة ١٣٠٦ ===== */}
-      <Wall a={[r.x1, r.z0]} b={[r.x1, r.z1]} />
-      <Wall a={[r.x0, r.z1]} b={[r.x1, r.z1]} />
-      <Wall a={[r.x0, r.z0]} b={[r.x1, r.z0]} />
-      <Wall a={[r.x0, r.z0]} b={[r.x0, -15.2]} />
-      <Wall a={[r.x0, -13.8]} b={[r.x0, r.z1]} />
+      <Wall a={[r.x1, r.z0]} b={[r.x1, r.z1]} plaster />
+      <Wall a={[r.x0, r.z1]} b={[r.x1, r.z1]} plaster />
+      <Wall a={[r.x0, r.z0]} b={[r.x1, r.z0]} plaster />
+      <Wall a={[r.x0, r.z0]} b={[r.x0, -15.2]} plaster />
+      <Wall a={[r.x0, -13.8]} b={[r.x0, r.z1]} plaster />
 
       <DoorUnit position={[1.95, 0, -14.5]} rotationY={-Math.PI / 2} open={-1.2} />
       <LockScratchProp />
@@ -508,47 +623,42 @@ export function Floor13World() {
         <meshStandardMaterial map={roomSign} roughness={0.45} metalness={0.35} />
       </mesh>
 
-      {/* نافذة ليلية على الطوفة المقابلة + ستائر داكنة */}
-      <mesh position={[4.5, 1.5, r.z0 + 0.12]}>
-        <planeGeometry args={[1.8, 1.5]} />
-        <meshStandardMaterial
-          color="#161d27"
-          emissive="#2b3c50"
-          emissiveIntensity={0.34}
-          roughness={0.25}
-          metalness={0.4}
-        />
-      </mesh>
-      <Curtain position={[4.5, 1.34, r.z0 + 0.26]} width={2.3} />
+      {/* نافذة الفندق بستارة blackout */}
+      <HotelWindow position={[4.5, 1.55, r.z0 + 0.14]} />
 
-      {/* ===== أثاث الغرفة (تخطيط جناح فندق حقيقي) ===== */}
+      {/* ===== أثاث الغرفة ===== */}
       <Zone z={-11}>
-        {/* السرير برأسه على الطوفة اليمنى + كومدينة على كل جانب */}
-        <Prop name="GothicBed_01" position={[6.6, 0, -17.6]} rotationY={-Math.PI / 2} height={1.3} />
-        <Prop name="throw_pillows_01" position={[7.15, 0.6, -17.6]} rotationY={-Math.PI / 2} width={0.95} />
-        <Prop name="ClassicNightstand_01" position={[7.15, 0, -16.35]} rotationY={-Math.PI / 2} height={0.7} />
-        <Prop name="ClassicNightstand_01" position={[7.15, 0, -18.85]} rotationY={-Math.PI / 2} height={0.7} />
-        <Prop name="vintage_oil_lamp" position={[7.15, 0.7, -18.85]} height={0.42} />
-        <Prop name="alarm_clock_01" position={[7.2, 0.7, -16.0]} rotationY={2.2} height={0.13} />
+        {/* السرير برأسه على الطوفة اليمنى + كومدينتان */}
+        <HotelBed position={[6.5, 0, -17.6]} rotationY={-Math.PI / 2} />
+        <Prop name="painted_wooden_nightstand" position={[7.15, 0, -16.3]} rotationY={-Math.PI / 2} height={0.68} tint="#94836f" />
+        <Prop name="painted_wooden_nightstand" position={[7.15, 0, -18.9]} rotationY={-Math.PI / 2} height={0.68} tint="#94836f" />
+        <Prop name="desk_lamp_arm_01" position={[7.2, 0.68, -18.9]} rotationY={-Math.PI / 2} height={0.42} />
+        <HotelPhone position={[7.18, 0.68, -16.6]} rotationY={-Math.PI / 2} />
+        <Prop name="alarm_clock_01" position={[7.2, 0.68, -16.1]} rotationY={2.2} height={0.12} />
         <EarringProp />
-        <mesh position={[7.15, 1.0, -18.85]}>
-          <sphereGeometry args={[0.05, 10, 8]} />
-          <meshStandardMaterial color="#fff6ea" emissive="#ffe6cb" emissiveIntensity={1} toneMapped={false} />
+        <mesh position={[7.15, 0.96, -18.9]}>
+          <sphereGeometry args={[0.045, 10, 8]} />
+          <meshStandardMaterial color="#fff2e2" emissive="#ffdcb8" emissiveIntensity={0.95} toneMapped={false} />
         </mesh>
-        <pointLight position={[6.9, 1.04, -18.85]} color="#ffd6ae" intensity={2.4} distance={5.5} decay={2} />
+        <pointLight position={[6.85, 0.99, -18.9]} color="#ffd0a4" intensity={1.9} distance={4.6} decay={2} />
 
-        {/* المكتب تحت النافذة + الكرسي أمامه */}
-        <Prop name="WoodenTable_01" position={[3.05, 0, -19.15] } rotationY={0} height={0.76} />
-        <Prop name="WoodenChair_01" position={[3.05, 0, -18.35]} rotationY={Math.PI} height={1.02} />
+        {/* المكتب تحت النافذة + الكرسي */}
+        <Prop name="painted_wooden_table" position={[3.15, 0, -19.1]} rotationY={0} height={0.76} tint="#9a8b78" />
+        <Prop name="painted_wooden_chair_01" position={[3.15, 0, -18.3]} rotationY={Math.PI} height={0.95} tint="#9a8b78" />
         <DeskNoteProp />
 
-        {/* الدولاب قريب من المدخل على طوفة الدخول + حقيبة جانبه */}
-        <Prop name="GothicCabinet_01" position={[3.4, 0, -13.4] } rotationY={Math.PI} height={2.05} />
+        {/* تلفزيون قديم على طاولة منخفضة مقابل السرير */}
+        <Prop name="side_table_01" position={[2.15, 0, -16.9]} rotationY={Math.PI / 2} height={0.66} tint="#876d54" />
+        <Prop name="television_02" position={[2.2, 0.66, -16.9]} rotationY={Math.PI / 2} width={0.72} />
 
-        {/* سجادة بمقاس مناسب أمام السرير */}
-        <mesh rotation-x={-Math.PI / 2} position={[4.9, 0.014, -17.2]} receiveShadow>
+        {/* الدولاب قريب من المدخل */}
+        <Prop name="vintage_cabinet_01" position={[3.5, 0, -13.45]} rotationY={Math.PI} height={1.95} />
+        <Prop name="vintage_suitcase" position={[4.35, 0, -13.6]} rotationY={0.5} width={0.6} />
+
+        {/* سجادة تحت منطقة السرير */}
+        <mesh rotation-x={-Math.PI / 2} position={[4.9, 0.014, -17.4]} receiveShadow>
           <planeGeometry args={[2.6, 3.0]} />
-          <meshStandardMaterial {...roomRug} color="#7a5b53" roughness={1} normalScale={[1.05, 1.05]} />
+          <meshStandardMaterial {...roomRug} color="#6f544c" roughness={1} normalScale={[1.05, 1.05]} />
         </mesh>
         <Prop
           name="hanging_picture_frame_02"
@@ -560,19 +670,27 @@ export function Floor13World() {
       </Zone>
       <LightSwitch position={[2.0, 1.15, -13.9]} rotationY={Math.PI / 2} />
 
-      {/* ===== إضاءة فندق سينمائية: دافئة محايدة، مقروءة، بدون highlights محروقة ===== */}
-      <ambientLight intensity={0.78} color="#aab0bd" />
-      <hemisphereLight args={["#b6bccb", "#846f60", 1.05]} />
-      <Chandelier position={[0, H - 0.12, -3.2]} intensity={5.6} />
-      <Chandelier position={[0, H - 0.12, -9.6]} intensity={5.2} />
-      <Chandelier position={[0, H - 0.12, -16.4]} intensity={4.4} castShadow />
+      {/* ===== الإضاءة: دافئة خافتة غير متساوية، نهاية الممر أغمق ===== */}
+      <ambientLight intensity={1.02} color="#a2aab8" />
+      <hemisphereLight args={["#a3abba", "#8b7563", 1.05]} />
+      <CeilingLamp position={[0, H - 0.06, -3.0]} intensity={3.6} />
+      <CeilingLamp position={[0, H - 0.06, -10.6]} intensity={2.9} />
+      {/* fill قريب من السجادة حتى تبقى أرضية الممر مقروءة بدون فقدان الجو */}
+      <pointLight position={[0, 1.15, -2.2]} color="#e9d8c0" intensity={1.5} distance={6.5} decay={2} />
+      <pointLight position={[0, 1.1, -7.4]} color="#e2d1ba" intensity={1.3} distance={6.5} decay={2} />
+      <pointLight position={[0, 1.1, -12.6]} color="#dccbb5" intensity={1.1} distance={6} decay={2} />
+      <pointLight position={[0, 1.05, -17.6]} color="#cfc0ab" intensity={0.85} distance={5.5} decay={2} />
       <Zone z={-11}>
-        <Chandelier position={[4.6, H - 0.12, -16.6]} intensity={6.2} castShadow />
-        {/* fill ناعم للزوايا حتى تبقى الأدلة والأثاث واضحة بدون فقدان الغموض */}
-        <pointLight position={[2.6, 1.6, -14.4]} color="#e9d7c1" intensity={1.3} distance={7} decay={2} />
-        <pointLight position={[2.7, 1.5, -18.6]} color="#e4d1bb" intensity={1.2} distance={7} decay={2} />
-        <pointLight position={[6.4, 1.5, -14.2]} color="#e4d1bb" intensity={1.1} distance={7} decay={2} />
+        <CeilingLamp position={[4.4, H - 0.06, -16.6]} intensity={5.4} castShadow />
+        <CeilingLamp position={[3.1, H - 0.06, -14.2]} intensity={3.2} />
+        {/* fill خفيف للزوايا حتى يبقى الأثاث مقروءًا */}
+        <pointLight position={[2.9, 1.7, -14.6]} color="#e8d6bd" intensity={1.9} distance={7} decay={2} />
+        <pointLight position={[3.3, 1.6, -18.6]} color="#dfcdb6" intensity={1.7} distance={7} decay={2} />
+        <pointLight position={[6.2, 1.7, -15.2]} color="#e2d0b9" intensity={1.5} distance={7} decay={2} />
+        <pointLight position={[5.2, 1.05, -17.4]} color="#d8c7b1" intensity={1.2} distance={6} decay={2} />
       </Zone>
+
+
     </group>
   );
 }

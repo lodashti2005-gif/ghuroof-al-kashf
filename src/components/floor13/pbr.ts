@@ -12,7 +12,10 @@ export type PbrName =
   | "beige_wall_001"
   | "wood_floor"
   | "velour_velvet"
-  | "quatrefoil_jacquard_fabric";
+  | "quatrefoil_jacquard_fabric"
+  | "rough_linen"
+  | "worn_plaster_wall"
+  | "oak_veneer_01";
 
 export interface PbrMaps {
   map: THREE.Texture;
