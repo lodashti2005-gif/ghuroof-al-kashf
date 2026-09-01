@@ -88,6 +88,9 @@ export interface AnalyticsReport {
   funnel: FunnelStage[];
   sources: SourceRow[] | null;
   sourcesTracked: boolean;
+  /** تحليل «أين توقف الزوار؟» */
+  dropoff: DropoffStage[];
+  journeys: VisitorJourney[];
   revenue: { currency: string; amount: number }[];
   ownerRevenue: { currency: string; amount: number }[];
   excluded: {
@@ -109,6 +112,8 @@ export const emptyAnalyticsReport: AnalyticsReport = {
   funnel: [],
   sources: null,
   sourcesTracked: false,
+  dropoff: [],
+  journeys: [],
   revenue: [],
   ownerRevenue: [],
   excluded: { users: 0, visitors: 0, ownerPurchases: 0, excludedEvents: 0 },
