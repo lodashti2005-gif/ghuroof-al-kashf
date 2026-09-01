@@ -776,10 +776,16 @@ export async function startRoles(playerIds: string[] = []) {
   const fresh = await fetchPlayerIds(code);
   const ids = fresh.length ? fresh : playerIds.length ? playerIds : (state?.players ?? []).map((p) => p.id);
   update((s) => {
-    const hadRoles = Object.keys(s.roles ?? {}).length > 0;
+    const present = new Set(ids);
+    // تنظيف بقايا الجولة السابقة: أدوار وجاهزية لاعبين غادروا الغرفة كانت تمنع
+    // شرط «كل الفريق جاهز» للأبد.
+    const kept: Record<string, string> = {};
+    for (const [pid, role] of Object.entries(s.roles ?? {}))
+      if (present.has(pid)) kept[pid] = role;
+    const hadRoles = Object.keys(kept).length > 0;
     // توزيع مرة واحدة: أي دور محفوظ مسبقاً يبقى ثابت لنفس player_id.
-    s.roles = assignRoles(ids, s.roles ?? {});
-    if (!hadRoles) s.ready = [];
+    s.roles = assignRoles(ids, kept);
+    s.ready = hadRoles ? (s.ready ?? []).filter((pid) => present.has(pid)) : [];
     s.intro = null;
     s.phase = "roles";
   });
@@ -1096,7 +1102,11 @@ export function resetCase() {
   run(rpc("room_reset_votes", { _code: code, _player_id: session.playerId }), "reset votes");
 
   update((s) => {
+    // معرّف جلسة جديد: كل الأجهزة تعرف أن الجولة السابقة انتهت وترجع للبداية،
+    // بدون إنشاء غرفة جديدة ولا تغيير رمزها ولا طرد أي لاعب.
+    s.sessionId = (s.sessionId ?? 1) + 1;
     s.phase = "lobby";
+    s.intro = null;
     s.unlockedEvidence = [];
     s.notes = [];
     s.deductions = [];
