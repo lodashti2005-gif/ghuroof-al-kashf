@@ -10,7 +10,7 @@ import {
   ShoppingCart,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { AccountMenu } from "@/components/site/account-menu";
 import { ResumeCaseButton } from "@/components/game/resume-case-button";
@@ -42,6 +42,11 @@ export const Route = createFileRoute("/cases")({
 
 function CasesPage() {
   const { cases, myCases, signedIn, loading } = useCaseStore();
+
+  useEffect(() => {
+    // تتبّع تسويقي فقط: مشاهدة متجر القضايا.
+    void trackEvent("cases_view", { path: "/cases" });
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -241,6 +246,9 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
                 to="/purchase/$caseId"
                 params={{ caseId: item.id }}
                 search={{ room: undefined }}
+                onClick={() => {
+                  void trackEvent("case_view", { caseId: item.id, path: "/cases" });
+                }}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary/50 bg-primary/10 px-5 py-3 font-display text-sm font-bold text-primary transition-colors hover:bg-primary/20"
               >
                 <ShoppingCart className="size-4" /> شراء القضية — {formatCasePrice(item.id)}
@@ -294,6 +302,7 @@ function TrialCta({ item }: { item: StoreCase }) {
       disabled={busy}
       onClick={async () => {
         setBusy(true);
+        void trackEvent("case_view", { caseId: item.id, path: "/cases" });
         void trackEvent("trial_click", { caseId: item.id, path: "/cases" });
         const next = await start();
         setBusy(false);

@@ -38,6 +38,40 @@ export interface AnalyticsMetric {
   note: string;
 }
 
+/** مرحلة توقّف: كم زائر وصل لها وما كمل للمرحلة اللي بعدها. */
+export interface DropoffStage {
+  key: string;
+  /** «فتح قضية ولم يبدأ التجربة» */
+  label: string;
+  /** عدد الزوار اللي وصلوا لهذه المرحلة (أو null إذا الحدث ما كان يُسجَّل). */
+  reached: number | null;
+  /** عدد اللي توقفوا هنا ولم يكملوا. */
+  droppedHere: number | null;
+  /** نسبة الوصول من إجمالي الزوار الحقيقيين. */
+  reachedPct: number | null;
+  /** نسبة التوقف من إجمالي الزوار الحقيقيين. */
+  droppedPct: number | null;
+  available: boolean;
+  note: string;
+}
+
+/** رحلة زائر حقيقي واحد بالترتيب. */
+export interface VisitorJourney {
+  visitorId: string;
+  source: string;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  referrer: string | null;
+  /** مفاتيح المراحل اللي وصلها بالترتيب. */
+  stages: string[];
+  /** آخر مرحلة وصلها (نص عربي). */
+  lastStageLabel: string;
+  firstSeen: string;
+  lastSeen: string;
+}
+
+
 export interface AnalyticsReport {
   allowed: boolean;
   /** بداية الفترة المعروضة (ISO). */
@@ -54,6 +88,9 @@ export interface AnalyticsReport {
   funnel: FunnelStage[];
   sources: SourceRow[] | null;
   sourcesTracked: boolean;
+  /** تحليل «أين توقف الزوار؟» */
+  dropoff: DropoffStage[];
+  journeys: VisitorJourney[];
   revenue: { currency: string; amount: number }[];
   ownerRevenue: { currency: string; amount: number }[];
   excluded: {
@@ -75,6 +112,8 @@ export const emptyAnalyticsReport: AnalyticsReport = {
   funnel: [],
   sources: null,
   sourcesTracked: false,
+  dropoff: [],
+  journeys: [],
   revenue: [],
   ownerRevenue: [],
   excluded: { users: 0, visitors: 0, ownerPurchases: 0, excludedEvents: 0 },

@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type PlayerEventType =
   | "site_open"
+  | "cases_view"
+  | "case_view"
   | "signup"
   | "trial_click"
   | "trial_start"

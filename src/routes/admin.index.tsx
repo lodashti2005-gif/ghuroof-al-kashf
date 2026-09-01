@@ -49,6 +49,8 @@ export const Route = createFileRoute("/admin/")({
 
 const EVENT_LABEL: Record<string, string> = {
   site_open: "فتح الموقع",
+  cases_view: "مشاهدة المتجر",
+  case_view: "فتح قضية",
   case_start: "بدء قضية",
   room_create: "إنشاء غرفة",
   room_join: "دخول غرفة",
@@ -372,6 +374,80 @@ function AdminDashboardPage() {
                 </li>
               ))}
             </ul>
+          )}
+        </Section>
+
+        <Section icon={<Filter className="size-4" />} title="أين توقف الزوار؟">
+          {report == null || report.dropoff.length === 0 ? (
+            <p className="text-sm text-muted-foreground">غير متاح.</p>
+          ) : (
+            <>
+              <ul className="space-y-2">
+                {report.dropoff.map((s) => (
+                  <li
+                    key={s.key}
+                    className="rounded-xl border border-border bg-surface-2 px-4 py-3"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-display text-xs font-bold">{s.label}</span>
+                      <span className="font-display text-sm font-extrabold">
+                        {s.droppedHere == null ? (
+                          <span className="text-xs font-medium text-muted-foreground">
+                            غير متاح
+                          </span>
+                        ) : (
+                          `${s.droppedHere.toLocaleString("ar-KW")} زائر`
+                        )}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 font-mono text-[11px] text-muted-foreground">
+                      وصلوا لهذه المرحلة:{" "}
+                      {s.reached == null ? "غير متاح" : s.reached.toLocaleString("ar-KW")} (
+                      {s.reachedPct == null ? "غير متاح" : `${s.reachedPct}%`} من الزوار) ·
+                      توقفوا:{" "}
+                      {s.droppedPct == null ? "غير متاح" : `${s.droppedPct}%`} من الزوار
+                    </p>
+                    {!s.available ? (
+                      <p className="mt-1 text-[10px] text-muted-foreground">{s.note}</p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+
+              <h3 className="mt-5 font-display text-xs font-bold">رحلة كل زائر حقيقي</h3>
+              {report.journeys.length === 0 ? (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  ما فيه زوار حقيقيون في هذه الفترة.
+                </p>
+              ) : (
+                <ul className="mt-2 space-y-2">
+                  {report.journeys.map((j) => (
+                    <li
+                      key={j.visitorId}
+                      className="rounded-xl border border-border bg-surface-2 px-4 py-3"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-display text-[11px] font-bold">
+                          {SOURCE_LABEL[j.source] ?? j.source}
+                          {j.utmSource ? ` · UTM: ${j.utmSource}` : ""}
+                          {j.utmCampaign ? ` / ${j.utmCampaign}` : ""}
+                        </span>
+                        <span className="font-mono text-[10px] text-muted-foreground">
+                          {new Date(j.lastSeen).toLocaleString("ar-KW")}
+                        </span>
+                      </div>
+                      <p className="mt-1.5 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                        {j.stages.join(" → ")}
+                      </p>
+                      <p className="mt-1 break-all font-mono text-[10px] text-muted-foreground">
+                        توقف عند: {j.lastStageLabel || "دخول الموقع"} · زائر:{" "}
+                        {j.visitorId.slice(0, 8)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
           )}
         </Section>
 
