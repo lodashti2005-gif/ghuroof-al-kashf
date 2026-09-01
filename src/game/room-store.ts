@@ -841,6 +841,25 @@ export async function claimRole(playerId: string): Promise<boolean> {
   return false;
 }
 
+/**
+ * تنظيف بقايا جولة قديمة داخل نفس الغرفة: أدوار وجاهزية لاعبين ما هم أعضاء
+ * الجولة الحالية. يشيل سبب تعليق شاشة «بانتظار باقي الفريق» بدون مسح أي تقدم.
+ */
+export const pruneRoundMembers = () =>
+  update((s) => {
+    const present = new Set(s.players.map((p) => p.id));
+    const roles: Record<string, string> = {};
+    for (const [pid, role] of Object.entries(s.roles ?? {}))
+      if (present.has(pid)) roles[pid] = role;
+    s.roles = roles;
+    s.ready = (s.ready ?? []).filter((pid) => present.has(pid));
+    const ltRoles: Record<string, string> = {};
+    for (const [pid, role] of Object.entries(s.ltRoles ?? {}))
+      if (present.has(pid)) ltRoles[pid] = role;
+    s.ltRoles = ltRoles;
+    s.ltRoleReady = (s.ltRoleReady ?? []).filter((pid) => present.has(pid));
+  });
+
 export const markReady = (playerId: string) =>
   update((s) => {
     if (!s.ready.includes(playerId)) s.ready.push(playerId);
