@@ -280,10 +280,11 @@ function TrialCta({ item }: { item: StoreCase }) {
   if (trial?.started && trial.expired) {
     return (
       <p className="text-center font-mono text-[11px] text-muted-foreground">
-        انتهت تجربتك المجانية على هذا الجهاز
+        انتهت تجربتك المجانية على هذا الجهاز — اشترِ القضية وكمل من نفس المكان
       </p>
     );
   }
+
 
   if (trial?.started) {
     return (
