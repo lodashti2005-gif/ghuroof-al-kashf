@@ -40,6 +40,7 @@ type Listener = () => void;
 /** Portion of RoomState persisted inside `rooms.state`. */
 type SharedState = Pick<
   RoomState,
+  | "sessionId"
   | "unlockedEvidence"
   | "notes"
   | "deductions"
@@ -114,6 +115,7 @@ const scopeSuspects = (
 };
 
 const freshShared = (caseId: string = caseFile.id): SharedState => ({
+  sessionId: 1,
   unlockedEvidence: [],
   notes: [],
   deductions: [],
@@ -330,6 +332,7 @@ function toRoomState(snap: Snapshot): RoomState {
     code: snap.room.code,
     caseId: snap.room.case_id,
     phase: snap.room.phase as RoomState["phase"],
+    sessionId: shared.sessionId ?? 1,
     createdAt: new Date(snap.room.created_at).getTime(),
     players: (snap.players ?? []).map<Player>((p) => {
       if (p.last_seen_at) lastSeenById.set(p.player_id, new Date(p.last_seen_at).getTime());
@@ -550,6 +553,7 @@ let flushingMutations = false;
 
 function sharedPayload(next: RoomState) {
   return {
+    sessionId: next.sessionId,
     unlockedEvidence: next.unlockedEvidence,
     notes: next.notes,
     deductions: next.deductions,
