@@ -16,6 +16,8 @@ import { useEffect, useState } from "react";
 
 import { Eyebrow, Panel } from "@/components/game/ui";
 import { formatTrialClock, useDeviceTrial } from "@/game/device-trial";
+import { formatCasePrice } from "@/game/pricing";
+
 import { useCaseEntitlement } from "@/game/use-entitlement";
 import { useRoom } from "@/game/use-room";
 import { trackEvent } from "@/lib/activity";
