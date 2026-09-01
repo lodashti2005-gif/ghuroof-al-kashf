@@ -25,12 +25,17 @@ const UP = new THREE.Vector3(0, 1, 0);
 export function Floor13Player({
   controls,
   keys,
+  found,
   onNearChange,
 }: {
   controls: React.RefObject<Floor13Controls>;
   keys: React.RefObject<Set<string>>;
+  /** الأدلة المكتشفة — تُستخدم لتفضيل الدليل غير المكتشف عند التقارب */
+  found: Set<string>;
   onNearChange: (id: string | null) => void;
 }) {
+  const foundRef = useRef(found);
+  foundRef.current = found;
   const camera = useThree((s) => s.camera);
   const yaw = useRef(FLOOR13_SPAWN_YAW);
   const pitch = useRef(0);
@@ -87,15 +92,21 @@ export function Floor13Player({
     camera.position.y = FLOOR13_LAYOUT.eyeHeight;
 
     // ==== أقرب دليل ====
+    // أقرب دليل *غير مكتشف* له الأولوية، حتى لا يحجب دليلٌ مكتشفٌ جاره أبداً.
     let best: string | null = null;
     let bestD = Infinity;
+    let bestFound = true;
     for (const e of FLOOR13_EVIDENCE) {
       const r = e.radius ?? 1.9;
       const dx = e.position[0] - camera.position.x;
       const dz = e.position[2] - camera.position.z;
       const d = Math.hypot(dx, dz);
-      if (d <= r && d < bestD) {
+      if (d > r) continue;
+      const isFound = foundRef.current.has(e.id);
+      const better = bestFound && !isFound ? true : isFound === bestFound ? d < bestD : false;
+      if (better) {
         bestD = d;
+        bestFound = isFound;
         best = e.id;
       }
     }

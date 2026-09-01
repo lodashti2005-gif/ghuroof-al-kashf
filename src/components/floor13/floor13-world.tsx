@@ -393,60 +393,63 @@ export function Floor13World({ found }: { found: Set<string> }) {
       </mesh>
       <Curtain position={[roomCx + 1.2, 1.35, r.z0 + 0.26]} width={2.2} />
 
-      {/* ===== أثاث الغرفة (موديلات GLB واقعية) ===== */}
+      {/* ===== أثاث الغرفة (توزيع غرفة فندق حقيقية: ممشى واضح بالوسط) ===== */}
       <Zone z={-11}>
-        {/* السرير + مخدات + حقيبة */}
-        <Prop name="GothicBed_01" position={[3.55, 0, -16.7]} rotationY={Math.PI} height={1.35} />
-        <Prop name="throw_pillows_01" position={[3.55, 0.62, -17.45]} rotationY={Math.PI} width={1.0} />
-        <Prop name="vintage_suitcase" position={[2.35, 0, -20.4]} rotationY={0.6} width={0.62} />
-
-        {/* كومدينتان + أباجورة + منبّه */}
-        <Prop name="ClassicNightstand_01" position={[2.4, 0, -17.7]} rotationY={Math.PI / 2} height={0.68} />
-        <Prop name="vintage_oil_lamp" position={[2.4, 0.68, -17.7]} height={0.44} />
-        <mesh position={[2.4, 1.0, -17.7]}>
+        {/* السرير ملاصق للطوفة اليمنى + مخدات، وكومدينة على كل جانب */}
+        <Prop name="GothicBed_01" position={[8.25, 0, -19.5]} rotationY={-Math.PI / 2} height={1.35} />
+        <Prop name="throw_pillows_01" position={[8.95, 0.62, -19.5]} rotationY={-Math.PI / 2} width={1.0} />
+        <Prop name="ClassicNightstand_01" position={[8.6, 0, -18.1]} rotationY={-Math.PI / 2} height={0.7} />
+        <Prop name="ClassicNightstand_01" position={[8.6, 0, -21.0]} rotationY={-Math.PI / 2} height={0.7} />
+        <Prop name="vintage_oil_lamp" position={[8.6, 0.7, -21.0]} height={0.44} />
+        <Prop name="alarm_clock_01" position={[8.6, 0.7, -18.55]} rotationY={2.1} height={0.14} />
+        <mesh position={[8.6, 1.02, -21.0]}>
           <sphereGeometry args={[0.05, 10, 8]} />
           <meshStandardMaterial color="#fff2dd" emissive="#ffdcae" emissiveIntensity={1} toneMapped={false} />
         </mesh>
-        <pointLight position={[2.5, 1.02, -17.7]} color="#ffc891" intensity={2.6} distance={5.5} decay={2} />
-        <Prop name="ClassicNightstand_01" position={[4.75, 0, -17.7]} rotationY={-Math.PI / 2} height={0.68} />
-        <Prop name="alarm_clock_01" position={[4.75, 0.68, -17.7]} rotationY={-2.4} height={0.14} />
+        <pointLight position={[8.35, 1.05, -21.0]} color="#ffc891" intensity={2.6} distance={5.5} decay={2} />
 
-        {/* المكتب + الكرسي */}
-        <Prop name="WoodenTable_01" position={[6.6, 0, -23.6]} rotationY={0} height={0.76} />
-        <Prop name="WoodenChair_01" position={[6.5, 0, -22.5]} rotationY={0.25} height={1.05} />
+        {/* المكتب تحت النافذة + الكرسي أمامه */}
+        <Prop name="WoodenTable_01" position={[6.8, 0, -23.95]} rotationY={0} height={0.78} />
+        <Prop name="WoodenChair_01" position={[6.8, 0, -22.9]} rotationY={Math.PI} height={1.05} />
 
-        {/* الدولاب */}
-        <Prop name="GothicCabinet_01" position={[8.8, 0, -15.6]} rotationY={-Math.PI / 2} height={2.12} />
+        {/* الدولاب على الطوفة المقابلة للسرير + حقيبة جانبه */}
+        <Prop name="GothicCabinet_01" position={[4.5, 0, -14.25]} rotationY={Math.PI} height={2.12} />
+        <Prop name="vintage_suitcase" position={[3.0, 0, -14.9]} rotationY={0.5} width={0.62} />
 
-        {/* سجادة الغرفة + لوحة */}
-        <mesh rotation-x={-Math.PI / 2} position={[5.6, 0.014, -19.6]} receiveShadow>
-          <planeGeometry args={[3.4, 2.6]} />
+        {/* سجادة وسط الممشى + لوحة على طوفة النافذة */}
+        <mesh rotation-x={-Math.PI / 2} position={[5.1, 0.014, -19.2]} receiveShadow>
+          <planeGeometry args={[3.2, 3.0]} />
           <meshStandardMaterial {...roomRug} color="#7d5b52" roughness={1} normalScale={[1.1, 1.1]} />
         </mesh>
         <Prop
           name="hanging_picture_frame_02"
-          position={[r.x1 - 0.11, 1.7, -20.6]}
-          rotationY={-Math.PI / 2}
+          position={[4.1, 1.72, r.z0 + 0.1]}
+          rotationY={0}
           anchor="origin"
           width={0.95}
         />
       </Zone>
       <LightSwitch position={[2.05, 1.15, -19.05]} rotationY={Math.PI / 2} />
 
-      {/* ===== إضاءة فندق سينمائية ===== */}
-      <ambientLight intensity={0.42} color="#9fa7b6" />
-      <hemisphereLight args={["#aab2c6", "#6b564a", 0.72]} />
+      {/* ===== إضاءة فندق سينمائية (fill أعلى قليلاً مع الحفاظ على الغموض) ===== */}
+      <ambientLight intensity={0.62} color="#a4abba" />
+      <hemisphereLight args={["#b0b8ca", "#7a6255", 0.98]} />
       <Chandelier position={[0, H - 0.12, -3]} intensity={6.5} />
       {/* ضوء أرضي خفيف يبرز نقشة السجاد بدون إحراق السقف */}
       {[-2, -7, -12, -17, -22].map((z) => (
-        <pointLight key={z} position={[0, 0.5, z]} color="#f0d7bd" intensity={0.55} distance={5.5} decay={2} />
+        <pointLight key={z} position={[0, 0.5, z]} color="#f0d7bd" intensity={0.8} distance={6} decay={2} />
       ))}
       <Chandelier position={[0, H - 0.12, -10]} intensity={6.5} />
       <Chandelier position={[0, H - 0.12, -16.5]} intensity={6} castShadow />
       <Zone z={-11}>
-        <Chandelier position={[4.6, H - 0.12, -17.6]} intensity={6.5} castShadow />
-        <Chandelier position={[6.6, H - 0.12, -21.6]} intensity={6} />
+        <Chandelier position={[5.1, H - 0.12, -18.9]} intensity={7} castShadow />
+        <Chandelier position={[6.8, H - 0.12, -22.6]} intensity={6.5} />
+        {/* fill لزوايا الغرفة حتى تبقى الأدلة والأثاث واضحة */}
+        <pointLight position={[3.0, 1.5, -15.2]} color="#e9d3ba" intensity={1.5} distance={7} decay={2} />
+        <pointLight position={[8.4, 1.4, -23.2]} color="#e9d3ba" intensity={1.3} distance={7} decay={2} />
+        <pointLight position={[2.6, 1.3, -23.2]} color="#e3cdb6" intensity={1.2} distance={7} decay={2} />
       </Zone>
+
 
       {/* ===== نقاط الأدلة ===== */}
       {FLOOR13_EVIDENCE.map((e) => (

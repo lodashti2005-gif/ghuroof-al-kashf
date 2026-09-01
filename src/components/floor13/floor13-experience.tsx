@@ -95,6 +95,7 @@ export function Floor13Experience({ onExit }: { onExit: () => void }) {
   const [nearId, setNearId] = useState<string | null>(null);
   const [found, setFound] = useState<Set<string>>(new Set());
   const [card, setCard] = useState<Floor13EvidencePoint | null>(null);
+  const [completed, setCompleted] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
 
   const onNearChange = useCallback((id: string | null) => setNearId(id), []);
@@ -108,6 +109,7 @@ export function Floor13Experience({ onExit }: { onExit: () => void }) {
       if (prev.has(near.id)) return prev;
       const next = new Set(prev);
       next.add(near.id);
+      if (next.size === FLOOR13_EVIDENCE_TOTAL) setCompleted(true);
       return next;
     });
   };
@@ -204,6 +206,12 @@ export function Floor13Experience({ onExit }: { onExit: () => void }) {
             <div className="absolute bottom-24 left-1/2 -translate-x-1/2 text-center text-[11px] text-amber-100/35">
               الغرفة ١٣٠٦ في نهاية الممر على اليمين
             </div>
+
+            {completed && (
+              <div className="absolute left-1/2 top-16 w-max max-w-[90vw] -translate-x-1/2 rounded-full border border-emerald-300/35 bg-emerald-950/70 px-5 py-2 text-center text-sm font-semibold text-emerald-100 backdrop-blur">
+                اكتشفت كل الأدلة في مسرح الجريمة
+              </div>
+            )}
 
             <Joystick controls={controls} />
 
