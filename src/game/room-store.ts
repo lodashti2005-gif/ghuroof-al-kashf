@@ -10,6 +10,7 @@
  * `createRoom`/`joinRoom`/`hydrate` now being async.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { getDeviceId } from "@/lib/activity";
 import { INTERROGATION_SECONDS, caseFile } from "./case-data";
 import { CASE_INTERROGATION_SECONDS, suspectIdsForCase } from "./case-suspects";
 import { assignRoles, playerRoles } from "./roles";
@@ -621,22 +622,27 @@ export async function createRoom(
   caseId: string = caseFile.id,
 ): Promise<{ ok: boolean; code?: string; error?: string }> {
   const playerId = uid();
+  // معرّف الجهاز يسمح للاعب بفتح غرفة تجربة بدون حساب. منطق الشراء/الملكية
+  // كما هو: الملكية المؤكدة تفتح القضية كاملة.
+  const deviceId = getDeviceId();
 
   for (let attempt = 0; attempt < 6; attempt++) {
     const code = generateRoomCode();
-    const { data: result, error } = await rpc<string>("room_create", {
+    const { data: result, error } = await rpc<string>("room_create_v2", {
       _code: code,
       _case_id: caseId,
       _host_player_id: playerId,
       _host_name: hostName,
       _state: freshShared(caseId),
+      _device_id: deviceId ?? "",
     });
     if (error) return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
     if (result === "code_taken") continue; // code collision, retry
     if (result === "not_entitled")
-      return { ok: false, error: "هذي القضية مقفلة — لازم تشتريها من متجر القضايا أول" };
+      return { ok: false, error: "هذي القضية مقفلة — ابدأ التجربة المجانية أو اشترِ القضية" };
     if (result === "unknown_case") return { ok: false, error: "القضية غير متوفرة حالياً" };
     if (result !== "ok") return { ok: false, error: "تأكد من الاسم وجرب مرة ثانية" };
+
 
 
     session = { code, playerId };

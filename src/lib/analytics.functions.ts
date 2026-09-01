@@ -143,6 +143,31 @@ export const getAnalyticsReport = createServerFn({ method: "POST" })
       cleanTrials.filter((t) => (t.consumed_seconds ?? 0) >= 600).map((t) => t.user_id),
     ).size;
 
+    // ٤.١) تجارب الأجهزة (بدون حساب) — بيانات حقيقية من جدول تجارب الأجهزة.
+    const { data: deviceRows } = await supabaseAdmin
+      .from("device_trials")
+      .select("device_id, case_id, started_at, last_seen_at")
+      .limit(20000);
+    const cleanDevice = (deviceRows ?? []).filter(
+      (t) => t.started_at >= since && !excludedVisitors.has(t.device_id),
+    );
+    const nowMs = Date.now();
+    const endedAt = (startedAt: string) => new Date(startedAt).getTime() + 600_000;
+    const deviceStarted = new Set(cleanDevice.map((t) => t.device_id)).size;
+    const deviceEnded = new Set(
+      cleanDevice.filter((t) => nowMs >= endedAt(t.started_at)).map((t) => t.device_id),
+    ).size;
+    // «أكمل التجربة» = بقي فاعلاً حتى قرب نهاية الـ١٠ دقائق (آخر ظهور ≥ ٩:٣٠).
+    const deviceCompleted = new Set(
+      cleanDevice
+        .filter((t) => new Date(t.last_seen_at).getTime() >= endedAt(t.started_at) - 30_000)
+        .map((t) => t.device_id),
+    ).size;
+
+    const startedTrialTotal = trialStarted + deviceStarted;
+    const completedTrialTotal = trialCompleted + deviceCompleted;
+
+
     // ٥) المشتريات والإيراد — عملاء حقيقيون فقط.
     const { data: purchaseRows } = await supabaseAdmin
       .from("case_purchases")
@@ -192,8 +217,11 @@ export const getAnalyticsReport = createServerFn({ method: "POST" })
       { key: "pageviews", label: "مشاهدات الصفحات", value: clean.length, note: "أحداث فتح الصفحات المسجّلة." },
       { key: "signups", label: "حسابات جديدة", value: signups, note: "من نظام الحسابات — بيانات تاريخية حقيقية." },
       { key: "trial_click", label: "ضغط «ابدأ التجربة»", value: visitorsOf("trial_click"), note: recordedEventTypes.includes("trial_click") ? "زوار فريدون." : NA },
-      { key: "trial_start", label: "بدأ تجربة الـ١٠ دقائق فعلياً", value: trialStarted, note: "من جدول التجارب — بيانات تاريخية حقيقية." },
-      { key: "trial_done", label: "استهلك التجربة كاملة", value: trialCompleted, note: "١٠ دقائق مستهلكة — بيانات تاريخية حقيقية." },
+      { key: "trial_start", label: "بدأ التجربة (١٠ دقائق)", value: startedTrialTotal, note: "أجهزة بدون حساب + حسابات — بيانات حقيقية." },
+      { key: "trial_done", label: "أكمل التجربة كاملة", value: completedTrialTotal, note: "بقي فاعلاً حتى نهاية الـ١٠ دقائق." },
+      { key: "trial_expired", label: "انتهت تجربته", value: deviceEnded + trialCompleted, note: "انتهى وقت تجربته ولازم يشتري لفتح القضية." },
+      { key: "trial_device", label: "تجارب بدون حساب (أجهزة)", value: deviceStarted, note: "أجهزة/متصفحات فريدة بدأت التجربة بدون تسجيل." },
+
       { key: "purchase_view", label: "وصل لصفحة الشراء", value: visitorsOf("purchase_view"), note: recordedEventTypes.includes("purchase_view") ? "زوار فريدون." : NA },
       { key: "pay_click", label: "ضغط «ادفع وافتح القضية»", value: visitorsOf("pay_click"), note: recordedEventTypes.includes("pay_click") ? "زوار فريدون." : NA },
       { key: "checkout_open", label: "فتح صفحة الدفع (Checkout)", value: visitorsOf("checkout_open"), note: recordedEventTypes.includes("checkout_open") ? "زوار فريدون." : NA },
@@ -224,15 +252,17 @@ export const getAnalyticsReport = createServerFn({ method: "POST" })
 
     const purchaseViews = visitorsOf("purchase_view");
     const checkoutOpens = visitorsOf("checkout_open");
+    // التجربة صارت بدون حساب، فمرحلة «أنشأ حساب» ما هي شرط قبل التجربة.
     const funnel: FunnelStage[] = [
       stage("visit", "زار الموقع", uniqueVisitors, uniqueVisitors, uniqueVisitors, "زوار فريدون."),
-      stage("signup", "أنشأ حساب", signups, uniqueVisitors, uniqueVisitors, "بيانات حقيقية."),
-      stage("trial", "بدأ التجربة", trialStarted, signups, uniqueVisitors, "بيانات حقيقية."),
-      stage("trial_done", "أكمل التجربة", trialCompleted, trialStarted, uniqueVisitors, "بيانات حقيقية."),
-      stage("purchase_view", "وصل للشراء", purchaseViews, trialCompleted, uniqueVisitors, purchaseViews == null ? NA : "زوار فريدون."),
+      stage("trial", "بدأ التجربة", startedTrialTotal, uniqueVisitors, uniqueVisitors, "أجهزة + حسابات — بيانات حقيقية."),
+      stage("trial_done", "أكمل التجربة", completedTrialTotal, startedTrialTotal, uniqueVisitors, "بيانات حقيقية."),
+      stage("purchase_view", "وصل للشراء", purchaseViews, completedTrialTotal, uniqueVisitors, purchaseViews == null ? NA : "زوار فريدون."),
       stage("checkout", "فتح صفحة الدفع", checkoutOpens, purchaseViews, uniqueVisitors, checkoutOpens == null ? NA : "زوار فريدون."),
-      stage("paid", "دفع", paid.length, checkoutOpens ?? trialCompleted, uniqueVisitors, "بيانات حقيقية."),
+      stage("paid", "دفع", paid.length, checkoutOpens ?? completedTrialTotal, uniqueVisitors, "بيانات حقيقية."),
+      stage("signup", "أنشأ حساب (بعد الشراء عادةً)", signups, uniqueVisitors, uniqueVisitors, "بيانات حقيقية."),
     ];
+
 
     // ٩) مصادر الزيارات.
     let sources: SourceRow[] | null = null;

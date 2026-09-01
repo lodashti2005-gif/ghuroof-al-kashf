@@ -62,6 +62,15 @@ function getVisitorId(): string | null {
   }
 }
 
+/**
+ * معرّف الجهاز/المتصفح المجهول — نفس معرّف الزائر (بدون أي بيانات شخصية).
+ * يُستخدم لربط التجربة المجانية بالجهاز بدون طلب حساب.
+ */
+export function getDeviceId(): string | null {
+  return getVisitorId();
+}
+
+
 /** تصنيف مصدر الزيارة من UTM أو من الموقع اللي جا منه الزائر. */
 function classifySource(utmSource: string | null, referrer: string | null): string {
   const raw = `${utmSource ?? ""} ${referrer ?? ""}`.toLowerCase();

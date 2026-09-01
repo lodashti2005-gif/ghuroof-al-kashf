@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
   BadgeCheck,
@@ -10,11 +10,14 @@ import {
   ShoppingCart,
   Users,
 } from "lucide-react";
+import { useState } from "react";
+
 import { AccountMenu } from "@/components/site/account-menu";
 import { ResumeCaseButton } from "@/components/game/resume-case-button";
 import { Eyebrow } from "@/components/game/ui";
 import { GAME_NAME, GAME_TAGLINE } from "@/game/game-meta";
 import { useCaseStore, type StoreCase } from "@/game/entitlements";
+import { formatTrialClock, useDeviceTrial } from "@/game/device-trial";
 import { formatCasePrice } from "@/game/pricing";
 import { trackEvent } from "@/lib/activity";
 
@@ -232,16 +235,19 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
               <Lock className="size-4" /> قيد التجهيز
             </button>
           ) : (
-            <Link
-              to="/purchase/$caseId"
-              params={{ caseId: item.id }}
-              search={{ room: undefined }}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary/50 bg-primary/10 px-5 py-3 font-display text-sm font-bold text-primary transition-colors hover:bg-primary/20"
-            >
-              <ShoppingCart className="size-4" /> شراء القضية — {formatCasePrice(item.id)}
-            </Link>
-
+            <div className="space-y-2">
+              <TrialCta item={item} />
+              <Link
+                to="/purchase/$caseId"
+                params={{ caseId: item.id }}
+                search={{ room: undefined }}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary/50 bg-primary/10 px-5 py-3 font-display text-sm font-bold text-primary transition-colors hover:bg-primary/20"
+              >
+                <ShoppingCart className="size-4" /> شراء القضية — {formatCasePrice(item.id)}
+              </Link>
+            </div>
           )}
+
           {!item.owned && !soon && !signedIn && (
             <p className="mt-2 text-center font-mono text-[11px] text-muted-foreground">
               الشراء يحتاج حساب — <Link to="/auth" className="text-primary">دخول</Link>
@@ -252,3 +258,54 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
     </article>
   );
 }
+
+/**
+ * زر التجربة المجانية بدون حساب: يبدأ الـ١٠ دقائق عند الضغط فقط، ويكمل من
+ * المتبقي لو رجع اللاعب. بعد انتهائها ما يظهر الزر لنفس الجهاز.
+ */
+function TrialCta({ item }: { item: StoreCase }) {
+  const navigate = useNavigate();
+  const { trial, start } = useDeviceTrial(item.id);
+  const [busy, setBusy] = useState(false);
+  const to = item.id === "last-trip" ? "/last-trip/lobby" : "/play";
+
+  if (trial?.started && trial.expired) {
+    return (
+      <p className="text-center font-mono text-[11px] text-muted-foreground">
+        انتهت تجربتك المجانية على هذا الجهاز
+      </p>
+    );
+  }
+
+  if (trial?.started) {
+    return (
+      <Link
+        to={to}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-display text-sm font-bold text-primary-foreground"
+      >
+        <Play className="size-4" /> أكمل تجربتك ({formatTrialClock(trial.remainingSeconds)})
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        void trackEvent("trial_click", { caseId: item.id, path: "/cases" });
+        const next = await start();
+        setBusy(false);
+        if (next) {
+          void trackEvent("trial_start", { caseId: item.id });
+          navigate({ to });
+        }
+      }}
+      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-display text-sm font-bold text-primary-foreground disabled:opacity-60"
+    >
+      <Play className="size-4" /> {busy ? "لحظة..." : "ابدأ التجربة المجانية — ١٠ دقائق"}
+    </button>
+  );
+}
+
