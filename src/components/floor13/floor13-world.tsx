@@ -1,5 +1,6 @@
 import { Suspense, useMemo, useRef, useState, type ReactNode } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
+import { RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import { FLOOR13_LAYOUT } from "@/game/cases/floor13/scene-data";
 import { signTexture } from "./textures";
@@ -317,19 +318,26 @@ function HotelWindow({ position }: { position: [number, number, number] }) {
           side={THREE.DoubleSide}
         />
       </mesh>
-      {/* قضيب الستارة */}
-      <mesh position={[0, h / 2 + 0.28, 0.24]} rotation-z={Math.PI / 2} castShadow>
-        <cylinderGeometry args={[0.02, 0.02, w + 0.75, 10]} />
+      {/* قضيب الستارة من السقف تقريبًا */}
+      <mesh position={[0, 1.32, 0.26]} rotation-z={Math.PI / 2} castShadow>
+        <cylinderGeometry args={[0.022, 0.022, w + 1.5, 12]} />
         <meshStandardMaterial color="#5d5348" metalness={0.7} roughness={0.45} />
       </mesh>
-      {/* ستارتان blackout ثقيلتان مغلقتان جزئيًا */}
+      {/* ستائر blackout كاملة من السقف للأرض (مفتوحة قليلًا في الوسط) */}
       {[-1, 1].map((s) => (
-        <group key={s} position={[s * (w / 2 + 0.02), -0.12, 0.24]}>
-          {[0, 1, 2, 3].map((i) => (
-            <mesh key={i} position={[s * (i * 0.11 - 0.16), 0, (i % 2) * 0.025]} castShadow receiveShadow>
-              <boxGeometry args={[0.12, h + 0.85, 0.075 + (i % 2) * 0.02]} />
-              <meshStandardMaterial {...velvet} color="#3b3330" roughness={0.98} />
-            </mesh>
+        <group key={s} position={[s * (w / 2 + 0.16), -0.09, 0.26]}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <RoundedBox
+              key={i}
+              args={[0.17, 2.78, 0.1 + (i % 2) * 0.03]}
+              radius={0.045}
+              smoothness={3}
+              position={[s * (i * 0.145 - 0.3), 0, (i % 2) * 0.03]}
+              castShadow
+              receiveShadow
+            >
+              <meshStandardMaterial {...velvet} color="#3a332f" roughness={0.99} />
+            </RoundedBox>
           ))}
         </group>
       ))}
@@ -444,35 +452,172 @@ function LockScratchProp() {
   );
 }
 
-/** سرير فندق واقعي: هيكل GLB + مرتبة وملاءة ولحاف ومخدات بخامة كتان. */
+/**
+ * سرير Queen فندقي واقعي: قاعدة upholstered + headboard قماش داكن + مرتبة
+ * وملاءات بيضاء وduvet ومخدات. كل الأحجام RoundedBox (حواف ناعمة، ليست مكعبات)
+ * وخاماتها PBR قماش/كتان — بدون أي هيكل معدني.
+ */
 function HotelBed({ position, rotationY = 0 }: { position: [number, number, number]; rotationY?: number }) {
-  const linen = usePbr("rough_linen", [2.4, 1.6]);
-  const linenSoft = usePbr("rough_linen", [1.2, 1.2]);
+  const linen = usePbr("rough_linen", [3.4, 3.4]);
+  const sheet = usePbr("rough_linen", [2.6, 2.6]);
+  const duvet = usePbr("rough_linen", [2.2, 1.4]);
+  const upholstery = usePbr("rough_linen", [3.2, 1.6]);
+  const headFabric = usePbr("rough_linen", [2.2, 1.8]);
   return (
     <group position={position} rotation-y={rotationY}>
-      <Prop name="old_bed_frame" width={2.05} />
+      {/* قاعدة upholstered + plinth غائر */}
+      <RoundedBox args={[1.96, 0.3, 2.06]} radius={0.035} smoothness={3} position={[0, 0.24, 0]} castShadow receiveShadow>
+        <meshStandardMaterial {...upholstery} color="#4b443d" roughness={0.97} />
+      </RoundedBox>
+      <mesh position={[0, 0.05, 0]} receiveShadow>
+        <boxGeometry args={[1.8, 0.1, 1.9]} />
+        <meshStandardMaterial color="#241f1c" roughness={0.95} />
+      </mesh>
+      {/* headboard قماش داكن بقنوات عمودية */}
+      <RoundedBox
+        args={[2.06, 1.18, 0.11]}
+        radius={0.04}
+        smoothness={3}
+        position={[0, 1.0, -1.06]}
+        castShadow
+        receiveShadow
+      >
+        <meshStandardMaterial {...headFabric} color="#453f39" roughness={0.98} />
+      </RoundedBox>
+      {[-0.72, -0.24, 0.24, 0.72].map((x) => (
+        <RoundedBox
+          key={x}
+          args={[0.42, 1.0, 0.07]}
+          radius={0.032}
+          smoothness={3}
+          position={[x, 1.0, -0.99]}
+          castShadow
+          receiveShadow
+        >
+          <meshStandardMaterial {...headFabric} color="#4f4842" roughness={0.98} />
+        </RoundedBox>
+      ))}
       {/* المرتبة */}
-      <mesh position={[0, 0.44, 0]} castShadow receiveShadow>
-        <boxGeometry args={[1.85, 0.26, 1.98]} />
-        <meshStandardMaterial {...linen} color="#cfc6b4" roughness={1} />
-      </mesh>
-      {/* ملاءة بيج غير مثالية */}
-      <mesh position={[0, 0.575, -0.06]} rotation-x={0.008} castShadow receiveShadow>
-        <boxGeometry args={[1.88, 0.02, 1.86]} />
-        <meshStandardMaterial {...linenSoft} color="#ded5c2" roughness={1} />
-      </mesh>
-      {/* لحاف مطوي عند الأرجل */}
-      <mesh position={[0, 0.62, 0.6]} rotation-x={-0.02} castShadow receiveShadow>
-        <boxGeometry args={[1.86, 0.12, 0.8]} />
-        <meshStandardMaterial {...linenSoft} color="#b9ae9a" roughness={1} />
-      </mesh>
-      {/* مخدات فندقية بسيطة */}
+      <RoundedBox args={[1.86, 0.28, 1.98]} radius={0.055} smoothness={3} position={[0, 0.53, 0]} castShadow receiveShadow>
+        <meshStandardMaterial {...linen} color="#ded6c6" roughness={1} />
+      </RoundedBox>
+      {/* ملاءة بيضاء غير مثالية */}
+      <RoundedBox
+        args={[1.9, 0.07, 1.92]}
+        radius={0.03}
+        smoothness={3}
+        position={[0, 0.68, -0.04]}
+        rotation-x={0.006}
+        castShadow
+        receiveShadow
+      >
+        <meshStandardMaterial {...sheet} color="#ece5d5" roughness={1} />
+      </RoundedBox>
+      {/* duvet مطوي عند الأرجل */}
+      <RoundedBox
+        args={[1.9, 0.16, 0.88]}
+        radius={0.06}
+        smoothness={3}
+        position={[0, 0.75, 0.52]}
+        rotation-x={-0.015}
+        castShadow
+        receiveShadow
+      >
+        <meshStandardMaterial {...duvet} color="#d3c9b3" roughness={1} />
+      </RoundedBox>
+      {/* مخدات فندقية: صفّان */}
+      {[-0.46, 0.46].map((x) => (
+        <RoundedBox
+          key={`p${x}`}
+          args={[0.78, 0.19, 0.44]}
+          radius={0.085}
+          smoothness={3}
+          position={[x, 0.79, -0.74]}
+          rotation-x={-0.2}
+          rotation-z={x > 0 ? 0.03 : -0.04}
+          castShadow
+          receiveShadow
+        >
+          <meshStandardMaterial {...sheet} color="#f1ebdc" roughness={1} />
+        </RoundedBox>
+      ))}
       {[-0.44, 0.44].map((x) => (
-        <mesh key={x} position={[x, 0.66, -0.72]} rotation-x={-0.18} rotation-z={x > 0 ? 0.04 : -0.05} castShadow>
-          <boxGeometry args={[0.76, 0.16, 0.42]} />
-          <meshStandardMaterial {...linenSoft} color="#e6ddca" roughness={1} />
+        <RoundedBox
+          key={`q${x}`}
+          args={[0.7, 0.16, 0.38]}
+          radius={0.075}
+          smoothness={3}
+          position={[x, 0.73, -0.42]}
+          rotation-x={-0.06}
+          rotation-z={x > 0 ? -0.05 : 0.04}
+          castShadow
+          receiveShadow
+        >
+          <meshStandardMaterial {...sheet} color="#e9e1cf" roughness={1} />
+        </RoundedBox>
+      ))}
+    </group>
+  );
+}
+
+/** مكتب فندق بسيط بخشب veneer (سطح نظيف + جنبان + رف). */
+function HotelDesk({ position, rotationY = 0 }: { position: [number, number, number]; rotationY?: number }) {
+  const veneer = usePbr("oak_veneer_01", [1.6, 1]);
+  const veneerSide = usePbr("oak_veneer_01", [0.7, 1.2]);
+  return (
+    <group position={position} rotation-y={rotationY}>
+      <RoundedBox args={[1.5, 0.05, 0.62]} radius={0.014} smoothness={3} position={[0, 0.745, 0]} castShadow receiveShadow>
+        <meshStandardMaterial {...veneer} color="#6b5d51" roughness={0.72} />
+      </RoundedBox>
+      {[-0.7, 0.7].map((x) => (
+        <mesh key={x} position={[x, 0.36, 0]} castShadow receiveShadow>
+          <boxGeometry args={[0.06, 0.72, 0.58]} />
+          <meshStandardMaterial {...veneerSide} color="#61554a" roughness={0.75} />
         </mesh>
       ))}
+      <mesh position={[0, 0.2, -0.02]} castShadow receiveShadow>
+        <boxGeometry args={[1.34, 0.04, 0.5]} />
+        <meshStandardMaterial {...veneer} color="#5b5045" roughness={0.78} />
+      </mesh>
+      <mesh position={[0, 0.56, -0.27]} receiveShadow>
+        <boxGeometry args={[1.36, 0.3, 0.03]} />
+        <meshStandardMaterial {...veneer} color="#564c42" roughness={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
+/** دولاب فندق بسيط: بابان بخشب veneer ومقابض معدنية هادئة. */
+function HotelWardrobe({ position, rotationY = 0 }: { position: [number, number, number]; rotationY?: number }) {
+  const veneer = usePbr("oak_veneer_01", [1.2, 2]);
+  const door = usePbr("oak_veneer_01", [0.7, 2.1]);
+  return (
+    <group position={position} rotation-y={rotationY}>
+      <RoundedBox args={[1.32, 2.06, 0.62]} radius={0.02} smoothness={3} position={[0, 1.03, 0]} castShadow receiveShadow>
+        <meshStandardMaterial {...veneer} color="#645749" roughness={0.76} />
+      </RoundedBox>
+      {[-0.32, 0.32].map((x) => (
+        <group key={x}>
+          <RoundedBox
+            args={[0.6, 1.92, 0.04]}
+            radius={0.012}
+            smoothness={3}
+            position={[x, 1.06, 0.32]}
+            castShadow
+            receiveShadow
+          >
+            <meshStandardMaterial {...door} color="#6d5f51" roughness={0.7} />
+          </RoundedBox>
+          <mesh position={[x + (x > 0 ? -0.24 : 0.24), 1.06, 0.37]} rotation-x={Math.PI / 2} castShadow>
+            <cylinderGeometry args={[0.012, 0.012, 0.22, 10]} />
+            <meshStandardMaterial color="#a2916e" metalness={0.85} roughness={0.32} />
+          </mesh>
+        </group>
+      ))}
+      <mesh position={[0, 0.03, 0]} receiveShadow>
+        <boxGeometry args={[1.28, 0.06, 0.58]} />
+        <meshStandardMaterial color="#2b2521" roughness={0.9} />
+      </mesh>
     </group>
   );
 }
@@ -488,7 +633,7 @@ export function Floor13World() {
 
   const corridorCarpet = usePbr("dirty_carpet", [2.2, 15], [0, 0]);
   const roomCarpet = usePbr("dirty_carpet", [5, 5.5], [0.4, 0.2]);
-  const roomRug = usePbr("quatrefoil_jacquard_fabric", [2.2, 1.8]);
+  
   const ceiling = usePbr("beige_wall_001", [6, 20]);
   const roomCeiling = usePbr("beige_wall_001", [6, 6]);
   const elevatorMetal = usePbr("beige_wall_001", [1, 1]);
@@ -507,7 +652,7 @@ export function Floor13World() {
       </mesh>
       <mesh rotation-x={-Math.PI / 2} position={[roomCx, 0, roomCz]} receiveShadow>
         <planeGeometry args={[roomW, roomLen]} />
-        <meshStandardMaterial {...roomCarpet} color="#867168" roughness={1} normalScale={[1.05, 1.05]} />
+        <meshStandardMaterial {...roomCarpet} color="#94806f" roughness={1} normalScale={[1.05, 1.05]} />
       </mesh>
 
       {/* ===== أسقف ===== */}
@@ -588,7 +733,7 @@ export function Floor13World() {
 
       {/* كونسول الممر + أباجورة ومرآة */}
       <group position={[c.x1 - 0.42, 0, -8.6]}>
-        <Prop name="side_table_01" rotationY={-Math.PI / 2} height={0.72} tint="#8a7057" />
+        <Prop name="side_table_01" rotationY={-Math.PI / 2} height={0.72} tint="#6d5c4a" />
         <Prop name="desk_lamp_arm_01" position={[0, 0.72, -0.2]} rotationY={-Math.PI / 2} height={0.44} />
         <mesh position={[0.05, 1.02, -0.2]}>
           <sphereGeometry args={[0.045, 10, 8]} />
@@ -626,40 +771,41 @@ export function Floor13World() {
       {/* نافذة الفندق بستارة blackout */}
       <HotelWindow position={[4.5, 1.55, r.z0 + 0.14]} />
 
-      {/* ===== أثاث الغرفة ===== */}
+      {/* ===== أثاث الغرفة (غرفة فندق واقعية) ===== */}
       <Zone z={-11}>
-        {/* السرير برأسه على الطوفة اليمنى + كومدينتان */}
+        {/* السرير Queen برأسه على الطوفة اليمنى + كومدينتان وأباجورتان */}
         <HotelBed position={[6.5, 0, -17.6]} rotationY={-Math.PI / 2} />
-        <Prop name="painted_wooden_nightstand" position={[7.15, 0, -16.3]} rotationY={-Math.PI / 2} height={0.68} tint="#94836f" />
-        <Prop name="painted_wooden_nightstand" position={[7.15, 0, -18.9]} rotationY={-Math.PI / 2} height={0.68} tint="#94836f" />
+        <Prop name="side_table_01" position={[7.15, 0, -16.3]} rotationY={-Math.PI / 2} height={0.68} tint="#6f6152" />
+        <Prop name="side_table_01" position={[7.15, 0, -18.9]} rotationY={-Math.PI / 2} height={0.68} tint="#6f6152" />
         <Prop name="desk_lamp_arm_01" position={[7.2, 0.68, -18.9]} rotationY={-Math.PI / 2} height={0.42} />
+        <Prop name="desk_lamp_arm_01" position={[7.2, 0.68, -16.05]} rotationY={-Math.PI / 2} height={0.4} />
         <HotelPhone position={[7.18, 0.68, -16.6]} rotationY={-Math.PI / 2} />
-        <Prop name="alarm_clock_01" position={[7.2, 0.68, -16.1]} rotationY={2.2} height={0.12} />
         <EarringProp />
         <mesh position={[7.15, 0.96, -18.9]}>
           <sphereGeometry args={[0.045, 10, 8]} />
           <meshStandardMaterial color="#fff2e2" emissive="#ffdcb8" emissiveIntensity={0.95} toneMapped={false} />
         </mesh>
         <pointLight position={[6.85, 0.99, -18.9]} color="#ffd0a4" intensity={1.9} distance={4.6} decay={2} />
+        <mesh position={[7.15, 0.94, -16.05]}>
+          <sphereGeometry args={[0.04, 10, 8]} />
+          <meshStandardMaterial color="#fff0dd" emissive="#ffd9b0" emissiveIntensity={0.8} toneMapped={false} />
+        </mesh>
+        <pointLight position={[6.9, 0.96, -16.05]} color="#ffd2a8" intensity={1.4} distance={4.2} decay={2} />
 
-        {/* المكتب تحت النافذة + الكرسي */}
-        <Prop name="painted_wooden_table" position={[3.15, 0, -19.1]} rotationY={0} height={0.76} tint="#9a8b78" />
-        <Prop name="painted_wooden_chair_01" position={[3.15, 0, -18.3]} rotationY={Math.PI} height={0.95} tint="#9a8b78" />
+        {/* مكتب الفندق تحت النافذة + كرسي واحد */}
+        <HotelDesk position={[3.15, 0, -19.1]} />
+        <Prop name="hotel_desk_chair" position={[3.15, 0, -18.35]} rotationY={Math.PI} height={0.92} />
         <DeskNoteProp />
 
-        {/* تلفزيون قديم على طاولة منخفضة مقابل السرير */}
-        <Prop name="side_table_01" position={[2.15, 0, -16.9]} rotationY={Math.PI / 2} height={0.66} tint="#876d54" />
+        {/* تلفزيون على كونسول منخفض مقابل السرير */}
+        <Prop name="side_table_01" position={[2.15, 0, -16.9]} rotationY={Math.PI / 2} height={0.66} tint="#6d5e4d" />
         <Prop name="television_02" position={[2.2, 0.66, -16.9]} rotationY={Math.PI / 2} width={0.72} />
 
-        {/* الدولاب قريب من المدخل */}
-        <Prop name="vintage_cabinet_01" position={[3.5, 0, -13.45]} rotationY={Math.PI} height={1.95} />
-        <Prop name="vintage_suitcase" position={[4.35, 0, -13.6]} rotationY={0.5} width={0.6} />
+        {/* الدولاب قريب من المدخل + طاولة صغيرة وحقيبة */}
+        <HotelWardrobe position={[3.5, 0, -13.42]} rotationY={Math.PI} />
+        <Prop name="side_table_01" position={[5.7, 0, -13.6]} rotationY={Math.PI} height={0.52} tint="#6f6152" />
+        <Prop name="vintage_suitcase" position={[4.5, 0, -13.6]} rotationY={0.5} width={0.6} />
 
-        {/* سجادة تحت منطقة السرير */}
-        <mesh rotation-x={-Math.PI / 2} position={[4.9, 0.014, -17.4]} receiveShadow>
-          <planeGeometry args={[2.6, 3.0]} />
-          <meshStandardMaterial {...roomRug} color="#6f544c" roughness={1} normalScale={[1.05, 1.05]} />
-        </mesh>
         <Prop
           name="hanging_picture_frame_02"
           position={[r.x1 - 0.11, 1.72, -15.1]}
