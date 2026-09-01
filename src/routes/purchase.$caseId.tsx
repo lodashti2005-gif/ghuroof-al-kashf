@@ -70,6 +70,7 @@ function PurchasePage() {
 
   // تتبّع تسويقي فقط — ما يأثر على الشراء ولا على فتح القضية.
   useEffect(() => {
+    void trackEvent("case_view", { caseId, path: "/purchase" });
     void trackEvent("purchase_view", { caseId, path: "/purchase" });
   }, [caseId]);
   useEffect(() => {
