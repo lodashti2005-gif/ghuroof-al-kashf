@@ -49,6 +49,8 @@ export const Route = createFileRoute("/admin/")({
 
 const EVENT_LABEL: Record<string, string> = {
   site_open: "فتح الموقع",
+  cases_view: "مشاهدة المتجر",
+  case_view: "فتح قضية",
   case_start: "بدء قضية",
   room_create: "إنشاء غرفة",
   room_join: "دخول غرفة",
