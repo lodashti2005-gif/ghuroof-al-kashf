@@ -49,7 +49,9 @@ export function DeviceTrialGate({
   const { trial, loading, start } = useDeviceTrial(caseId);
   const [busy, setBusy] = useState(false);
 
+  const priceText = formatCasePrice(caseId, entitlement?.priceKwd ?? null);
   const purchased = entitlement?.purchased === true;
+
 
   // تتبّع تسويقي فقط: انتهاء التجربة.
   const expiredNow = !!trial?.started && trial.expired && !purchased;
