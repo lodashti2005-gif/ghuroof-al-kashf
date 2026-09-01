@@ -399,9 +399,9 @@ export function Floor13World({ found }: { found: Set<string> }) {
         <Prop name="GothicBed_01" position={[8.25, 0, -19.5]} rotationY={-Math.PI / 2} height={1.35} />
         <Prop name="throw_pillows_01" position={[8.95, 0.62, -19.5]} rotationY={-Math.PI / 2} width={1.0} />
         <Prop name="ClassicNightstand_01" position={[8.6, 0, -18.1]} rotationY={-Math.PI / 2} height={0.7} />
-        <Prop name="vintage_oil_lamp" position={[8.6, 0, -21.0]} height={0.44} />
         <Prop name="ClassicNightstand_01" position={[8.6, 0, -21.0]} rotationY={-Math.PI / 2} height={0.7} />
-        <Prop name="alarm_clock_01" position={[8.6, 0.7, -21.0]} rotationY={2.1} height={0.14} />
+        <Prop name="vintage_oil_lamp" position={[8.6, 0.7, -21.0]} height={0.44} />
+        <Prop name="alarm_clock_01" position={[8.6, 0.7, -18.55]} rotationY={2.1} height={0.14} />
         <mesh position={[8.6, 1.02, -21.0]}>
           <sphereGeometry args={[0.05, 10, 8]} />
           <meshStandardMaterial color="#fff2dd" emissive="#ffdcae" emissiveIntensity={1} toneMapped={false} />
