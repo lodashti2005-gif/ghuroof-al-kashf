@@ -42,9 +42,9 @@ export const FLOOR13_WALKABLE: Floor13Rect[] = [
   { x0: 1.95, x1: 9.15, z0: -24.15, z1: -13.85 },
 ];
 
-export const FLOOR13_SPAWN: [number, number, number] = [0, FLOOR13_LAYOUT.eyeHeight, -0.4];
+export const FLOOR13_SPAWN: [number, number, number] = [3.2, FLOOR13_LAYOUT.eyeHeight, -20.5];
 /** يبدأ اللاعب ناظر ناحية عمق الممر (-z). */
-export const FLOOR13_SPAWN_YAW = 0;
+export const FLOOR13_SPAWN_YAW = -1.2;
 
 export const FLOOR13_EVIDENCE: Floor13EvidencePoint[] = [
   {
