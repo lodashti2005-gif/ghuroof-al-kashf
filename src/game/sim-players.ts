@@ -142,6 +142,7 @@ export function buildSimRoom(sim: SimState, caseId = "last-trip"): RoomState {
     code: "SIMLAB",
     caseId,
     phase: "investigation" as RoomState["phase"],
+    sessionId: 1,
     createdAt: Date.now(),
     players: sim.players.map(simPlayer),
     unlockedEvidence: [],

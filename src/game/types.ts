@@ -153,6 +153,11 @@ export interface RoomState {
   code: string;
   caseId: string;
   phase: GamePhase;
+  /**
+   * معرّف الجولة/الجلسة الحالية. يزيد عند كل «إعادة القضية»، فأي جهاز عالق على
+   * شاشة دور قديمة يعرف أن الجولة تغيّرت ويرجع لبداية الجولة الجديدة.
+   */
+  sessionId: number;
   createdAt: number;
   players: Player[];
   unlockedEvidence: string[];
