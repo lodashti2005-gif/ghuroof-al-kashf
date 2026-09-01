@@ -38,6 +38,40 @@ export interface AnalyticsMetric {
   note: string;
 }
 
+/** مرحلة توقّف: كم زائر وصل لها وما كمل للمرحلة اللي بعدها. */
+export interface DropoffStage {
+  key: string;
+  /** «فتح قضية ولم يبدأ التجربة» */
+  label: string;
+  /** عدد الزوار اللي وصلوا لهذه المرحلة (أو null إذا الحدث ما كان يُسجَّل). */
+  reached: number | null;
+  /** عدد اللي توقفوا هنا ولم يكملوا. */
+  droppedHere: number | null;
+  /** نسبة الوصول من إجمالي الزوار الحقيقيين. */
+  reachedPct: number | null;
+  /** نسبة التوقف من إجمالي الزوار الحقيقيين. */
+  droppedPct: number | null;
+  available: boolean;
+  note: string;
+}
+
+/** رحلة زائر حقيقي واحد بالترتيب. */
+export interface VisitorJourney {
+  visitorId: string;
+  source: string;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  referrer: string | null;
+  /** مفاتيح المراحل اللي وصلها بالترتيب. */
+  stages: string[];
+  /** آخر مرحلة وصلها (نص عربي). */
+  lastStageLabel: string;
+  firstSeen: string;
+  lastSeen: string;
+}
+
+
 export interface AnalyticsReport {
   allowed: boolean;
   /** بداية الفترة المعروضة (ISO). */
