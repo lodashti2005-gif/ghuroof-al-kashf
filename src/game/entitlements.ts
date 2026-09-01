@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { isTrialCase } from "./trial-cases";
 import { caseRegistry, type CaseSummary } from "./game-meta";
+
 
 /**
  * ملكية القضايا (Entitlements).
@@ -64,8 +66,12 @@ export function useCaseStore() {
 
   const cases: StoreCase[] = caseRegistry.map((item) => {
     const purchased = purchases.some((p) => p.case_id === item.id && p.status === "paid");
-    return { ...item, purchased, owned: item.free || purchased };
+    // القضية التجريبية (١٠ دقائق) ما تُعتبر ملكية كاملة — لازم يظهر السعر وزر
+    // الشراء لغير المالكين، والملكية تُمنح بالشراء المؤكد فقط.
+    const openForAll = item.free && !isTrialCase(item.id);
+    return { ...item, purchased, owned: openForAll || purchased };
   });
+
 
   return {
     loading,
