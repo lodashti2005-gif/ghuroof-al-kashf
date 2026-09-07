@@ -18,22 +18,35 @@ export const INTERROGATION_SECONDS = 5 * 60;
 export const caseFile = {
   id: "last-night",
   title: "قضية الشاليه",
+  titleEn: "The Chalet Case",
   code: "K-2291",
   victim: {
     name: "بدر",
+    nameEn: "Badr",
     age: 32,
     portrait: victimBader,
     timeOfDeath: "01:40 – 02:00 فجراً",
+    timeOfDeathEn: "1:40 – 2:00 AM",
     location: "شاليه خاص – جنوب الكويت",
+    locationEn: "A private chalet — south of Kuwait",
     cause: "ضربة على مؤخرة الرأس + آثار مهدئ في الدم",
+    causeEn: "A blow to the back of the head, plus sedative traces in the blood",
     summary:
       "بدر انلقى ميت داخل غرفة خاصة بالشاليه بعد قعدة مع أربعة من المقربين له. الباب ما كان مكسور، وتلفونه اختفى من المكان. كل واحد من الموجودين عنده سبب يخليه يخبي شي.",
+    summaryEn:
+      "Badr was found dead in a private room at the chalet after a gathering with four of his closest friends. The door wasn't forced, and his phone had vanished from the scene. Everyone there has a reason to be hiding something.",
   },
   brief: [
     "القعدة بدت الساعة 10:30 مساءً وانتهت حسب أقوالهم قريب الساعة 01:30 فجراً.",
     "الباب كان مقفل من الداخل، ولا في أي أثر عنف على القفل.",
     "تلفون بدر مفقود، وكاميرة المدخل مسجلة حركة بعد وقت الوفاة.",
     "أربعة أشخاص كانوا بالشاليه، وكلهم غيّروا شي بروايتهم مرة على الأقل.",
+  ],
+  briefEn: [
+    "The gathering started at 10:30 PM and, by their account, wound down around 1:30 AM.",
+    "The door was locked from the inside, with no sign of forced entry on the lock.",
+    "Badr's phone is missing, and the entrance camera recorded movement after the time of death.",
+    "Four people were at the chalet, and every one of them has changed part of their story at least once.",
   ],
 };
 

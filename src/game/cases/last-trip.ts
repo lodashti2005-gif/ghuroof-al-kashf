@@ -14,6 +14,7 @@ export const LAST_TRIP_CASE_ID = "last-trip";
 export interface CaseContentStub {
   id: string;
   title: string;
+  titleEn: string;
   code: string;
   /** الضحية — يُضاف لاحقاً. */
   victim: null;
@@ -41,6 +42,7 @@ export interface CaseContentStub {
 export const lastTripCase: CaseContentStub = {
   id: LAST_TRIP_CASE_ID,
   title: "آخر رحلة",
+  titleEn: "The Last Trip",
   code: "K-0472",
   victim: null,
   suspects: [],
