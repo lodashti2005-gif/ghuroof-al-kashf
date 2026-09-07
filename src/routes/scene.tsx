@@ -17,6 +17,7 @@ import {
 
 import { playDiscoverySting } from "@/game/discovery-fx";
 import { useRoom } from "@/game/use-room";
+import { useI18n } from "@/i18n";
 import { useTurn } from "@/game/use-turn";
 
 
@@ -40,6 +41,7 @@ export const Route = createFileRoute("/scene")({
 function SceneRoute() {
   const { room, me, actions } = useRoom();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const unlockedIds = room?.unlockedEvidence ?? [];
   // وقت النقاش: المشاهدة مفتوحة للجميع، بس ما ينكتشف دليل جديد.
   const { discussion, awaitingNextRound, finalPhase } = useTurn();
@@ -117,7 +119,7 @@ function SceneRoute() {
     if (!item) return;
     const isNew = !unlockedIds.includes(evidenceId) && !claimed.current.has(evidenceId);
     if (isNew && discoveryPaused) {
-      setToast("وقت النقاش — ما ينكتشف دليل جديد الآن، راجعوا دفتر القضية");
+      setToast(t("scene.discussionPaused"));
       return;
     }
     setFound(evidenceId);
@@ -128,7 +130,7 @@ function SceneRoute() {
     actions.unlockEvidence(evidenceId);
     setSpark({ x: at.x, y: at.y, k: Date.now() });
     setFlash(Date.now());
-    setToast("🔎 تم اكتشاف دليل — انضاف للوحة الأدلة");
+    setToast(t("scene.discovered"));
     playDiscoverySting();
   };
 
@@ -141,31 +143,29 @@ function SceneRoute() {
   const sceneComplete = sceneFound.length >= sceneTotal;
 
   return (
-    <GameShell title="مسرح الجريمة" right={<LeaveRoomButton />}>
+    <GameShell title={t("scene.title")} right={<LeaveRoomButton />}>
       <div className="space-y-5">
         <Panel className="cine-in flex flex-wrap items-center justify-between gap-4">
           <div className="min-w-0">
-            <Eyebrow>معاينة الموقع</Eyebrow>
-            <h1 className="mt-1.5 text-xl font-bold sm:text-2xl">مسرح الجريمة</h1>
+            <Eyebrow>{t("scene.eyebrow")}</Eyebrow>
+            <h1 className="mt-1.5 text-xl font-bold sm:text-2xl">{t("scene.title")}</h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              {caseFile.victim.location} — دقّقوا بالصورة واضغطوا على أي شي يشدكم. بعض الأشياء ما
-              تعني شي، وبعضها دليل. الأدلة اللي تكتشفونها تنضاف تلقائياً للوحة الأدلة وتصير جاهزة
-              للمواجهة بالاستجواب.
+              {caseFile.victim.location} — {t("scene.intro")}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <CaseTag tone="evidence">
-              الأدلة المكتشفة: {sceneFound.length}/{sceneTotal}
+              {t("scene.foundCount", { found: sceneFound.length, total: sceneTotal })}
             </CaseTag>
             <ActionButton variant="outline" onClick={() => setBoard(true)}>
-              <Fingerprint className="size-4" /> لوحة الأدلة
+              <Fingerprint className="size-4" /> {t("scene.board")}
             </ActionButton>
             <ActionButton
               variant={sceneComplete ? "primary" : "outline"}
               onClick={() => navigate({ to: "/dashboard" })}
             >
               <Users className="size-4" />
-              {sceneComplete ? "ابدأ الاستجواب" : "المشتبه فيهم"}
+              {sceneComplete ? t("scene.startInterrogation") : t("scene.suspects")}
             </ActionButton>
           </div>
         </Panel>
@@ -176,12 +176,12 @@ function SceneRoute() {
               <div
                 className="relative w-full transition-opacity duration-[280ms] ease-out"
                 style={{ opacity: fade ? 0 : 1 }}
-                onClick={() => setMiss("ماكو شي مهم هنا")}
+                onClick={() => setMiss(t("scene.nothingHere"))}
               >
                 <img
                   key={view.id}
                   src={view.image}
-                  alt="مشهد داخل مسرح الجريمة"
+                  alt={t("scene.sceneAlt")}
                   width={sceneImageSize.width}
                   height={sceneImageSize.height}
                   className="block w-full cursor-crosshair"
@@ -192,7 +192,7 @@ function SceneRoute() {
                   <button
                     key={`${view.id}-${n.to}`}
                     type="button"
-                    aria-label="التحرك داخل مسرح الجريمة"
+                    aria-label={t("scene.moveAria")}
                     data-nav-hotspot={n.to}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -214,7 +214,7 @@ function SceneRoute() {
                   <button
                     key={`${view.id}-${d.id}`}
                     type="button"
-                    aria-label="فحص تفصيلة في مسرح الجريمة"
+                    aria-label={t("scene.inspectAria")}
                     onClick={(e) => {
                       e.stopPropagation();
                       setMiss(d.message);
@@ -234,7 +234,7 @@ function SceneRoute() {
                   <button
                     key={h.evidenceId}
                     type="button"
-                    aria-label="فحص تفصيلة في مسرح الجريمة"
+                    aria-label={t("scene.inspectAria")}
                     data-evidence-hotspot={h.evidenceId}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -287,7 +287,7 @@ function SceneRoute() {
                     }}
                     className="pointer-events-auto rounded-lg border border-white/20 bg-black/55 px-3 py-1.5 text-xs font-semibold text-white/90 backdrop-blur-sm transition-colors hover:bg-black/75 active:bg-black/90 sm:text-sm"
                   >
-                    رجوع
+                    {t("common.back")}
                   </button>
                 )}
                 <span className="pointer-events-auto rounded-lg bg-black/50 px-2.5 py-1 font-mono text-[11px] tracking-widest text-white/80">
@@ -296,7 +296,7 @@ function SceneRoute() {
               </div>
 
               {miss && (
-                <div className="pointer-events-none absolute bottom-3 right-1/2 z-40 translate-x-1/2 rounded-lg border border-border bg-card/90 px-3 py-1.5 text-xs text-muted-foreground">
+                <div className="pointer-events-none absolute bottom-3 left-1/2 z-40 -translate-x-1/2 rounded-lg border border-border bg-card/90 px-3 py-1.5 text-center text-xs text-muted-foreground">
                   {miss}
                 </div>
               )}
@@ -304,7 +304,7 @@ function SceneRoute() {
 
             <div className="flex items-center gap-2 border-t border-border/70 px-4 py-3 text-xs text-muted-foreground">
               <Search className="size-3.5 shrink-0" />
-              تحرّك بالضغط على الأشياء نفسها داخل الصورة — الأدلة تتشارك بين الفريق مباشرة.
+              {t("scene.hint")}
             </div>
 
           </div>
@@ -312,7 +312,7 @@ function SceneRoute() {
 
           {/* Side board: only what the team already discovered. */}
           <aside className="surface-panel cine-in h-fit p-4">
-            <Eyebrow>الأدلة المكتشفة</Eyebrow>
+            <Eyebrow>{t("scene.found")}</Eyebrow>
             <p className="mt-1 text-lg font-bold">
               {sceneFound.length}/{sceneTotal}
             </p>
@@ -331,7 +331,7 @@ function SceneRoute() {
                       <button
                         type="button"
                         onClick={() => setFound(item.id)}
-                        className="flex w-full items-center gap-3 rounded-lg border border-evidence/40 bg-card p-2 text-right transition-colors hover:border-evidence"
+                        className="flex w-full items-center gap-3 rounded-lg border border-evidence/40 bg-card p-2 text-start transition-colors hover:border-evidence"
                       >
                         <SceneCrop
                           crop={item.crop}
@@ -350,7 +350,9 @@ function SceneRoute() {
                         <span className="grid size-12 shrink-0 place-items-center rounded-md bg-secondary text-muted-foreground">
                           <Search className="size-4" />
                         </span>
-                        <span className="text-sm text-muted-foreground">دليل رقم {i + 1} — بعده مو مكتشف</span>
+                        <span className="text-sm leading-relaxed text-muted-foreground">
+                          {t("scene.slotEmpty", { n: i + 1 })}
+                        </span>
                       </div>
                     )}
                   </li>
@@ -359,17 +361,16 @@ function SceneRoute() {
             </ul>
             {sceneComplete ? (
               <div className="mt-4 space-y-3 rounded-lg border border-evidence/40 bg-evidence/5 p-3">
-                <p className="text-sm font-bold text-evidence">
-                  خلصت معاينة مسرح الجريمة — كل الأدلة بيدكم
+                <p className="text-sm font-bold leading-relaxed text-evidence">
+                  {t("scene.complete")}
                 </p>
                 <ActionButton className="w-full" onClick={() => navigate({ to: "/dashboard" })}>
-                  <Users className="size-4" /> انتقل للمرحلة التالية
+                  <Users className="size-4" /> {t("scene.next")}
                 </ActionButton>
               </div>
             ) : (
               <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-                باقي {sceneTotal - sceneFound.length} أدلة بالصورة. المرحلة التالية تفتح بعد ما
-                تكملون {sceneTotal}/{sceneTotal}.
+                {t("scene.remaining", { n: sceneTotal - sceneFound.length, total: sceneTotal })}
               </p>
             )}
           </aside>
@@ -395,23 +396,23 @@ function SceneRoute() {
             <div className="p-5">
               <div className="flex items-center justify-between gap-3">
                 <span className="font-mono text-xs text-muted-foreground">{foundItem.number}</span>
-                <CaseTag tone="evidence">{foundAdded ? "تم الاكتشاف" : "شي مشبوه"}</CaseTag>
+                <CaseTag tone="evidence">{foundAdded ? t("scene.discoveredTag") : t("scene.suspiciousTag")}</CaseTag>
               </div>
               <h2 className="mt-2 text-xl font-bold">{foundItem.title}</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {foundItem.description}
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
-                علاقته بالقضية ما تتوضح إلا من استجواب المشتبه المناسب.
+                {t("scene.relationNote")}
               </p>
               <div className="mt-5 flex flex-col gap-2 sm:flex-row">
                 {foundAdded ? (
                   <ActionButton variant="outline" className="w-full" disabled>
-                    <Check className="size-4" /> موجود بلوحة الأدلة
+                    <Check className="size-4" /> {t("scene.onBoard")}
                   </ActionButton>
                 ) : (
                   <ActionButton className="w-full" onClick={() => inspect(foundItem.id, { x: 50, y: 50 })}>
-                    <Fingerprint className="size-4" /> إضافة إلى لوحة الأدلة
+                    <Fingerprint className="size-4" /> {t("scene.addToBoard")}
                   </ActionButton>
                 )}
                 <ActionButton
@@ -419,7 +420,7 @@ function SceneRoute() {
                   className="w-full"
                   onClick={() => setFound(null)}
                 >
-                  رجوع لمسرح الجريمة
+                  {t("scene.backToScene")}
                 </ActionButton>
               </div>
             </div>
@@ -440,15 +441,15 @@ function SceneRoute() {
           >
             <div className="flex items-center justify-between gap-3">
               <div>
-                <Eyebrow>لوحة الأدلة</Eyebrow>
+                <Eyebrow>{t("scene.board")}</Eyebrow>
                 <h2 className="mt-1 text-lg font-bold">
-                  الأدلة المكتشفة: {unlockedItems.length}
+                  {t("scene.boardCount", { n: unlockedItems.length })}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => setBoard(false)}
-                aria-label="إغلاق"
+                aria-label={t("shell.close")}
                 className="rounded-lg border border-border bg-secondary p-2 text-muted-foreground transition-colors hover:text-foreground"
               >
                 <X className="size-4" />
@@ -465,7 +466,7 @@ function SceneRoute() {
                   title: link.title,
                   insight: link.insight,
                   evidenceIds: link.pair,
-                  author: me?.name ?? "محقق",
+                  author: me?.name ?? t("shell.investigator"),
                 })
               }
               onUseDeduction={(text, suspectId) =>
