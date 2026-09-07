@@ -4,17 +4,23 @@
  * تظهر بعد توزيع الأدوار وتبقى ثابتة حتى يضغط اللاعب «فهمت دوري — متابعة».
  * ما تعرض أدوار باقي اللاعبين أبداً.
  */
-import { ArrowLeft, EyeOff, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, EyeOff, Loader2, Sparkles } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { ActionButton } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { useLastTripRole } from "@/game/cases/last-trip-role-state";
+import { useI18n } from "@/i18n";
+import { lastTripT } from "@/game/cases/last-trip-strings";
 
 export function LastTripRoleGate({ children }: { children: React.ReactNode }) {
   const { inRoom, role, acknowledged, acknowledge, roleId } = useLastTripRole();
   const [slow, setSlow] = useState(false);
+  const { lang, dir, pick } = useI18n();
+  const tt = (key: Parameters<typeof lastTripT>[1], vars?: Record<string, string | number>) =>
+    lastTripT(lang, key, vars);
+  const NextArrow = dir === "rtl" ? ArrowLeft : ArrowRight;
 
   // لو تأخر التوزيع أو ما بقى دور شاغر، ما نخلي اللاعب بشاشة انتظار للأبد.
   useEffect(() => {
@@ -29,49 +35,48 @@ export function LastTripRoleGate({ children }: { children: React.ReactNode }) {
   if (!inRoom || acknowledged) return <>{children}</>;
 
   return (
-    <div dir="rtl" className="grid min-h-screen place-items-center bg-background px-4 py-10">
+    <div dir={dir} className="grid min-h-screen place-items-center bg-background px-4 py-10">
       <Panel className="cine-in w-full max-w-lg text-center">
-        <Eyebrow>دورك في القضية</Eyebrow>
+        <Eyebrow>{tt("roleGateEyebrow")}</Eyebrow>
         {role ? (
           <>
-            <h1 className="mt-4 text-3xl font-extrabold">{role.title}</h1>
+            <h1 className="mt-4 text-3xl font-extrabold">{pick(role.title, role.titleEn)}</h1>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-              {role.mission}
+              {pick(role.mission, role.missionEn)}
             </p>
-            <div className="mt-5 rounded-xl border border-border bg-secondary/40 p-4 text-right">
+            <div className="mt-5 rounded-xl border border-border bg-secondary/40 p-4 text-start">
               <div className="flex items-center gap-2">
                 <Sparkles className="size-4 text-primary" />
-                <CaseTag>قدرتك الخاصة</CaseTag>
+                <CaseTag>{tt("specialAbility")}</CaseTag>
               </div>
-              <p className="mt-2 text-sm leading-relaxed">{role.ability}</p>
+              <p className="mt-2 text-sm leading-relaxed">{pick(role.ability, role.abilityEn)}</p>
             </div>
             <p className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/60 px-3 py-1.5 text-xs text-muted-foreground">
-              <EyeOff className="size-3.5" /> هذا الدور خاص بجهازك — ما أحد بالفريق يشوفه
+              <EyeOff className="size-3.5" /> {tt("deviceOnlyRole")}
             </p>
             <ActionButton className="mt-6 w-full justify-center py-3.5 text-base" onClick={acknowledge}>
-              فهمت دوري — متابعة <ArrowLeft className="size-4" />
+              {tt("understoodContinue")} <NextArrow className="size-4" />
             </ActionButton>
           </>
         ) : (
           slow ? (
           <>
-            <h1 className="mt-4 text-2xl font-bold">ما وصلك دور بعد</h1>
+            <h1 className="mt-4 text-2xl font-bold">{tt("noRoleYetTitle")}</h1>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
-              توزيع الأدوار ما اكتمل، أو الأدوار الستة كلها محجوزة. ارجع لصفحة القضية
-              وتأكد من عدد اللاعبين، وبعدها جرب مرة ثانية.
+              {tt("noRoleYetDesc")}
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
               <Link to="/last-trip/suspects">
-                <ActionButton>رجوع للشخصيات</ActionButton>
+                <ActionButton>{tt("backToSuspects")}</ActionButton>
               </Link>
               <Link to="/last-trip/lobby">
-                <ActionButton variant="outline">غرفة الانتظار</ActionButton>
+                <ActionButton variant="outline">{tt("waitingRoom")}</ActionButton>
               </Link>
             </div>
           </>
           ) : (
           <p className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" /> جاري توزيع الأدوار…
+            <Loader2 className="size-4 animate-spin" /> {tt("assigningRoles")}
             {roleId ? "" : ""}
           </p>
           )

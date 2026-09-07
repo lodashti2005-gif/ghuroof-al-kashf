@@ -11,6 +11,8 @@ import { z } from "zod";
 const roomInput = z.object({
   code: z.string().regex(/^\d{6}$/),
   playerId: z.string().min(1).max(64),
+  /** لغة الواجهة — تحدد لغة نصوص النهاية المُرجعة. */
+  lang: z.enum(["ar", "en"]).optional(),
 });
 
 export const judgeLastTripAccusation = createServerFn({ method: "POST" })
@@ -32,5 +34,9 @@ export const getLastTripEnding = createServerFn({ method: "POST" })
     const { lastTripCulpritId, lastTripEndingBeats } = await import(
       "@/game/cases/last-trip-ending.server"
     );
-    return { culpritId: lastTripCulpritId, beats: lastTripEndingBeats };
+    const beats =
+      data.lang === "en"
+        ? lastTripEndingBeats.map((b) => ({ title: b.titleEn, text: b.textEn }))
+        : lastTripEndingBeats.map((b) => ({ title: b.title, text: b.text }));
+    return { culpritId: lastTripCulpritId, beats };
   });

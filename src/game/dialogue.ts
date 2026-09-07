@@ -29,6 +29,7 @@ export interface ReplyContext {
 
 export interface ReplyResult {
   text: string;
+  textEn?: string;
   stressDelta: number;
   unlock?: string;
   topic: string;
@@ -266,6 +267,181 @@ const SCRIPTS: Record<string, Lines> = {
   },
 };
 
+const SCRIPTS_EN: Record<string, Lines> = {
+  fahad: {
+    alibi: [
+      "I was in the living room, far as I remember. Why?",
+      "I fell asleep a bit late... not totally sure of the exact time.",
+      "Fine, I wasn't asleep from one. I was awake and heard footsteps in the hallway.",
+    ],
+    money: [
+      "Yeah I borrowed from him, what about it?",
+      "I asked him for money that night and he refused. I got upset, that's it.",
+      "Look... I need money, but I never laid a hand on him while he was alive.",
+    ],
+    phone: [
+      "His phone? I never touched it.",
+      "I saw it with him at the gathering, after that I don't know.",
+      "I didn't take it. But honestly, I did go into the room afterward.",
+    ],
+    door: [
+      "The door was closed.",
+      "I heard a click, thought it was the front door.",
+      "The keys hang in the kitchen... one's missing, I noticed later.",
+    ],
+    camera: [
+      "The camera's by the entrance, I don't go near it.",
+      "If it recorded something, show it, it's not about me.",
+    ],
+    coffee: [
+      "Badr doesn't drink coffee at night.",
+      "I didn't see anyone make coffee after the gathering.",
+    ],
+    watch: [
+      "His watch was on his wrist, I didn't notice anything about it.",
+      "Broken? I had no idea.",
+    ],
+    relation: [
+      "He and Noura, that's their business, I don't get involved.",
+      "They were tense, something was between them.",
+    ],
+    threat: ["I never threatened him.", "Something work-related reached him, that's all I heard."],
+    accuse: [
+      "Me? Ask someone else.",
+      "I'm his friend not his enemy, don't pin this on me.",
+      "Fine! There's something I did and I'm scared to say it, but it has nothing to do with his death.",
+    ],
+    smalltalk: ["Hey... let's wrap this up fast, I'm tired."],
+    default: ["I said what I know.", "Next question.", "I swear I've got nothing more."],
+  },
+  noura: {
+    alibi: [
+      "I left the gathering, I was bored.",
+      "Around one fifteen or so... I wasn't watching the clock.",
+      "Fine, I came back! I came back to return the ring but I didn't go into his room.",
+    ],
+    relation: [
+      "We broke up two months ago, that's all.",
+      "I sent him messages, I wanted to end things respectfully.",
+      "I had to return the ring in person... that's why I came back.",
+    ],
+    phone: [
+      "His phone was with him, I saw him scrolling through it.",
+      "I didn't take anything from him.",
+      "I saw someone take something from the room... a phone. But don't ask me who.",
+    ],
+    watch: [
+      "His watch? I noticed it.",
+      "It was already cracked before I left, I remember that clearly.",
+    ],
+    money: [
+      "He was scared of something work-related, not from me.",
+      "He told me 'this is bigger than money' and went quiet.",
+    ],
+    door: [
+      "The door was shut while he was inside.",
+      "I didn't try to open it, none of my business.",
+    ],
+    camera: ["I don't know what it recorded.", "If it shows something, it's probably about me."],
+    coffee: ["I didn't see any coffee.", "Badr hates coffee at night, I'm sure of that."],
+    threat: ["A message arrived and his face changed, but it wasn't from me."],
+    accuse: [
+      "Me? God help you...",
+      "I didn't kill him. I love him, even if we won't marry.",
+      "I'm staying quiet about something because someone has leverage over me and my family, not because I did it.",
+    ],
+    smalltalk: ["Hi... sorry, my eyes are tired."],
+    default: ["I don't know more.", "Let me gather my thoughts.", "I said everything I have."],
+  },
+  yousef: {
+    alibi: [
+      "I left before midnight, ask anyone.",
+      "I went home. I'm busy, I don't stay up late.",
+      "Okay... I passed by the chalet again, but I didn't go in to see him.",
+    ],
+    camera: [
+      "The camera? I don't think it even works.",
+      "Maybe I passed near the entrance, what about it?",
+      "Fine, it's my car. I went to get some papers from the chalet and came back, but I didn't go into his room.",
+    ],
+    door: [
+      "I have a key, it's a company chalet.",
+      "The door isn't my concern, I wasn't there at that time.",
+      "The spare key... I had it, but that doesn't mean I opened it on him.",
+    ],
+    money: [
+      "Normal business disputes between partners.",
+      "The transfers are documented, any concern goes through the accountant.",
+      "Badr was exaggerating, wanting a lawyer over something solvable in a meeting, yes I was upset, and anyone in my place would be.",
+    ],
+    coffee: [
+      "I didn't drink coffee.",
+      "What's coffee got to do with anything? Are we down to kitchen gossip now?",
+      "Two cups doesn't mean it was me. I won't answer kitchen details.",
+    ],
+    phone: [
+      "Why would I be asked about his phone?",
+      "I don't know what happened to it.",
+      "Enough about the phone. I'm done discussing this point.",
+    ],
+    threat: [
+      "A threatening message? Strong words.",
+      "I wrote him something between us, and anyone annoyed writes things.",
+      "Yes, I wrote it. I wanted to stop the lawyer thing, nothing more.",
+    ],
+    watch: ["His watch? I didn't notice.", "Why are you focused on tiny details?"],
+    relation: ["Him and Noura don't concern me, I'm a business partner."],
+    accuse: [
+      "Watch your words.",
+      "Say what you have proof of, or stay quiet.",
+      "That's it, I won't say more without a lawyer.",
+    ],
+    smalltalk: ["Come on, hurry up, I have commitments."],
+    default: [
+      "I've got nothing more.",
+      "Your questions keep circling the same spot.",
+      "I'm cooperating, don't push it.",
+    ],
+  },
+  dana: {
+    alibi: [
+      "I was in the yard most of the time.",
+      "I went into the kitchen twice only.",
+      "After one and a bit I was awake, yes.",
+    ],
+    watch: [
+      "I heard something break.",
+      "Sounded like glass... around one thirty something.",
+      "I remember the exact time: one forty-seven.",
+    ],
+    door: ["I heard a door shut.", "After one forty-five, I'm sure of it."],
+    coffee: [
+      "I saw two coffee cups in the kitchen.",
+      "And that's strange, Badr doesn't drink coffee at night.",
+      "The cups were used, not clean.",
+    ],
+    camera: [
+      "The camera by the entrance records the cars.",
+      "I saw headlights of a car coming in late.",
+    ],
+    phone: ["He was scrolling on his phone, typing seriously before he went in."],
+    money: ["I heard the word 'lawyer' between him and someone, and I didn't get involved."],
+    relation: ["Noura seemed upset, but I didn't see anything strange from her."],
+    threat: ["His phone rang and his face changed, something bothered him."],
+    accuse: [
+      "I wouldn't hurt anyone.",
+      "Ask me gently and I'll say more.",
+      "I have an audio recording from that night, I haven't handed it over because I was scared.",
+    ],
+    smalltalk: ["Hi. I'm ready to talk, on my own pace."],
+    default: [
+      "I observe more than I talk.",
+      "Ask me something specific and I'll answer.",
+      "What exactly do you want to know?",
+    ],
+  },
+};
+
 function detectTopic(message: string): Topic {
   const order: Topic[] = [
     "accuse",
@@ -364,12 +540,16 @@ export function generateSuspectReply(ctx: ReplyContext): ReplyResult {
   }
 
   const text = lines[level] ?? lines[0] ?? "...";
+  const scriptEn = SCRIPTS_EN[ctx.suspectId] ?? SCRIPTS_EN["fahad"]!;
+  const linesEn = scriptEn[topic] ?? scriptEn.default;
+  const textEn = linesEn[level] ?? linesEn[0] ?? text;
 
   // Evidence opens only from a specific question about it, never from time.
   const unlock = evidenceId && !ctx.unlockedEvidence.includes(evidenceId) ? evidenceId : undefined;
 
   const result: ReplyResult = {
     text,
+    textEn,
     stressDelta: Math.max(-4, Math.round(delta * tolerance)),
     topic,
   };
