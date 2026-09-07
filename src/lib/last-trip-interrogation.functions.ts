@@ -16,6 +16,8 @@ const inputSchema = z.object({
   confrontWitnessId: z.string().nullable().optional(),
   confrontHistory: z.array(z.string()).max(24).default([]),
   contradictionCount: z.number().min(0).max(50).default(0),
+  /** لغة الواجهة — المشتبه فيه يرد بنفس اللغة اللي اختارها اللاعب. */
+  lang: z.enum(["ar", "en"]).optional(),
   transcript: z
     .array(
       z.object({
@@ -73,7 +75,12 @@ export const askLastTripSuspect = createServerFn({ method: "POST" })
     // نفس محرك التوتر المستخدم بقضية «الشاليه» — زيادة ثابتة ومتوقعة لكل نوع سؤال.
     const { classifyQuestion, shapeStressDelta } = await import("./stress.server");
 
-    const { system, user } = buildLastTripPrompt(rules, safeData);
+    const built = buildLastTripPrompt(rules, safeData);
+    const system =
+      data.lang === "en"
+        ? `${built.system}\n\nLANGUAGE: Answer only in natural, colloquial spoken English. Keep the same character, the same facts and the same short line length. Never switch to Arabic.`
+        : built.system;
+    const { user } = built;
 
     const confrontId = evidenceId || witnessId || null;
     const isCulprit = data.suspectId === LAST_TRIP_CULPRIT_ID;
@@ -109,7 +116,7 @@ export const askLastTripSuspect = createServerFn({ method: "POST" })
 
     if (!process.env["LOVABLE_API_KEY"]) {
       return {
-        text: scripted ?? "…لحظة، ما سمعت السؤال زين. عيده علي.",
+        text: scripted ?? (data.lang === "en" ? "…hold on, I didn't catch that. Say it again." : "…لحظة، ما سمعت السؤال زين. عيده علي."),
         state: "thinking",
         stressDelta: 0,
         contradiction: false,
@@ -131,10 +138,12 @@ export const askLastTripSuspect = createServerFn({ method: "POST" })
       const fallback =
         scripted ??
         (confrontId
-          ? "وهذا شنو يثبت علي؟"
-          : rules.scriptedAnswers[0]?.answer ?? "مادري شنو تبيني أقول أكثر.");
+          ? (data.lang === "en" ? "And what does that prove about me?" : "وهذا شنو يثبت علي؟")
+          : rules.scriptedAnswers[0]?.answer ?? (data.lang === "en" ? "I don't know what more you want me to say." : "مادري شنو تبيني أقول أكثر."));
       return {
-        text: repeated ? `قلت لك… ${fallback}` : fallback,
+        text: repeated
+          ? (data.lang === "en" ? `I already told you… ${fallback}` : `قلت لك… ${fallback}`)
+          : fallback,
         state: "nervous",
         stressDelta: shape(scripted ? 6 : 1, false),
         contradiction: false,
