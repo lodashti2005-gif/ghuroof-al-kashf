@@ -311,6 +311,7 @@ function InterrogationRoom() {
           stress: runtime?.stress ?? 0,
           unlockedEvidence: room?.unlockedEvidence ?? [],
           confrontEvidenceId: confrontId ?? null,
+          lang,
           ...(options?.contradictionConfront ? { contradictionConfront: true } : {}),
           // ذاكرة كاملة: كل أقوال الجلسة من بدايتها.
           transcript: history.slice(-60),
