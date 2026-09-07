@@ -34,12 +34,14 @@ export interface SceneEvidenceHotspot extends SceneRect {
 export interface SceneDecoyHotspot extends SceneRect {
   id: string;
   message: string;
+  messageEn?: string;
 }
 
 export interface SceneView {
   id: string;
   /** Small ambient caption only — never a navigation control. */
   label: string;
+  labelEn?: string;
   image: string;
   nav: SceneNavHotspot[];
   evidence: SceneEvidenceHotspot[];
