@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowLeft,
+  ArrowRight,
   FileSearch,
   Loader2,
   RotateCcw,
@@ -34,13 +35,14 @@ import {
   getSuspect,
   suspects as allSuspects,
 } from "@/game/case-data";
-import { suggestedQuestions } from "@/game/dialogue";
+import { suggestedQuestions, suggestedQuestionsEn } from "@/game/dialogue";
 import { questionsForSuspect } from "@/game/evidence-questions";
 
 import * as store from "@/game/room-store";
 import { formatClock, useRoom } from "@/game/use-room";
 import { useTurn } from "@/game/use-turn";
 import { askSuspect } from "@/lib/interrogation.functions";
+import { useI18n } from "@/i18n";
 
 
 export const Route = createFileRoute("/interrogation/$suspectId")({
@@ -101,10 +103,13 @@ function InterrogationRoom() {
   const bonusMode = bonusParam === "1";
   const [bonusUsed, setBonusUsed] = useState(false);
   const { room, me, actions } = useRoom();
+  const { t, lang, pick, dir } = useI18n();
   const { canAct: myTurnActive } = useTurn();
   const navigate = useNavigate();
   const ask = useServerFn(askSuspect);
   const suspect = getSuspect(suspectId);
+  const Forward = dir === "rtl" ? ArrowLeft : ArrowRight;
+  const prompts = pick(suggestedQuestions, suggestedQuestionsEn);
   const runtime = room?.suspects[suspectId];
   const [clockTick, setClockTick] = useState(0);
   const [draft, setDraft] = useState("");
@@ -227,8 +232,8 @@ function InterrogationRoom() {
 
   if (!suspect) {
     return (
-      <GameShell title="غرفة الاستجواب">
-        <Panel>ما لقينا هذا المشتبه.</Panel>
+      <GameShell title={t("interrogation.room")}>
+        <Panel>{t("interrogation.notFound")}</Panel>
       </GameShell>
     );
   }
@@ -381,14 +386,15 @@ function InterrogationRoom() {
       text: item.title,
       evidenceId: id,
     });
-    const repeatNote =
-      times > 0
-        ? " (سبق عرضت عليك نفس الدليل بهذي الجلسة — ردك يكون مثل إنسان يتضايق من التكرار، نفس معلوماتك بدون أي معلومة جديدة، وبدون انهيار)"
-        : "";
-    void send(`أواجهك بهذا الدليل: ${item.title} — ${item.description}. شنو ردك عليه؟${repeatNote}`, id, {
-      skipPush: true,
-      ...(times > 0 ? { maxStress: times >= 2 ? 1 : 3 } : {}),
-    });
+    const repeatNote = times > 0 ? t("interrogation.repeatNote") : "";
+    void send(
+      `${t("interrogation.confrontLine", { title: item.title, description: item.description })}${repeatNote}`,
+      id,
+      {
+        skipPush: true,
+        ...(times > 0 ? { maxStress: times >= 2 ? 1 : 3 } : {}),
+      },
+    );
   };
 
 
@@ -410,7 +416,10 @@ function InterrogationRoom() {
     setContradictionsOpen(false);
     actions.markContradictionConfronted(item.id);
     void send(
-      `أواجهك بتناقض: قلت «${item.claim}»، وهذا ما يركب مع «${item.conflictsWith}». شنو تفسيرك؟`,
+      t("interrogation.contradictionLine", {
+        claim: item.claim,
+        conflict: item.conflictsWith,
+      }),
       undefined,
       { contradictionConfront: true },
     );
@@ -428,7 +437,7 @@ function InterrogationRoom() {
 
   return (
     <GameShell
-      title={`استجواب · ${suspect.name}`}
+      title={`${t("interrogation.titlePrefix")} · ${suspect.name}`}
       right={
         <span
           dir="ltr"
@@ -458,9 +467,9 @@ function InterrogationRoom() {
           </div>
 
           <Panel className="cine-in">
-            <Eyebrow>أقوال المشتبه فيه</Eyebrow>
+            <Eyebrow>{t("interrogation.claims")}</Eyebrow>
             <p className="mt-1.5 text-xs text-muted-foreground/80">
-              أقوال غير مؤكدة — ممكن تحتوي كذب.
+              {t("interrogation.claimsNote")}
             </p>
             <ul className="mt-3 space-y-2.5">
               {suspect.known.map((k, i) => (
@@ -474,17 +483,17 @@ function InterrogationRoom() {
 
           <div className="grid gap-2 sm:grid-cols-2">
             <ActionButton variant="outline" className="w-full" onClick={() => setSuspectsOpen(true)}>
-              <Users className="size-4" /> المشتبه فيهم
+              <Users className="size-4" /> {t("interrogation.suspects")}
             </ActionButton>
             <ActionButton variant="outline" className="w-full" onClick={() => setBoardOpen(true)}>
-              <FileSearch className="size-4" /> لوحة الأدلة
+              <FileSearch className="size-4" /> {t("interrogation.board")}
             </ActionButton>
             <ActionButton
               variant="outline"
               className="w-full sm:col-span-2"
               onClick={() => navigate({ to: "/scene" })}
             >
-              <Search className="size-4" /> مسرح الجريمة
+              <Search className="size-4" /> {t("interrogation.scene")}
             </ActionButton>
           </div>
 
@@ -497,26 +506,30 @@ function InterrogationRoom() {
               navigate({ to: "/dashboard" });
             }}
           >
-            أنهِ الاستجواب <ArrowLeft className="size-4" />
+            {t("interrogation.end")} <Forward className="size-4" />
           </ActionButton>
         </aside>
 
         <Panel className="cine-in flex min-h-[32rem] flex-col p-0">
           <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
             <div className="min-w-0">
-              <Eyebrow>غرفة الاستجواب 2</Eyebrow>
+              <Eyebrow>{t("interrogation.room")}</Eyebrow>
               <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                الجلسة مسجلة · {room?.players.length ?? 1} محققين متصلين
+                {t("interrogation.sessionRecorded", { n: room?.players.length ?? 1 })}
               </p>
             </div>
             <div className="flex items-center gap-2">
               {bonusMode && (
                 <CaseTag tone="evidence">
-                  {bonusUsed ? "خلص السؤال الإضافي" : "سؤال إضافي · بدون خصم وقت"}
+                  {bonusUsed ? t("interrogation.bonusUsed") : t("interrogation.bonus")}
                 </CaseTag>
               )}
               <CaseTag tone={locked ? "muted" : "danger"}>
-                {waitingTurn ? "انتظر دورك" : locked ? "الجلسة مغلقة" : "جارية"}
+                {waitingTurn
+                  ? t("interrogation.waitTurn")
+                  : locked
+                    ? t("interrogation.closed")
+                    : t("interrogation.live")}
               </CaseTag>
             </div>
 
@@ -530,7 +543,7 @@ function InterrogationRoom() {
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
             {(runtime?.transcript.length ?? 0) === 0 && (
               <div className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-                اسأله أي شي بأسلوبك. يفهم أسئلتك المفتوحة ويتذكر كل كلمة قالها قبل.
+                {t("interrogation.emptyHint")}
               </div>
             )}
 
@@ -564,7 +577,7 @@ function InterrogationRoom() {
                     {m.role === "suspect" && m.flagged && (
                       <p className="mt-1.5 flex items-center gap-1.5 rounded-lg border border-evidence/40 bg-evidence/10 px-2.5 py-1.5 text-[0.7rem] leading-relaxed text-evidence">
                         <AlertTriangle className="size-3.5 shrink-0" />
-                        ⚠️ في شي بكلامه ما يركب مع الدليل
+                        {t("interrogation.flagged")}
                       </p>
                     )}
                   </div>
@@ -580,13 +593,13 @@ function InterrogationRoom() {
                   <span className="size-1.5 animate-pulse rounded-full bg-primary [animation-delay:150ms]" />
                   <span className="size-1.5 animate-pulse rounded-full bg-primary [animation-delay:300ms]" />
                 </span>
-                {suspect.name} يفكر...
+                {t("interrogation.thinking", { name: suspect.name })}
               </div>
             )}
 
             {retry && !typing && (
               <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface-2 px-4 py-3 text-sm text-muted-foreground">
-                <span>ما وصل رده — خلل تقني مؤقت، وقتك ما نقص.</span>
+                <span>{t("interrogation.failed")}</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -596,7 +609,7 @@ function InterrogationRoom() {
                   }}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-primary/50 bg-primary/12 px-3 py-1.5 text-xs text-primary transition-colors hover:bg-primary/20"
                 >
-                  <RotateCcw className="size-3.5" /> إعادة المحاولة
+                  <RotateCcw className="size-3.5" /> {t("interrogation.retry")}
                 </button>
               </div>
             )}
@@ -607,11 +620,11 @@ function InterrogationRoom() {
             {contradictionsOpen && (
               <div className="cine-in mb-3 rounded-xl border border-evidence/35 bg-evidence/5 p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <Eyebrow>تناقضات مرصودة على {suspect.name}</Eyebrow>
+                  <Eyebrow>{t("interrogation.contradictionsOn", { name: suspect.name })}</Eyebrow>
                   <button
                     type="button"
                     onClick={() => setContradictionsOpen(false)}
-                    aria-label="إلغاء"
+                    aria-label={t("shell.cancel")}
                     className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="size-4" />
@@ -619,7 +632,7 @@ function InterrogationRoom() {
                 </div>
                 {openContradictions.length === 0 ? (
                   <p className="text-xs leading-relaxed text-muted-foreground">
-                    ما فيه تناقض مرصود عليه الآن — كمّل أسئلة وواجهه بالأدلة.
+                    {t("interrogation.noContradictions")}
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -629,11 +642,13 @@ function InterrogationRoom() {
                         type="button"
                         disabled={locked || busy}
                         onClick={() => confrontContradiction(c.id)}
-                        className="w-full rounded-lg border border-evidence/45 bg-evidence/10 px-3 py-2 text-right text-xs leading-relaxed text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
+                        className="w-full rounded-lg border border-evidence/45 bg-evidence/10 px-3 py-2 text-start text-xs leading-relaxed text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
                       >
-                        <span className="block font-bold">قال: «{c.claim}»</span>
+                        <span className="block font-bold">
+                          {t("interrogation.said", { claim: c.claim })}
+                        </span>
                         <span className="mt-1 block text-muted-foreground">
-                          يتعارض مع: {c.conflictsWith}
+                          {t("interrogation.conflictsWith", { text: c.conflictsWith })}
                         </span>
                       </button>
                     ))}
@@ -645,11 +660,11 @@ function InterrogationRoom() {
             {confrontOpen && (
               <div className="cine-in mb-3 rounded-xl border border-evidence/35 bg-evidence/5 p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <Eyebrow>اختر دليلاً من الأدلة المكتشفة</Eyebrow>
+                  <Eyebrow>{t("interrogation.pickEvidence")}</Eyebrow>
                   <button
                     type="button"
                     onClick={() => setConfrontOpen(false)}
-                    aria-label="إلغاء"
+                    aria-label={t("shell.cancel")}
                     className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="size-4" />
@@ -657,7 +672,7 @@ function InterrogationRoom() {
                 </div>
                 {unlocked.length === 0 ? (
                   <p className="text-xs leading-relaxed text-muted-foreground">
-                    ما عندكم أدلة مكتشفة بعد — دقّقوا بمسرح الجريمة أو اسألوا أكثر.
+                    {t("interrogation.noEvidence")}
                   </p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
@@ -683,7 +698,7 @@ function InterrogationRoom() {
 
             {!locked && evidenceAsks.length > 0 && (
               <div className="cine-in mb-3 rounded-xl border border-evidence/30 bg-evidence/5 p-3">
-                <Eyebrow>أسئلة فتحتها الأدلة</Eyebrow>
+                <Eyebrow>{t("interrogation.evidenceAsks")}</Eyebrow>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {evidenceAsks.map((q) => (
                     <button
@@ -702,7 +717,7 @@ function InterrogationRoom() {
 
             {!locked && (
               <div className="mb-3 flex flex-wrap gap-2">
-                {suggestedQuestions.slice(0, 4).map((q) => (
+                {prompts.slice(0, 4).map((q) => (
                   <button
                     key={q}
                     type="button"
@@ -740,10 +755,10 @@ function InterrogationRoom() {
                 disabled={locked || busy}
                 placeholder={
                   waitingTurn
-                    ? "انتظر دورك — الدور الحالي عند لاعب ثاني"
+                    ? t("interrogation.placeholderWait")
                     : locked
-                      ? "انتهى وقت هذا المشتبه"
-                      : "اكتب سؤالك بأسلوبك..."
+                      ? t("interrogation.placeholderLocked")
+                      : t("interrogation.placeholder")
                 }
                 className="min-h-[4.5rem] min-w-0 flex-1 resize-none rounded-xl border border-input bg-surface-2 px-3.5 py-3 text-base leading-relaxed outline-none placeholder:text-muted-foreground/70 focus:border-primary/60 disabled:opacity-50 sm:text-sm"
               />
@@ -755,13 +770,13 @@ function InterrogationRoom() {
                 type="button"
                 disabled={locked || busy || openContradictions.length === 0}
                 onClick={() => setContradictionsOpen((v) => !v)}
-                aria-label="واجهه بالتناقض"
-                title="واجهه بالتناقض"
+                aria-label={t("interrogation.confrontContradiction")}
+                title={t("interrogation.confrontContradiction")}
                 className="relative grid size-11 shrink-0 place-items-center rounded-xl border border-evidence/45 bg-evidence/10 text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
               >
                 <AlertTriangle className="size-4" />
                 {openContradictions.length > 0 && (
-                  <span className="absolute -top-1 -left-1 grid size-4 place-items-center rounded-full bg-primary font-mono text-[0.6rem] text-primary-foreground">
+                  <span className="absolute -top-1 -start-1 grid size-4 place-items-center rounded-full bg-primary font-mono text-[0.6rem] text-primary-foreground">
                     {openContradictions.length}
                   </span>
                 )}
@@ -770,8 +785,8 @@ function InterrogationRoom() {
                 type="button"
                 disabled={locked || busy || unlocked.length === 0}
                 onClick={() => setConfrontOpen((v) => !v)}
-                aria-label="واجهه بدليل"
-                title="واجهه بدليل"
+                aria-label={t("interrogation.confrontEvidence")}
+                title={t("interrogation.confrontEvidence")}
                 className="grid size-11 shrink-0 place-items-center rounded-xl border border-evidence/45 bg-evidence/10 text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
               >
                 <FileSearch className="size-4" />
@@ -779,7 +794,7 @@ function InterrogationRoom() {
               <button
                 type="submit"
                 disabled={locked || busy || !draft.trim()}
-                aria-label="إرسال"
+                aria-label={t("interrogation.send")}
                 className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground transition-opacity disabled:opacity-45"
               >
                 {busy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
@@ -800,13 +815,13 @@ function InterrogationRoom() {
           >
             <div className="flex items-center justify-between gap-3">
               <div>
-                <Eyebrow>تنقل بين الجلسات</Eyebrow>
-                <h3 className="mt-1 text-xl font-bold">المشتبه فيهم</h3>
+                <Eyebrow>{t("interrogation.switchSessions")}</Eyebrow>
+                <h3 className="mt-1 text-xl font-bold">{t("interrogation.suspects")}</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setSuspectsOpen(false)}
-                aria-label="إغلاق"
+                aria-label={t("shell.close")}
                 className="text-muted-foreground hover:text-foreground"
               >
                 <X className="size-5" />
@@ -820,7 +835,7 @@ function InterrogationRoom() {
                     key={s.id}
                     type="button"
                     onClick={() => switchTo(s.id)}
-                    className={`flex items-center gap-3 rounded-xl border p-3 text-right transition-colors ${
+                    className={`flex items-center gap-3 rounded-xl border p-3 text-start transition-colors ${
                       s.id === suspectId
                         ? "border-primary/55 bg-primary/10"
                         : "border-border bg-surface-2 hover:border-primary/45"
@@ -839,7 +854,7 @@ function InterrogationRoom() {
                         className="mt-0.5 block font-mono text-[0.65rem] text-muted-foreground"
                       >
                         {formatClock(rt?.timeLeft ?? INTERROGATION_SECONDS)}
-                        {rt?.finished ? " · مغلقة" : ""}
+                        {rt?.finished ? ` · ${t("interrogation.sessionClosed")}` : ""}
                       </span>
                     </span>
                   </button>
@@ -861,20 +876,20 @@ function InterrogationRoom() {
           >
             <div className="flex items-center justify-between gap-3">
               <div>
-                <Eyebrow>الأدلة المكتشفة</Eyebrow>
-                <h3 className="mt-1 text-xl font-bold">لوحة الأدلة</h3>
+                <Eyebrow>{t("scene.found")}</Eyebrow>
+                <h3 className="mt-1 text-xl font-bold">{t("interrogation.board")}</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setBoardOpen(false)}
-                aria-label="إغلاق"
+                aria-label={t("shell.close")}
                 className="text-muted-foreground hover:text-foreground"
               >
                 <X className="size-5" />
               </button>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              اختر دليلاً وبعدها «استخدم في الاستجواب» عشان تواجه فيه أي مشتبه.
+              {t("interrogation.boardHint")}
             </p>
             <div className="mt-4">
               <EvidenceBoard
@@ -887,7 +902,7 @@ function InterrogationRoom() {
                     title: link.title,
                     insight: link.insight,
                     evidenceIds: link.pair,
-                    author: me?.name ?? "محقق",
+                    author: me?.name ?? t("shell.investigator"),
                   })
                 }
                 onUseDeduction={(text, targetId) => {
@@ -923,23 +938,25 @@ function InterrogationRoom() {
       )}
 
       {contradictionToast && (
-        <div className="fixed bottom-24 right-1/2 z-50 translate-x-1/2 sm:right-6 sm:translate-x-0">
+        <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 sm:left-auto sm:end-6 sm:translate-x-0">
           <div className="cine-in flex items-center gap-3 rounded-xl border border-evidence/45 bg-card px-4 py-3 shadow-[var(--shadow-noir)]">
             <AlertTriangle className="size-4 shrink-0 text-evidence" />
             <div className="min-w-0">
-              <p className="text-sm font-bold">⚠️ تم رصد تناقض محتمل</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">انسجل بملف القضية · قسم التناقضات</p>
+              <p className="text-sm font-bold">{t("interrogation.contradictionToast")}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {t("interrogation.contradictionToastSub")}
+              </p>
             </div>
           </div>
         </div>
       )}
 
       {unlockToast && (
-        <div className="fixed bottom-6 right-1/2 z-50 translate-x-1/2 sm:right-6 sm:translate-x-0">
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 sm:left-auto sm:end-6 sm:translate-x-0">
           <div className="cine-in flex items-center gap-3 rounded-xl border border-evidence/40 bg-card px-4 py-3 shadow-[var(--shadow-noir)]">
             <Unlock className="size-4 shrink-0 text-evidence" />
             <div className="min-w-0">
-              <p className="text-sm font-bold">🔎 تم اكتشاف دليل جديد</p>
+              <p className="text-sm font-bold">{t("interrogation.unlockToast")}</p>
               <p className="mt-0.5 truncate text-xs text-muted-foreground">{unlockToast}</p>
             </div>
           </div>
