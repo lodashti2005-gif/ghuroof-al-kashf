@@ -17,9 +17,12 @@ export type LastTripCapability =
 export interface LastTripRole {
   id: string;
   title: string;
+  titleEn: string;
   mission: string;
+  missionEn: string;
   /** القدرة الخاصة بصيغة مفهومة للاعب. */
   ability: string;
+  abilityEn: string;
   capability: LastTripCapability;
 }
 
@@ -28,43 +31,62 @@ export const lastTripRoles: LastTripRole[] = [
   {
     id: "lt-detective",
     title: "المحقق",
+    titleEn: "Detective",
     mission: "يقود الاستجواب ويسأل المشتبه فيهم بنفسه، وباقي الفريق يشوف السؤال والرد والتوتر.",
+    missionEn:
+      "Leads the interrogation and questions suspects directly, while the rest of the team watches the question, reply, and stress live.",
     ability: "الوحيد اللي يرسل أسئلة الاستجواب والمواجهات للمشتبه فيهم.",
+    abilityEn: "The only one who can send interrogation questions and confrontations to suspects.",
     capability: "interrogate",
   },
   {
     id: "lt-forensics",
     title: "الجنائي",
+    titleEn: "Forensics Expert",
     mission: "يفحص الأدلة المادية بمسرح الجريمة ويطلع التفاصيل الجنائية الإضافية.",
+    missionEn: "Examines physical evidence at the crime scene and uncovers extra forensic detail.",
     ability: "فحص جنائي تفصيلي للأدلة المادية (الحنفية، الكلينكس، كوب القهوة).",
+    abilityEn: "Detailed forensic analysis of physical evidence (the faucet, the tissue, the coffee cup).",
     capability: "forensics",
   },
   {
     id: "lt-surveillance",
     title: "خبير المراقبة",
+    titleEn: "Surveillance Expert",
     mission: "يفحص تسجيلات الكاميرات ويطلع اللي مسجل فيها.",
+    missionEn: "Reviews camera footage and pulls out what's recorded in it.",
     ability: "مراجعة مقاطع الكاميرات (كاميرا الممر وكاميرا مدخل الكوفي).",
+    abilityEn: "Reviews camera footage (the corridor camera and the coffee shop entrance camera).",
     capability: "surveillance",
   },
   {
     id: "lt-comms",
     title: "خبير الاتصالات",
+    titleEn: "Comms Expert",
     mission: "يفحص سجل المكالمات والتوقيتات ويطلع أي انقطاع أو تعارض بالوقت.",
+    missionEn: "Examines the call log and timing for any gap or time conflict.",
     ability: "فتح وتحليل سجل مكالمات عبدالله وتوقيتاته.",
+    abilityEn: "Opens and analyzes Abdullah's call log and its timing.",
     capability: "comms",
   },
   {
     id: "lt-traces",
     title: "خبير الآثار",
+    titleEn: "Trace Expert",
     mission: "يحلل أثر الحذاء والآثار المادية واتجاه الحركة.",
+    missionEn: "Analyzes the shoe print and physical traces along with the direction of movement.",
     ability: "تحليل أثر الحذاء الرطب والآثار المادية.",
+    abilityEn: "Analyzes the wet shoe print and physical traces.",
     capability: "traces",
   },
   {
     id: "lt-analyst",
     title: "المحلل",
+    titleEn: "Analyst",
     mission: "يجمع التناقضات المكتشفة ويربط أقوال المشتبه فيهم بالأدلة.",
+    missionEn: "Collects discovered contradictions and links suspects' statements to the evidence.",
     ability: "لوحة التناقضات وربط الأقوال بالأدلة المكتشفة.",
+    abilityEn: "The contradictions board, linking statements to discovered evidence.",
     capability: "analysis",
   },
 ];
@@ -84,6 +106,7 @@ export const lastTripEvidenceSpecialty: Record<string, LastTripCapability> = {
 };
 
 export const LAST_TRIP_DENIED_MESSAGE = "هالمعلومة من اختصاص لاعب ثاني بالفريق.";
+export const LAST_TRIP_DENIED_MESSAGE_EN = "This is another teammate's specialty.";
 
 /**
  * صلاحية لاعب: بدون غرفة (تجربة فردية) كل القدرات مفتوحة مثل ما كانت.
