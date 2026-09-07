@@ -232,31 +232,47 @@ export interface EvidenceCrop {
 export interface EvidenceItem {
   id: string;
   number: string;
+  numberEn?: string;
   title: string;
+  titleEn?: string;
   description: string;
+  descriptionEn?: string;
   detail: string;
+  detailEn?: string;
   /** Neutral forensic observation shown to players — never names an owner or links a suspect. */
   observation: string;
+  observationEn?: string;
 
   icon: "watch" | "phone" | "cup" | "message" | "camera" | "key" | "shoe";
   /** Close-up crop of the single crime-scene photo, revealed after discovery. */
   crop: EvidenceCrop;
   /** Where the item was found in the chalet. */
   foundAt: string;
+  foundAtEn?: string;
   unlockHint: string;
+  unlockHintEn?: string;
 }
 
 export interface Suspect {
   id: string;
   name: string;
+  nameEn?: string;
   age: number;
   role: string;
+  roleEn?: string;
   personality: string;
+  personalityEn?: string;
   portrait: string;
   known: string[];
+  knownEn?: string[];
   backstory: string;
+  backstoryEn?: string;
   secret: string;
+  secretEn?: string;
   truths: string[];
+  truthsEn?: string[];
   lies: string[];
+  liesEn?: string[];
   stressStyle: string;
+  stressStyleEn?: string;
 }
