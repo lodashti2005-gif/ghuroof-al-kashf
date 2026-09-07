@@ -1,19 +1,23 @@
 import { Link } from "@tanstack/react-router";
 import { Mail, MessageCircle, ShieldAlert } from "lucide-react";
 
+import { LanguageSwitcher } from "@/components/site/language-switcher";
 import { GAME_NAME } from "@/game/game-meta";
+import { useT } from "@/i18n";
 
 const FOOTER_LINKS = [
-  { to: "/terms", label: "Terms of Service" },
-  { to: "/privacy", label: "Privacy Policy" },
-  { to: "/refund", label: "Refund Policy" },
-  { to: "/contact", label: "Contact Us" },
-  { to: "/purchases", label: "مشترياتي" },
-];
+  { to: "/terms", key: "site.terms" },
+  { to: "/privacy", key: "site.privacy" },
+  { to: "/refund", key: "site.refund" },
+  { to: "/contact", key: "site.contact" },
+  { to: "/purchases", key: "common.myPurchases" },
+] as const;
 
 const BRAND_NAME = "ورا السالفة | Wara Al Salfa";
 
 export function SiteFooter() {
+  const t = useT();
+
   return (
     <footer className="border-t border-border/60 bg-background/80 backdrop-blur-sm">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -32,7 +36,7 @@ export function SiteFooter() {
                 to={link.to}
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
-                {link.label}
+                {t(link.key)}
               </Link>
             ))}
           </nav>
@@ -54,12 +58,13 @@ export function SiteFooter() {
               <MessageCircle className="size-4" />
               @waralsalfa
             </a>
+            <LanguageSwitcher />
           </div>
         </div>
 
         <div className="mt-6 border-t border-border/40 pt-6 text-center">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} {BRAND_NAME}. جميع الحقوق محفوظة.
+            © {new Date().getFullYear()} {BRAND_NAME}. {t("site.rights")}
           </p>
         </div>
       </div>
