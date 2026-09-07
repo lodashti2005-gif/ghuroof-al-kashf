@@ -357,6 +357,17 @@ export function generateSuspectReply(ctx: ReplyContext): ReplyResult {
   return result;
 }
 
+export const suggestedQuestionsEn = [
+  "Where were you at 1:30?",
+  "When did you last see Bader?",
+  "What do you know about his phone?",
+  "Who made the coffee that night?",
+  "The camera caught a car coming in late — what about it?",
+  "Who else has a spare key to the room?",
+  "Is there money trouble between you?",
+  "You told us something different earlier — why did your story change?",
+];
+
 export const suggestedQuestions = [
   "وين كنت الساعة وحدة ونص؟",
   "متى آخر مرة شفت بدر؟",

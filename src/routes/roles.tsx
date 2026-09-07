@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, EyeOff, Loader2, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, EyeOff, Loader2, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
@@ -7,6 +7,7 @@ import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { roleById } from "@/game/roles";
 import { RoleGlyph } from "@/components/game/role-glyph";
 import { useRoom } from "@/game/use-room";
+import { useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/roles")({
   head: () => ({
@@ -28,9 +29,11 @@ export const Route = createFileRoute("/roles")({
 function RolesScreen() {
   const { room, me, isHost, actions } = useRoom();
   const navigate = useNavigate();
+  const { t, pick, dir } = useI18n();
   const [stuck, setStuck] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [waitStuck, setWaitStuck] = useState(false);
+  const Forward = dir === "rtl" ? ArrowLeft : ArrowRight;
 
   const myRole = roleById(me ? room?.roles?.[me.id] : undefined);
   // أعضاء الجولة الحالية فقط: لاعب غادر أو مات اتصاله ما يُحسب ضمن الانتظار.
@@ -88,6 +91,8 @@ function RolesScreen() {
     };
   }, [myRole, me, actions]);
 
+  void stuck;
+
   const resync = async () => {
     setSyncing(true);
     await actions.resync();
@@ -122,24 +127,24 @@ function RolesScreen() {
     if (isHost && allReady && allRolesAssigned && room?.phase === "roles") actions.setPhase("intro");
   }, [isHost, allReady, allRolesAssigned, room?.phase, actions]);
 
-
-
   return (
-    <GameShell title="هويتك في التحقيق" right={<LeaveRoomButton />}>
+    <GameShell title={t("roles.title")} right={<LeaveRoomButton />}>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <Panel className="cine-in text-center">
-          <Eyebrow>هويتك في التحقيق</Eyebrow>
+          <Eyebrow>{t("roles.title")}</Eyebrow>
           {myRole ? (
             <>
               <div className="mx-auto mt-5 grid size-20 place-items-center rounded-2xl border border-border bg-surface-2 text-primary">
                 <RoleGlyph icon={myRole.icon} className="size-9" />
               </div>
-              <h1 className="mt-4 text-3xl font-extrabold">{myRole.title}</h1>
+              <h1 className="mt-4 text-2xl font-extrabold sm:text-3xl">
+                {pick(myRole.title, myRole.titleEn)}
+              </h1>
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-                {myRole.mission}
+                {pick(myRole.mission, myRole.missionEn)}
               </p>
-              <p className="mt-5 inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/60 px-3 py-1.5 text-xs text-muted-foreground">
-                <EyeOff className="size-3.5" /> هذا الدور خاص بجهازك — ما أحد بالفريق يشوفه
+              <p className="mt-5 inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/60 px-3 py-1.5 text-xs leading-relaxed text-muted-foreground">
+                <EyeOff className="size-3.5 shrink-0" /> {t("roles.private")}
               </p>
 
               <ActionButton
@@ -149,11 +154,11 @@ function RolesScreen() {
               >
                 {iAmReady ? (
                   <>
-                    <Loader2 className="size-4 animate-spin" /> بانتظار باقي الفريق
+                    <Loader2 className="size-4 animate-spin" /> {t("roles.waiting")}
                   </>
                 ) : (
                   <>
-                    فهمت دوري — ابدأ التحقيق <ArrowLeft className="size-4" />
+                    {t("roles.understood")} <Forward className="size-4" />
                   </>
                 )}
               </ActionButton>
@@ -162,15 +167,14 @@ function RolesScreen() {
                   className="mt-3 w-full py-3.5 text-base"
                   onClick={() => actions.setPhase("intro")}
                 >
-                  ابدأ التحقيق للجميع
+                  {t("roles.startAll")}
                 </ActionButton>
               )}
 
               {iAmReady && !allReady && waitStuck && (
-                <div className="mt-4 rounded-xl border border-border bg-secondary/50 p-4 text-right">
+                <div className="mt-4 rounded-xl border border-border bg-secondary/50 p-4 text-start">
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    الانتظار طال أكثر من اللازم — يمكن الاتصال انقطع. جرب إعادة الاتصال، أو ارجع
-                    لغرفة الانتظار وابدأوا من جديد.
+                    {t("roles.waitLong")}
                   </p>
                   <div className="mt-3 flex flex-wrap justify-end gap-2">
                     <ActionButton
@@ -180,31 +184,33 @@ function RolesScreen() {
                         setWaitStuck(false);
                       }}
                     >
-                      {syncing ? <Loader2 className="size-4 animate-spin" /> : null} إعادة الاتصال
+                      {syncing ? <Loader2 className="size-4 animate-spin" /> : null}{" "}
+                      {t("roles.reconnect")}
                     </ActionButton>
                     <ActionButton variant="outline" onClick={() => navigate({ to: "/lobby" })}>
-                      العودة للغرفة
+                      {t("roles.backToLobby")}
                     </ActionButton>
                   </div>
                 </div>
               )}
-
             </>
           ) : (
             <p className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> جاري توزيع الأدوار...
+              <Loader2 className="size-4 animate-spin" /> {t("roles.dealing")}
             </p>
           )}
         </Panel>
 
         <Panel className="cine-in">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Users className="size-4 text-muted-foreground" />
-              <h2 className="font-display text-base font-bold">استعداد الفريق</h2>
+            <div className="flex min-w-0 items-center gap-2">
+              <Users className="size-4 shrink-0 text-muted-foreground" />
+              <h2 className="truncate font-display text-base font-bold">{t("roles.teamReady")}</h2>
             </div>
             <CaseTag>
-              {readyCount}/{total}
+              <span dir="ltr">
+                {readyCount}/{total}
+              </span>
             </CaseTag>
           </div>
 
@@ -219,22 +225,20 @@ function RolesScreen() {
                   <span className="truncate text-sm">
                     {p.name}
                     {me?.id === p.id && (
-                      <span className="ms-2 font-mono text-[0.68rem] text-muted-foreground">أنت</span>
+                      <span className="ms-2 font-mono text-[0.68rem] text-muted-foreground">
+                        {t("roles.you")}
+                      </span>
                     )}
                   </span>
                   <CaseTag tone={ready ? "evidence" : "muted"}>
-                    {ready ? "جاهز" : "يقرأ دوره"}
+                    {ready ? t("roles.readyTag") : t("roles.readingTag")}
                   </CaseTag>
-
                 </li>
               );
             })}
           </ul>
 
-          <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
-            الأدوار تتوزع عشوائياً كل جولة، وكل واحد يشوف دوره بس. القضية والأدلة والتقدم مشتركة
-            بين الفريق كله.
-          </p>
+          <p className="mt-5 text-xs leading-relaxed text-muted-foreground">{t("roles.note")}</p>
         </Panel>
       </div>
     </GameShell>
