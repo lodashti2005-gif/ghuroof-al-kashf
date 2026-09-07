@@ -25,6 +25,8 @@ export interface CasePricing {
   currency: string;
   /** صيغة العرض. */
   currencyLabel: string;
+  /** صيغة العرض بالإنجليزي. */
+  currencyLabelEn?: string;
   /** نص بديل يظهر لو ما فيه سعر بعد. */
   note?: string;
 }
@@ -55,23 +57,35 @@ export const CASE_PRICING: CasePricing[] = [
     amount: 3,
     currency: "KWD",
     currencyLabel: "د.ك",
+    currencyLabelEn: "KWD",
   },
   {
     caseId: "last-night",
     amount: 3,
     currency: "KWD",
     currencyLabel: "د.ك",
+    currencyLabelEn: "KWD",
   },
 ];
 
 export const getCasePricing = (caseId: string): CasePricing | null =>
   CASE_PRICING.find((p) => p.caseId === caseId) ?? null;
 
-/** نص السعر المعروض داخل الواجهة. */
-export function formatCasePrice(caseId: string, _dbPrice?: number | null): string {
+/**
+ * نص السعر المعروض داخل الواجهة.
+ * الرقم نفسه ما يتغيّر بين اللغتين — تتغيّر تسمية العملة فقط.
+ */
+export function formatCasePrice(
+  caseId: string,
+  _dbPrice?: number | null,
+  lang: "ar" | "en" = "ar",
+): string {
   const cfg = getCasePricing(caseId);
-  if (!cfg?.amount) return cfg?.note ?? "السعر يُحدد قريباً";
+  if (!cfg?.amount) {
+    return cfg?.note ?? (lang === "en" ? "Price coming soon" : "السعر يُحدد قريباً");
+  }
 
-  if (cfg.currency === "USD") return `${cfg.currencyLabel}${cfg.amount.toFixed(2)} USD`;
-  return `${cfg.amount.toFixed(3)} ${cfg.currencyLabel}`;
+  const label = (lang === "en" ? cfg.currencyLabelEn : cfg.currencyLabel) ?? cfg.currencyLabel;
+  if (cfg.currency === "USD") return `${label}${cfg.amount.toFixed(2)} USD`;
+  return `${cfg.amount.toFixed(3)} ${label}`;
 }
