@@ -15,6 +15,7 @@ import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { evidence, getSuspect, killerId, solution } from "@/game/case-data";
 import { computeTeamScore, formatDuration } from "@/game/score";
 import { useRoom } from "@/game/use-room";
+import { useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/reveal")({
   head: () => ({
@@ -38,11 +39,14 @@ const LAST_STEP = STEP_DELAYS.length;
 function Reveal() {
   const { room, isHost, actions } = useRoom();
   const navigate = useNavigate();
+  const { t, lang, pick } = useI18n();
   const [step, setStep] = useState(0);
   const killer = getSuspect(killerId)!;
 
   useEffect(() => {
-    const timers = STEP_DELAYS.map((ms, i) => setTimeout(() => setStep((s) => Math.max(s, i + 1)), ms));
+    const timers = STEP_DELAYS.map((ms, i) =>
+      setTimeout(() => setStep((s) => Math.max(s, i + 1)), ms),
+    );
     return () => timers.forEach(clearTimeout);
   }, []);
 
@@ -58,33 +62,33 @@ function Reveal() {
     `transition-all duration-700 ${step >= from ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}`;
 
   return (
-    <GameShell title="الحقيقة" right={<LeaveRoomButton />}>
+    <GameShell title={t("reveal.title")} right={<LeaveRoomButton />}>
       <section className="cine-in mb-6 text-center">
         <div className="inline-flex items-center gap-2 rounded-full file-tape px-3.5 py-1.5">
-          <Skull className="size-3.5" />
-          <span className="font-display text-xs">ملف القضية انسدل</span>
+          <Skull className="size-3.5 shrink-0" />
+          <span className="font-display text-xs">{t("reveal.fileClosed")}</span>
         </div>
-        <h1 className="mt-4 text-4xl font-extrabold sm:text-5xl">الحقيقة</h1>
-        <p className="mt-2 text-sm text-muted-foreground">الحقيقة ما تنقال... تنكشف.</p>
+        <h1 className="mt-4 text-3xl font-extrabold sm:text-5xl">{t("reveal.title")}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{t("reveal.subtitle")}</p>
         {step < LAST_STEP && (
           <ActionButton variant="ghost" className="mt-4" onClick={() => setStep(LAST_STEP)}>
-            تخطّى الكشف
+            {t("reveal.skip")}
           </ActionButton>
         )}
       </section>
 
       {/* 1 — شنو صار فعلاً */}
       <Panel className={`mb-5 ${fade(1)}`}>
-        <Eyebrow>الخطوة الأولى</Eyebrow>
-        <h2 className="mt-1.5 text-2xl font-extrabold">شنو صار فعلاً؟</h2>
+        <Eyebrow>{t("reveal.step1")}</Eyebrow>
+        <h2 className="mt-1.5 text-2xl font-extrabold">{t("reveal.whatHappened")}</h2>
         <ol className="mt-5 space-y-4 border-e border-border pe-5">
-          {solution.timeline.map((t) => (
-            <li key={t.time} className="relative">
+          {solution.timeline.map((item) => (
+            <li key={item.time} className="relative">
               <span className="absolute -end-[1.6rem] top-1.5 size-2.5 rounded-full bg-primary" />
-              <p dir="ltr" className="text-right font-mono text-xs text-muted-foreground">
-                {t.time}
+              <p dir="ltr" className="text-start font-mono text-xs text-muted-foreground">
+                {item.time}
               </p>
-              <p className="mt-1 text-sm leading-relaxed">{t.text}</p>
+              <p className="mt-1 text-sm leading-relaxed">{item.text}</p>
             </li>
           ))}
         </ol>
@@ -95,10 +99,10 @@ function Reveal() {
 
       {/* 2 — الأدلة */}
       <Panel className={`mb-5 ${fade(2)}`}>
-        <Eyebrow>الخطوة الثانية</Eyebrow>
-        <h2 className="mt-1.5 text-2xl font-extrabold">الأدلة</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          كل دليل وشنو أثبت فعلاً — واللي فاتكم منها.
+        <Eyebrow>{t("reveal.step2")}</Eyebrow>
+        <h2 className="mt-1.5 text-2xl font-extrabold">{t("reveal.evidence")}</h2>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          {t("reveal.evidenceNote")}
         </p>
         <ul className="mt-5 space-y-3">
           {evidence.map((item, i) => {
@@ -112,14 +116,14 @@ function Reveal() {
                 style={{ transitionDelay: `${i * 120}ms` }}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="truncate text-sm font-bold">
+                  <h3 className="min-w-0 truncate text-sm font-bold">
                     <span className="me-2 font-mono text-xs text-muted-foreground">
                       {item.number}
                     </span>
                     {item.title}
                   </h3>
                   <CaseTag tone={found ? "evidence" : "danger"}>
-                    {found ? "لقيتوه" : "فاتكم"}
+                    {found ? t("reveal.foundTag") : t("reveal.missedTag")}
                   </CaseTag>
                 </div>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.detail}</p>
@@ -129,8 +133,8 @@ function Reveal() {
         </ul>
         <div className="mt-5 rounded-xl border border-evidence/40 bg-surface-2 p-4">
           <div className="flex items-center gap-2">
-            <Fingerprint className="size-4 text-evidence" />
-            <Eyebrow>الدليل الحاسم</Eyebrow>
+            <Fingerprint className="size-4 shrink-0 text-evidence" />
+            <Eyebrow>{t("reveal.decisive")}</Eyebrow>
           </div>
           <h3 className="mt-2 text-base font-bold">{solution.decisive.title}</h3>
           <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
@@ -141,40 +145,40 @@ function Reveal() {
 
       {/* 3 — التناقضات */}
       <Panel className={`mb-5 ${fade(3)}`}>
-        <Eyebrow>الخطوة الثالثة</Eyebrow>
-        <h2 className="mt-1.5 text-2xl font-extrabold">التناقضات</h2>
+        <Eyebrow>{t("reveal.step3")}</Eyebrow>
+        <h2 className="mt-1.5 text-2xl font-extrabold">{t("reveal.contradictions")}</h2>
         <ul className="mt-5 space-y-3">
           {solution.liars.map((l) => (
             <li key={l.name} className="rounded-xl border border-border bg-surface-2 p-4">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="truncate text-sm font-bold">{l.name}</h3>
+                <h3 className="min-w-0 truncate text-sm font-bold">{l.name}</h3>
                 <CaseTag tone={l.name === solution.killer ? "danger" : "muted"}>
-                  {l.name === solution.killer ? "القاتل" : "كذب جزئي"}
+                  {l.name === solution.killer ? t("reveal.killerTag") : t("reveal.partialLie")}
                 </CaseTag>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">{l.lie}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{l.lie}</p>
               <p className="mt-1.5 text-sm leading-relaxed">{l.why}</p>
             </li>
           ))}
         </ul>
         <div className="mt-5">
-          <Eyebrow>وكيف تترابط</Eyebrow>
+          <Eyebrow>{t("reveal.howLinked")}</Eyebrow>
           <ul className="mt-3 space-y-3">
             {solution.provingClues.map((c, i) => (
               <li key={i} className="flex gap-3 text-sm leading-relaxed text-muted-foreground">
                 <span className="mt-0.5 shrink-0 font-mono text-xs text-evidence">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <span>{c}</span>
+                <span className="min-w-0">{c}</span>
               </li>
             ))}
           </ul>
         </div>
         <div className="mt-5">
-          <Eyebrow>التناقضات اللي رصدها فريقكم</Eyebrow>
+          <Eyebrow>{t("reveal.teamContradictions")}</Eyebrow>
           {teamContradictions.length === 0 ? (
-            <p className="mt-2 text-sm text-muted-foreground">
-              ما رصدتوا أي تناقض بأقوال المشتبه فيهم.
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {t("reveal.noneSpotted")}
             </p>
           ) : (
             <ul className="mt-3 space-y-3">
@@ -183,7 +187,7 @@ function Reveal() {
                   <p className="text-xs font-bold">{c.suspectName}</p>
                   <p className="mt-1 text-sm leading-relaxed">«{c.claim}»</p>
                   <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-                    يتعارض مع: {c.conflictsWith}
+                    {t("reveal.conflictsWith", { text: c.conflictsWith })}
                   </p>
                 </li>
               ))}
@@ -198,7 +202,7 @@ function Reveal() {
           <div className="relative min-h-[18rem] md:min-h-[24rem]">
             <img
               src={killer.portrait}
-              alt={`صورة ${killer.name}`}
+              alt={t("accusation.portraitAlt", { name: killer.name })}
               width={912}
               height={1104}
               className={`absolute inset-0 size-full object-cover object-top transition-all duration-1000 ${
@@ -212,20 +216,22 @@ function Reveal() {
             />
           </div>
           <div className="p-6 sm:p-8">
-            <Eyebrow>لحظة كشف الحقيقة</Eyebrow>
+            <Eyebrow>{t("reveal.revealMoment")}</Eyebrow>
             <h2
-              className={`mt-3 text-4xl font-extrabold transition-all duration-700 sm:text-5xl ${
+              className={`mt-3 text-3xl font-extrabold transition-all duration-700 sm:text-5xl ${
                 step >= 4 ? "opacity-100 blur-0" : "opacity-0 blur-sm"
               }`}
             >
               {solution.killer}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              {killer.role} · {killer.age} سنة
+              {killer.role} · {t("reveal.years", { n: killer.age })}
             </p>
             <div className="mt-6">
-              <Eyebrow>سبب الجريمة</Eyebrow>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{solution.motive}</p>
+              <Eyebrow>{t("reveal.motive")}</Eyebrow>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {solution.motive}
+              </p>
             </div>
           </div>
         </div>
@@ -233,18 +239,18 @@ function Reveal() {
 
       {/* 5 — اتهام الفريق مقابل الحقيقة */}
       <Panel className={`mt-5 ${fade(5)}`}>
-        <Eyebrow>الخطوة الخامسة</Eyebrow>
+        <Eyebrow>{t("reveal.step5")}</Eyebrow>
         <h2 className="mt-1.5 text-2xl font-extrabold">
-          {correct ? "أحسنتوا... حليتوا القضية 🔍" : "القضية خدعتكم."}
+          {correct ? t("reveal.solved") : t("reveal.fooled")}
         </h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-border bg-surface-2 p-4">
-            <Eyebrow>اتهام الفريق</Eyebrow>
+            <Eyebrow>{t("reveal.teamAccusation")}</Eyebrow>
             <div className="mt-3 flex items-center gap-3">
               {accusedSuspect && (
                 <img
                   src={accusedSuspect.portrait}
-                  alt={`صورة ${accusedSuspect.name}`}
+                  alt={t("accusation.portraitAlt", { name: accusedSuspect.name })}
                   loading="lazy"
                   width={912}
                   height={1104}
@@ -252,7 +258,9 @@ function Reveal() {
                 />
               )}
               <div className="min-w-0">
-                <p className="truncate text-lg font-bold">{accusedSuspect?.name ?? "ما ثبتوا اتهام"}</p>
+                <p className="truncate text-lg font-bold">
+                  {accusedSuspect?.name ?? t("reveal.noAccusation")}
+                </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {accusedSuspect?.role ?? "—"}
                 </p>
@@ -260,11 +268,11 @@ function Reveal() {
             </div>
           </div>
           <div className="rounded-xl border border-primary/40 bg-surface-2 p-4">
-            <Eyebrow>الحقيقة</Eyebrow>
+            <Eyebrow>{t("reveal.title")}</Eyebrow>
             <div className="mt-3 flex items-center gap-3">
               <img
                 src={killer.portrait}
-                alt={`صورة ${killer.name}`}
+                alt={t("accusation.portraitAlt", { name: killer.name })}
                 loading="lazy"
                 width={912}
                 height={1104}
@@ -280,8 +288,8 @@ function Reveal() {
         {!correct && (
           <div className="mt-5 rounded-xl border border-primary/35 bg-surface-2 p-4">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="size-4 text-primary" />
-              <Eyebrow>الخيوط اللي فاتتكم أو قريتوها غلط</Eyebrow>
+              <AlertTriangle className="size-4 shrink-0 text-primary" />
+              <Eyebrow>{t("reveal.missedClues")}</Eyebrow>
             </div>
             <ul className="mt-3 space-y-2.5">
               {solution.provingClues.slice(0, 3).map((c, i) => (
@@ -293,7 +301,7 @@ function Reveal() {
                 .filter((item) => !unlocked.includes(item.id))
                 .map((item) => (
                   <li key={item.id} className="text-sm leading-relaxed text-muted-foreground">
-                    ما لقيتوا «{item.title}» — {item.detail}
+                    {t("reveal.missedEvidence", { title: item.title, detail: item.detail })}
                   </li>
                 ))}
             </ul>
@@ -305,16 +313,16 @@ function Reveal() {
       <Panel className={`mt-5 ${fade(6)}`}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="min-w-0">
-            <Eyebrow>تقييم أداء الفريق</Eyebrow>
+            <Eyebrow>{t("reveal.teamScore")}</Eyebrow>
             <h2 className="mt-1.5 flex items-center gap-2 text-2xl font-extrabold">
-              <Trophy className="size-5 text-evidence" /> {score.rank}
+              <Trophy className="size-5 shrink-0 text-evidence" /> {pick(score.rank, score.rankEn)}
             </h2>
           </div>
           <div className="shrink-0 text-center">
             <p className="font-mono text-4xl font-extrabold text-primary tabular-nums">
               {score.total}
             </p>
-            <p className="font-display text-xs text-muted-foreground">من ١٠٠</p>
+            <p className="font-display text-xs text-muted-foreground">{t("reveal.outOf")}</p>
           </div>
         </div>
 
@@ -322,8 +330,10 @@ function Reveal() {
           {score.breakdown.map((b) => (
             <li key={b.label} className="rounded-xl border border-border bg-surface-2 px-4 py-3">
               <div className="flex items-center justify-between gap-3">
-                <span className="truncate text-sm font-bold">{b.label}</span>
-                <span className="shrink-0 font-mono text-xs text-primary tabular-nums">
+                <span className="min-w-0 truncate text-sm font-bold">
+                  {pick(b.label, b.labelEn)}
+                </span>
+                <span dir="ltr" className="shrink-0 font-mono text-xs text-primary tabular-nums">
                   {b.points}/{b.max}
                 </span>
               </div>
@@ -333,7 +343,7 @@ function Reveal() {
                   style={{ width: `${(b.points / b.max) * 100}%` }}
                 />
               </div>
-              <p className="mt-1.5 text-xs text-muted-foreground">{b.detail}</p>
+              <p className="mt-1.5 text-xs text-muted-foreground">{pick(b.detail, b.detailEn)}</p>
             </li>
           ))}
         </ul>
@@ -342,23 +352,23 @@ function Reveal() {
       {/* ملخص التحقيق */}
       <Panel className={`mt-5 ${fade(6)}`}>
         <div className="flex items-center gap-2">
-          <ScanSearch className="size-4 text-muted-foreground" />
-          <Eyebrow>ملخص التحقيق</Eyebrow>
+          <ScanSearch className="size-4 shrink-0 text-muted-foreground" />
+          <Eyebrow>{t("reveal.summary")}</Eyebrow>
         </div>
         <ul className="mt-4 grid gap-2.5 sm:grid-cols-2">
           {[
-            { k: "الأدلة اللي لقيتوها", v: `${score.evidenceFound}/${score.evidenceTotal}` },
-            { k: "التناقضات المكتشفة", v: `${score.contradictions}` },
-            { k: "مدة التحقيق", v: formatDuration(score.seconds) },
-            { k: "المشتبه اللي اخترتوه", v: score.accusedName },
-            { k: "القاتل الحقيقي", v: solution.killer },
-            { k: "النتيجة النهائية", v: `${score.total}/100` },
+            { k: t("reveal.sumFound"), v: `${score.evidenceFound}/${score.evidenceTotal}` },
+            { k: t("reveal.sumContradictions"), v: `${score.contradictions}` },
+            { k: t("reveal.sumDuration"), v: formatDuration(score.seconds, lang) },
+            { k: t("reveal.sumAccused"), v: score.accusedName },
+            { k: t("reveal.sumKiller"), v: solution.killer },
+            { k: t("reveal.sumTotal"), v: `${score.total}/100` },
           ].map((row) => (
             <li
               key={row.k}
               className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-2 px-4 py-3"
             >
-              <span className="truncate text-sm text-muted-foreground">{row.k}</span>
+              <span className="min-w-0 truncate text-sm text-muted-foreground">{row.k}</span>
               <span className="shrink-0 font-mono text-sm">{row.v}</span>
             </li>
           ))}
@@ -373,10 +383,10 @@ function Reveal() {
               navigate({ to: "/lobby" });
             }}
           >
-            <RotateCcw className="size-4" /> إعادة القضية
+            <RotateCcw className="size-4" /> {t("reveal.replay")}
           </ActionButton>
         ) : (
-          <CaseTag>إعادة القضية بيد قائد الغرفة</CaseTag>
+          <CaseTag>{t("reveal.replayHost")}</CaseTag>
         )}
         <ActionButton
           variant="outline"
@@ -385,7 +395,7 @@ function Reveal() {
             navigate({ to: "/" });
           }}
         >
-          <Home className="size-4" /> قضية جديدة
+          <Home className="size-4" /> {t("reveal.newCase")}
         </ActionButton>
       </div>
     </GameShell>

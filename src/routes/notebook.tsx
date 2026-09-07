@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import { CaseNotebook } from "@/components/game/case-notebook";
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
 import { TurnBanner } from "@/components/game/turn-banner";
+import { useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/notebook")({
   head: () => ({
@@ -28,14 +29,16 @@ export const Route = createFileRoute("/notebook")({
 
 function NotebookPage() {
   const navigate = useNavigate();
+  const { t, dir } = useI18n();
+  const Back = dir === "rtl" ? ArrowLeft : ArrowRight;
 
   return (
-    <GameShell title="دفتر القضية" right={<LeaveRoomButton />}>
+    <GameShell title={t("notebook.title")} right={<LeaveRoomButton />}>
       <div className="space-y-5">
         <TurnBanner />
         <CaseNotebook />
         <ActionButton variant="outline" onClick={() => navigate({ to: "/dashboard" })}>
-          <ArrowLeft className="size-4" /> رجوع للوحة التحقيق
+          <Back className="size-4" /> {t("notebook.back")}
         </ActionButton>
       </div>
     </GameShell>

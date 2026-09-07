@@ -20,6 +20,8 @@ const inputSchema = z.object({
   confrontEvidenceId: z.string().nullable().optional(),
   /** المحقق يواجه المشتبه فيه بتناقض مرصود سابقاً. */
   contradictionConfront: z.boolean().optional(),
+  /** لغة الواجهة — المشتبه فيه يرد بنفس اللغة اللي اختارها اللاعب. */
+  lang: z.enum(["ar", "en"]).optional(),
   transcript: z
     .array(
       z.object({
@@ -47,7 +49,12 @@ export const askSuspect = createServerFn({ method: "POST" })
     const { classifyQuestion, shapeStressDelta } = await import("./stress.server");
     const { validateContradiction } = await import("./contradictions.server");
     const { fallbackReply } = await import("./interrogation-fallback.server");
-    const { system, user } = buildSuspectPrompt(profile, data);
+    const built = buildSuspectPrompt(profile, data);
+    const system =
+      data.lang === "en"
+        ? `${built.system}\n\nLANGUAGE: Answer only in natural, colloquial spoken English. Keep the same character, the same facts and the same short line length. Never switch to Arabic.`
+        : built.system;
+    const user = built.user;
 
     const linkedIds = linkedEvidenceIds(profile);
     const kind = classifyQuestion({
