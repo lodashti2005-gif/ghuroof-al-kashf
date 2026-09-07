@@ -34,7 +34,7 @@ export const Route = createFileRoute("/accusation")({
 function Accusation() {
   const { room, me, isHost, actions } = useRoom();
   const navigate = useNavigate();
-  const { t, lang } = useI18n();
+  const { t, lang, pick } = useI18n();
   const [selected, setSelected] = useState<string | null>(null);
   const [, tick] = useState(0);
 
@@ -111,7 +111,9 @@ function Accusation() {
             <div className="relative min-h-[14rem]">
               <img
                 src={accusedSuspect.portrait}
-                alt={t("accusation.portraitAlt", { name: accusedSuspect.name })}
+                alt={t("accusation.portraitAlt", {
+                  name: pick(accusedSuspect.name, accusedSuspect.nameEn),
+                })}
                 width={912}
                 height={1104}
                 className="absolute inset-0 size-full object-cover object-top"
@@ -120,8 +122,12 @@ function Accusation() {
             </div>
             <div className="p-6">
               <Eyebrow>{t("accusation.teamDecision")}</Eyebrow>
-              <h2 className="mt-2 text-2xl font-extrabold sm:text-3xl">{accusedSuspect.name}</h2>
-              <p className="mt-1.5 text-sm text-muted-foreground">{accusedSuspect.role}</p>
+              <h2 className="mt-2 text-2xl font-extrabold sm:text-3xl">
+                {pick(accusedSuspect.name, accusedSuspect.nameEn)}
+              </h2>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                {pick(accusedSuspect.role, accusedSuspect.roleEn)}
+              </p>
               <div className="mt-5">
                 {isHost ? (
                   <ActionButton
@@ -153,7 +159,7 @@ function Accusation() {
               </h2>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
                 {t("accusation.tieBody", {
-                  names: candidates.map((c) => c.name).join(joiner),
+                  names: candidates.map((c) => pick(c.name, c.nameEn)).join(joiner),
                 })}
               </p>
             </div>
@@ -189,7 +195,7 @@ function Accusation() {
                 <div className="relative min-h-[9rem]">
                   <img
                     src={s.portrait}
-                    alt={t("accusation.portraitAlt", { name: s.name })}
+                    alt={t("accusation.portraitAlt", { name: pick(s.name, s.nameEn) })}
                     loading="lazy"
                     width={912}
                     height={1104}
@@ -199,8 +205,10 @@ function Accusation() {
                 </div>
                 <div className="flex min-w-0 flex-col justify-center gap-2 py-4 pe-4">
                   <div className="min-w-0">
-                    <h2 className="truncate text-lg font-bold">{s.name}</h2>
-                    <p className="truncate text-xs text-muted-foreground">{s.role}</p>
+                    <h2 className="truncate text-lg font-bold">{pick(s.name, s.nameEn)}</h2>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {pick(s.role, s.roleEn)}
+                    </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     {complete ? (

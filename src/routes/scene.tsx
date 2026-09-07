@@ -34,7 +34,7 @@ export const Route = createFileRoute("/scene")({
 function SceneRoute() {
   const { room, me, actions } = useRoom();
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, pick } = useI18n();
   const unlockedIds = room?.unlockedEvidence ?? [];
   // وقت النقاش: المشاهدة مفتوحة للجميع، بس ما ينكتشف دليل جديد.
   const { discussion, awaitingNextRound, finalPhase } = useTurn();
@@ -141,7 +141,7 @@ function SceneRoute() {
             <Eyebrow>{t("scene.eyebrow")}</Eyebrow>
             <h1 className="mt-1.5 text-xl font-bold sm:text-2xl">{t("scene.title")}</h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              {caseFile.victim.location} — {t("scene.intro")}
+              {pick(caseFile.victim.location, caseFile.victim.locationEn)} — {t("scene.intro")}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -328,9 +328,11 @@ function SceneRoute() {
                           className="size-12 shrink-0 rounded-md"
                         />
                         <span className="min-w-0">
-                          <span className="block truncate text-sm font-bold">{item.title}</span>
+                          <span className="block truncate text-sm font-bold">
+                            {pick(item.title, item.titleEn)}
+                          </span>
                           <span className="block font-mono text-[11px] text-muted-foreground">
-                            {item.number}
+                            {pick(item.number, item.numberEn)}
                           </span>
                         </span>
                       </button>
@@ -378,20 +380,22 @@ function SceneRoute() {
           >
             <SceneCrop
               crop={foundItem.crop}
-              alt={foundItem.title}
+              alt={pick(foundItem.title, foundItem.titleEn)}
               detail
               className="aspect-[16/10] max-h-[60vh] w-full"
             />
             <div className="p-5">
               <div className="flex items-center justify-between gap-3">
-                <span className="font-mono text-xs text-muted-foreground">{foundItem.number}</span>
+                <span className="font-mono text-xs text-muted-foreground">
+                  {pick(foundItem.number, foundItem.numberEn)}
+                </span>
                 <CaseTag tone="evidence">
                   {foundAdded ? t("scene.discoveredTag") : t("scene.suspiciousTag")}
                 </CaseTag>
               </div>
-              <h2 className="mt-2 text-xl font-bold">{foundItem.title}</h2>
+              <h2 className="mt-2 text-xl font-bold">{pick(foundItem.title, foundItem.titleEn)}</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {foundItem.description}
+                {pick(foundItem.description, foundItem.descriptionEn)}
               </p>
               <p className="mt-2 text-xs text-muted-foreground">{t("scene.relationNote")}</p>
               <div className="mt-5 flex flex-col gap-2 sm:flex-row">

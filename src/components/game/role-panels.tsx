@@ -11,8 +11,10 @@ import { evidence as allEvidence, suspects } from "@/game/case-data";
 import { cameraLog, forensicNotes, statementLog, timelineRows } from "@/game/role-intel";
 import { roleById } from "@/game/roles";
 import type { Note, RoomState } from "@/game/types";
+import { useI18n } from "@/i18n";
 
 function ShareButton({ onShare }: { onShare: () => void }) {
+  const { pick } = useI18n();
   const [done, setDone] = useState(false);
   return (
     <button
@@ -24,26 +26,29 @@ function ShareButton({ onShare }: { onShare: () => void }) {
       }}
       className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-evidence/45 bg-evidence/10 px-2.5 py-1.5 text-[0.7rem] font-bold text-evidence transition-colors hover:bg-evidence/20"
     >
-      <Share2 className="size-3.5" /> {done ? "تمت المشاركة" : "شارك مع الفريق"}
+      <Share2 className="size-3.5" /> {done ? pick("تمت المشاركة", "Shared") : pick("شارك مع الفريق", "Share with team")}
     </button>
   );
 }
 
 /** بطاقة الدور: الاسم + وصف قصير للمهمة. */
 export function RoleBanner({ roleId }: { roleId?: string | null | undefined }) {
+  const { pick } = useI18n();
   const role = roleById(roleId);
   if (!role) return null;
   return (
     <Panel className="cine-in border-primary/30">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <Eyebrow>دورك بالتحقيق</Eyebrow>
+          <Eyebrow>{pick("دورك بالتحقيق", "Your role in the investigation")}</Eyebrow>
           <h2 className="mt-1 text-lg font-bold">
-            {role.emoji} {role.title}
+            {role.emoji} {pick(role.title, role.titleEn)}
           </h2>
-          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{role.mission}</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+            {pick(role.mission, role.missionEn)}
+          </p>
         </div>
-        <CaseTag>أدواتك فقط</CaseTag>
+        <CaseTag>{pick("أدواتك فقط", "Your tools only")}</CaseTag>
       </div>
     </Panel>
   );
@@ -57,19 +62,25 @@ export function ForensicsPanel({
   unlockedIds: string[];
   onShare: (text: string) => void;
 }) {
+  const { pick } = useI18n();
   const items = allEvidence.filter((e) => unlockedIds.includes(e.id));
+  const noteFor = (e: (typeof allEvidence)[number]) =>
+    pick(forensicNotes[e.id] ?? e.observation, e.detailEn ?? e.observationEn);
   return (
     <Panel className="cine-in">
       <div className="flex items-center gap-2">
         <FlaskConical className="size-4 text-evidence" />
-        <h2 className="font-display text-base font-bold">الفحص الجنائي</h2>
+        <h2 className="font-display text-base font-bold">{pick("الفحص الجنائي", "Forensic exam")}</h2>
       </div>
       <p className="mt-1.5 text-xs text-muted-foreground">
-        ملاحظات المعمل — تظهر لك فقط، وتقدر تشاركها مع الفريق.
+        {pick(
+          "ملاحظات المعمل — تظهر لك فقط، وتقدر تشاركها مع الفريق.",
+          "Lab notes — visible to you only, and you can share them with the team.",
+        )}
       </p>
       {items.length === 0 ? (
         <p className="mt-4 rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">
-          ما في أدلة مكتشفة للفحص بعد.
+          {pick("ما في أدلة مكتشفة للفحص بعد.", "No evidence discovered to examine yet.")}
         </p>
       ) : (
         <ul className="mt-4 space-y-3">
@@ -77,16 +88,20 @@ export function ForensicsPanel({
             <li key={e.id} className="rounded-xl border border-border bg-surface-2 p-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="font-mono text-[0.65rem] text-muted-foreground">{e.number}</p>
-                  <p className="mt-0.5 truncate text-sm font-bold">{e.title}</p>
+                  <p className="font-mono text-[0.65rem] text-muted-foreground">{pick(e.number, e.numberEn)}</p>
+                  <p className="mt-0.5 truncate text-sm font-bold">{pick(e.title, e.titleEn)}</p>
                 </div>
-                <ShareButton onShare={() => onShare(`فحص جنائي · ${e.title}: ${forensicNotes[e.id] ?? e.observation}`)} />
+                <ShareButton
+                  onShare={() =>
+                    onShare(
+                      `${pick("فحص جنائي", "Forensic exam")} · ${pick(e.title, e.titleEn)}: ${noteFor(e)}`,
+                    )
+                  }
+                />
               </div>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {forensicNotes[e.id] ?? e.observation}
-              </p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{noteFor(e)}</p>
               <p className="mt-1.5 font-mono text-[0.65rem] text-muted-foreground/80">
-                موقع الالتقاط: {e.foundAt}
+                {pick("موقع الالتقاط:", "Found at:")} {pick(e.foundAt, e.foundAtEn)}
               </p>
             </li>
           ))}
@@ -104,24 +119,32 @@ export function SurveillancePanel({
   unlockedIds: string[];
   onShare: (text: string) => void;
 }) {
+  const { pick } = useI18n();
   const rows = cameraLog.filter((r) => !r.requires || unlockedIds.includes(r.requires));
   return (
     <Panel className="cine-in">
       <div className="flex items-center gap-2">
         <Camera className="size-4 text-evidence" />
-        <h2 className="font-display text-base font-bold">سجل المراقبة</h2>
+        <h2 className="font-display text-base font-bold">{pick("سجل المراقبة", "Surveillance log")}</h2>
       </div>
       <p className="mt-1.5 text-xs text-muted-foreground">
-        لقطات المدخل والتحركات — بعض اللقطات تنفتح بعد اكتشاف الكاميرا بمسرح الجريمة.
+        {pick(
+          "لقطات المدخل والتحركات — بعض اللقطات تنفتح بعد اكتشاف الكاميرا بمسرح الجريمة.",
+          "Entrance footage and movements — some clips unlock once the camera is found at the crime scene.",
+        )}
       </p>
       <ul className="mt-4 space-y-2">
         {rows.map((r, i) => (
           <li key={i} className="flex items-start gap-3 rounded-xl border border-border bg-surface-2 p-3">
             <span dir="ltr" className="shrink-0 font-mono text-xs text-primary">
-              {r.time}
+              {pick(r.time, r.timeEn)}
             </span>
-            <span className="min-w-0 flex-1 text-sm leading-relaxed">{r.text}</span>
-            <ShareButton onShare={() => onShare(`مراقبة · ${r.time}: ${r.text}`)} />
+            <span className="min-w-0 flex-1 text-sm leading-relaxed">{pick(r.text, r.textEn)}</span>
+            <ShareButton
+              onShare={() =>
+                onShare(`${pick("مراقبة", "Surveillance")} · ${pick(r.time, r.timeEn)}: ${pick(r.text, r.textEn)}`)
+              }
+            />
           </li>
         ))}
       </ul>
@@ -137,15 +160,19 @@ export function TimelinePanel({
   unlockedIds: string[];
   onShare: (text: string) => void;
 }) {
+  const { pick } = useI18n();
   const rows = timelineRows.filter((r) => !r.requires || unlockedIds.includes(r.requires));
   return (
     <Panel className="cine-in">
       <div className="flex items-center gap-2">
         <Clock className="size-4 text-evidence" />
-        <h2 className="font-display text-base font-bold">الجدول الزمني</h2>
+        <h2 className="font-display text-base font-bold">{pick("الجدول الزمني", "Timeline")}</h2>
       </div>
       <p className="mt-1.5 text-xs text-muted-foreground">
-        رتّب الأوقات ولاحظ التعارض بين الأقوال والتسجيلات.
+        {pick(
+          "رتّب الأوقات ولاحظ التعارض بين الأقوال والتسجيلات.",
+          "Order the times and spot the conflicts between statements and records.",
+        )}
       </p>
       <ul className="mt-4 space-y-2">
         {rows.map((r, i) => (
@@ -156,18 +183,22 @@ export function TimelinePanel({
             }`}
           >
             <span dir="ltr" className="shrink-0 font-mono text-xs text-primary">
-              {r.time}
+              {pick(r.time, r.timeEn)}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-sm leading-relaxed">{r.text}</span>
+              <span className="block text-sm leading-relaxed">{pick(r.text, r.textEn)}</span>
               <span className="mt-1 block font-mono text-[0.62rem] text-muted-foreground">
-                {r.kind === "claim" ? "قول مشتبه" : "تسجيل / أثر مادي"}
-                {r.conflict ? " · تعارض زمني" : ""}
+                {r.kind === "claim" ? pick("قول مشتبه", "Suspect claim") : pick("تسجيل / أثر مادي", "Record / physical trace")}
+                {r.conflict ? pick(" · تعارض زمني", " · Timeline conflict") : ""}
               </span>
             </span>
             <ShareButton
               onShare={() =>
-                onShare(`جدول زمني · ${r.time}: ${r.text}${r.conflict ? " (تعارض زمني)" : ""}`)
+                onShare(
+                  `${pick("جدول زمني", "Timeline")} · ${pick(r.time, r.timeEn)}: ${pick(r.text, r.textEn)}${
+                    r.conflict ? pick(" (تعارض زمني)", " (timeline conflict)") : ""
+                  }`,
+                )
               }
             />
           </li>
@@ -185,15 +216,16 @@ export function RecordsPanel({
   room: RoomState | null;
   onShare: (text: string) => void;
 }) {
+  const { pick } = useI18n();
   const contradictions = room?.contradictions ?? [];
   const shared = (room?.notes ?? []).filter((n) => n.tag);
 
   const summary = [
-    `الأدلة المكتشفة: ${room?.unlockedEvidence.length ?? 0}`,
-    `التناقضات المرصودة: ${contradictions.length}`,
-    `الاستنتاجات: ${room?.deductions.length ?? 0}`,
-    `معلومات مشتركة من الفريق: ${shared.length}`,
-    ...contradictions.slice(0, 3).map((c) => `تناقض · ${c.suspectName}: ${c.claim}`),
+    `${pick("الأدلة المكتشفة:", "Discovered evidence:")} ${room?.unlockedEvidence.length ?? 0}`,
+    `${pick("التناقضات المرصودة:", "Contradictions flagged:")} ${contradictions.length}`,
+    `${pick("الاستنتاجات:", "Deductions:")} ${room?.deductions.length ?? 0}`,
+    `${pick("معلومات مشتركة من الفريق:", "Shared team info:")} ${shared.length}`,
+    ...contradictions.slice(0, 3).map((c) => `${pick("تناقض", "Contradiction")} · ${c.suspectName}: ${c.claim}`),
   ].join(" | ");
 
   return (
@@ -201,24 +233,33 @@ export function RecordsPanel({
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <FileText className="size-4 text-evidence" />
-          <h2 className="font-display text-base font-bold">ملف القضية</h2>
+          <h2 className="font-display text-base font-bold">{pick("ملف القضية", "Case file")}</h2>
         </div>
-        <ShareButton onShare={() => onShare(`ملخص القضية · ${summary}`)} />
+        <ShareButton onShare={() => onShare(`${pick("ملخص القضية", "Case summary")} · ${summary}`)} />
       </div>
       <p className="mt-1.5 text-xs text-muted-foreground">
-        سجل الأقوال والتناقضات والملخص النهائي قبل التصويت.
+        {pick(
+          "سجل الأقوال والتناقضات والملخص النهائي قبل التصويت.",
+          "The log of statements, contradictions and the final summary before the vote.",
+        )}
       </p>
 
-      <Eyebrow className="mt-4 block">أقوال المشتبه فيهم</Eyebrow>
+      <Eyebrow className="mt-4 block">{pick("أقوال المشتبه فيهم", "Suspect statements")}</Eyebrow>
       <ul className="mt-2 space-y-2">
         {statementLog.map((s) => (
           <li key={s.id} className="rounded-xl border border-border bg-surface-2 p-3">
             <div className="flex items-start justify-between gap-3">
-              <p className="truncate text-sm font-bold">{s.name}</p>
-              <ShareButton onShare={() => onShare(`أقوال ${s.name}: ${s.statements.join(" · ")}`)} />
+              <p className="truncate text-sm font-bold">{pick(s.name, s.nameEn)}</p>
+              <ShareButton
+                onShare={() =>
+                  onShare(
+                    `${pick("أقوال", "Statements from")} ${pick(s.name, s.nameEn)}: ${pick(s.statements, s.statementsEn).join(" · ")}`,
+                  )
+                }
+              />
             </div>
             <ul className="mt-1.5 space-y-1">
-              {s.statements.map((st, i) => (
+              {pick(s.statements, s.statementsEn).map((st, i) => (
                 <li key={i} className="text-xs leading-relaxed text-muted-foreground">
                   — {st}
                 </li>
@@ -228,10 +269,10 @@ export function RecordsPanel({
         ))}
       </ul>
 
-      <Eyebrow className="mt-5 block">التناقضات المسجلة</Eyebrow>
+      <Eyebrow className="mt-5 block">{pick("التناقضات المسجلة", "Recorded contradictions")}</Eyebrow>
       {contradictions.length === 0 ? (
         <p className="mt-2 rounded-lg border border-dashed border-border px-3 py-3 text-center text-xs text-muted-foreground">
-          ما في تناقضات مسجلة بعد.
+          {pick("ما في تناقضات مسجلة بعد.", "No contradictions recorded yet.")}
         </p>
       ) : (
         <ul className="mt-2 space-y-2">
@@ -240,12 +281,14 @@ export function RecordsPanel({
               <div className="flex items-start justify-between gap-3">
                 <p className="text-sm font-bold">{c.suspectName}</p>
                 <ShareButton
-                  onShare={() => onShare(`تناقض · ${c.suspectName}: ${c.claim} ↔ ${c.conflictsWith}`)}
+                  onShare={() =>
+                    onShare(`${pick("تناقض", "Contradiction")} · ${c.suspectName}: ${c.claim} ↔ ${c.conflictsWith}`)
+                  }
                 />
               </div>
               <p className="mt-1 text-xs leading-relaxed">{c.claim}</p>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                يتعارض مع: {c.conflictsWith}
+                {pick("يتعارض مع:", "Conflicts with:")} {c.conflictsWith}
               </p>
             </li>
           ))}
@@ -257,27 +300,28 @@ export function RecordsPanel({
 
 /** التناقضات المشتركة — للمحقق ومسؤول الملف. */
 export function ContradictionsPanel({ room }: { room: RoomState | null }) {
+  const { pick } = useI18n();
   const contradictions = room?.contradictions ?? [];
   return (
     <Panel className="cine-in">
       <div className="flex items-center gap-2">
         <AlertTriangle className="size-4 text-evidence" />
-        <h2 className="font-display text-base font-bold">التناقضات</h2>
+        <h2 className="font-display text-base font-bold">{pick("التناقضات", "Contradictions")}</h2>
       </div>
       {contradictions.length === 0 ? (
         <p className="mt-3 rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">
-          ما في تناقضات مرصودة بعد.
+          {pick("ما في تناقضات مرصودة بعد.", "No contradictions flagged yet.")}
         </p>
       ) : (
         <ul className="mt-3 space-y-2">
           {contradictions.map((c) => (
             <li key={c.id} className="rounded-xl border border-evidence/40 bg-evidence/8 p-3">
               <p className="text-sm font-bold">
-                {c.suspectName} {c.confronted ? "· تمت المواجهة" : ""}
+                {c.suspectName} {c.confronted ? pick("· تمت المواجهة", "· Confronted") : ""}
               </p>
               <p className="mt-1 text-xs leading-relaxed">{c.claim}</p>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                يتعارض مع: {c.conflictsWith}
+                {pick("يتعارض مع:", "Conflicts with:")} {c.conflictsWith}
               </p>
             </li>
           ))}
@@ -289,19 +333,20 @@ export function ContradictionsPanel({ room }: { room: RoomState | null }) {
 
 /** معلومات الفريق: كل ما شاركه اللاعبون من أدواتهم الخاصة. */
 export function TeamIntelPanel({ notes }: { notes: Note[] }) {
+  const { pick } = useI18n();
   const shared = notes.filter((n) => n.tag);
   return (
     <Panel className="cine-in">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Share2 className="size-4 text-muted-foreground" />
-          <h2 className="font-display text-sm font-bold">معلومات الفريق</h2>
+          <h2 className="font-display text-sm font-bold">{pick("معلومات الفريق", "Team intel")}</h2>
         </div>
         <CaseTag>{shared.length}</CaseTag>
       </div>
       {shared.length === 0 ? (
         <p className="mt-3 rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">
-          ما شارك أحد معلومة بعد.
+          {pick("ما شارك أحد معلومة بعد.", "No one has shared anything yet.")}
         </p>
       ) : (
         <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto pe-1">
@@ -326,11 +371,15 @@ export function TeamIntelPanel({ notes }: { notes: Note[] }) {
 
 /** رسالة بديلة لمن يكون الأداة مو من صلاحيات دور اللاعب. */
 export function RoleLockedNote({ text }: { text: string }) {
+  const { pick } = useI18n();
   return (
     <Panel className="cine-in border-dashed">
       <p className="text-sm leading-relaxed text-muted-foreground">{text}</p>
       <p className="mt-1.5 text-xs text-muted-foreground/80">
-        هذي الأداة تخص دور ثاني بالفريق — تابع «معلومات الفريق» لمن يشاركونك النتيجة.
+        {pick(
+          "هذي الأداة تخص دور ثاني بالفريق — تابع «معلومات الفريق» لمن يشاركونك النتيجة.",
+          "This tool belongs to another role on the team — check \"Team intel\" once they share the result.",
+        )}
       </p>
     </Panel>
   );

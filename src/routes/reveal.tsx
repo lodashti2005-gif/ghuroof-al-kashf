@@ -88,12 +88,12 @@ function Reveal() {
               <p dir="ltr" className="text-start font-mono text-xs text-muted-foreground">
                 {item.time}
               </p>
-              <p className="mt-1 text-sm leading-relaxed">{item.text}</p>
+              <p className="mt-1 text-sm leading-relaxed">{pick(item.text, item.textEn)}</p>
             </li>
           ))}
         </ol>
         <p className="mt-5 rounded-xl border border-border bg-surface-2 p-4 text-sm leading-relaxed text-muted-foreground">
-          {solution.method}
+          {pick(solution.method, solution.methodEn)}
         </p>
       </Panel>
 
@@ -118,15 +118,17 @@ function Reveal() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="min-w-0 truncate text-sm font-bold">
                     <span className="me-2 font-mono text-xs text-muted-foreground">
-                      {item.number}
+                      {pick(item.number, item.numberEn)}
                     </span>
-                    {item.title}
+                    {pick(item.title, item.titleEn)}
                   </h3>
                   <CaseTag tone={found ? "evidence" : "danger"}>
                     {found ? t("reveal.foundTag") : t("reveal.missedTag")}
                   </CaseTag>
                 </div>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.detail}</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {pick(item.detail, item.detailEn)}
+                </p>
               </li>
             );
           })}
@@ -136,9 +138,11 @@ function Reveal() {
             <Fingerprint className="size-4 shrink-0 text-evidence" />
             <Eyebrow>{t("reveal.decisive")}</Eyebrow>
           </div>
-          <h3 className="mt-2 text-base font-bold">{solution.decisive.title}</h3>
+          <h3 className="mt-2 text-base font-bold">
+            {pick(solution.decisive.title, solution.decisive.titleEn)}
+          </h3>
           <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-            {solution.decisive.text}
+            {pick(solution.decisive.text, solution.decisive.textEn)}
           </p>
         </div>
       </Panel>
@@ -151,20 +155,22 @@ function Reveal() {
           {solution.liars.map((l) => (
             <li key={l.name} className="rounded-xl border border-border bg-surface-2 p-4">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="min-w-0 truncate text-sm font-bold">{l.name}</h3>
+                <h3 className="min-w-0 truncate text-sm font-bold">{pick(l.name, l.nameEn)}</h3>
                 <CaseTag tone={l.name === solution.killer ? "danger" : "muted"}>
                   {l.name === solution.killer ? t("reveal.killerTag") : t("reveal.partialLie")}
                 </CaseTag>
               </div>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{l.lie}</p>
-              <p className="mt-1.5 text-sm leading-relaxed">{l.why}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {pick(l.lie, l.lieEn)}
+              </p>
+              <p className="mt-1.5 text-sm leading-relaxed">{pick(l.why, l.whyEn)}</p>
             </li>
           ))}
         </ul>
         <div className="mt-5">
           <Eyebrow>{t("reveal.howLinked")}</Eyebrow>
           <ul className="mt-3 space-y-3">
-            {solution.provingClues.map((c, i) => (
+            {pick(solution.provingClues, solution.provingCluesEn).map((c, i) => (
               <li key={i} className="flex gap-3 text-sm leading-relaxed text-muted-foreground">
                 <span className="mt-0.5 shrink-0 font-mono text-xs text-evidence">
                   {String(i + 1).padStart(2, "0")}
@@ -202,7 +208,7 @@ function Reveal() {
           <div className="relative min-h-[18rem] md:min-h-[24rem]">
             <img
               src={killer.portrait}
-              alt={t("accusation.portraitAlt", { name: killer.name })}
+              alt={t("accusation.portraitAlt", { name: pick(killer.name, killer.nameEn) })}
               width={912}
               height={1104}
               className={`absolute inset-0 size-full object-cover object-top transition-all duration-1000 ${
@@ -222,15 +228,15 @@ function Reveal() {
                 step >= 4 ? "opacity-100 blur-0" : "opacity-0 blur-sm"
               }`}
             >
-              {solution.killer}
+              {pick(solution.killer, solution.killerEn)}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              {killer.role} · {t("reveal.years", { n: killer.age })}
+              {pick(killer.role, killer.roleEn)} · {t("reveal.years", { n: killer.age })}
             </p>
             <div className="mt-6">
               <Eyebrow>{t("reveal.motive")}</Eyebrow>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {solution.motive}
+                {pick(solution.motive, solution.motiveEn)}
               </p>
             </div>
           </div>
@@ -250,7 +256,9 @@ function Reveal() {
               {accusedSuspect && (
                 <img
                   src={accusedSuspect.portrait}
-                  alt={t("accusation.portraitAlt", { name: accusedSuspect.name })}
+                  alt={t("accusation.portraitAlt", {
+                    name: pick(accusedSuspect.name, accusedSuspect.nameEn),
+                  })}
                   loading="lazy"
                   width={912}
                   height={1104}
@@ -259,10 +267,12 @@ function Reveal() {
               )}
               <div className="min-w-0">
                 <p className="truncate text-lg font-bold">
-                  {accusedSuspect?.name ?? t("reveal.noAccusation")}
+                  {accusedSuspect
+                    ? pick(accusedSuspect.name, accusedSuspect.nameEn)
+                    : t("reveal.noAccusation")}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {accusedSuspect?.role ?? "—"}
+                  {accusedSuspect ? pick(accusedSuspect.role, accusedSuspect.roleEn) : "—"}
                 </p>
               </div>
             </div>
@@ -272,15 +282,17 @@ function Reveal() {
             <div className="mt-3 flex items-center gap-3">
               <img
                 src={killer.portrait}
-                alt={t("accusation.portraitAlt", { name: killer.name })}
+                alt={t("accusation.portraitAlt", { name: pick(killer.name, killer.nameEn) })}
                 loading="lazy"
                 width={912}
                 height={1104}
                 className="size-14 shrink-0 rounded-lg border border-border object-cover object-top"
               />
               <div className="min-w-0">
-                <p className="truncate text-lg font-bold">{killer.name}</p>
-                <p className="truncate text-xs text-muted-foreground">{killer.role}</p>
+                <p className="truncate text-lg font-bold">{pick(killer.name, killer.nameEn)}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {pick(killer.role, killer.roleEn)}
+                </p>
               </div>
             </div>
           </div>
@@ -301,7 +313,10 @@ function Reveal() {
                 .filter((item) => !unlocked.includes(item.id))
                 .map((item) => (
                   <li key={item.id} className="text-sm leading-relaxed text-muted-foreground">
-                    {t("reveal.missedEvidence", { title: item.title, detail: item.detail })}
+                    {t("reveal.missedEvidence", {
+                      title: pick(item.title, item.titleEn),
+                      detail: pick(item.detail, item.detailEn),
+                    })}
                   </li>
                 ))}
             </ul>
@@ -361,7 +376,7 @@ function Reveal() {
             { k: t("reveal.sumContradictions"), v: `${score.contradictions}` },
             { k: t("reveal.sumDuration"), v: formatDuration(score.seconds, lang) },
             { k: t("reveal.sumAccused"), v: score.accusedName },
-            { k: t("reveal.sumKiller"), v: solution.killer },
+            { k: t("reveal.sumKiller"), v: pick(solution.killer, solution.killerEn) },
             { k: t("reveal.sumTotal"), v: `${score.total}/100` },
           ].map((row) => (
             <li

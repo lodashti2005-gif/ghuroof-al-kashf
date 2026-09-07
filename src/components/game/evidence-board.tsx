@@ -17,8 +17,37 @@ import { ActionButton } from "@/components/game/shell";
 import { SceneCrop } from "@/components/game/scene-crop";
 import { CaseTag, Eyebrow } from "@/components/game/ui";
 import { evidence as allEvidence, findEvidenceLink, suspects } from "@/game/case-data";
-import { forensicNotes } from "@/game/role-intel";
+import { useI18n } from "@/i18n";
 import type { Deduction, EvidenceItem } from "@/game/types";
+
+const BOARD_TEXT = {
+  empty: {
+    ar: "اللوحة فاضية. دقّقوا بمسرح الجريمة واسألوا المشتبه فيهم — كل شي تكتشفونه ينعلّق هني.",
+    en: "The board is empty. Search the crime scene and question the suspects — anything you find gets pinned here.",
+  },
+  linkEvidence: { ar: "ربط دليلين", en: "Link two clues" },
+  cancelLink: { ar: "إلغاء الربط", en: "Cancel linking" },
+  pickTwoHint: { ar: "اختر دليلين مكتشفين ثم اضغط «تحليل الرابط».", en: "Pick two discovered clues, then tap “Analyze the link”." },
+  pickTwoFromBoard: { ar: "اختر دليلين من الأدلة المعلّقة على اللوحة.", en: "Pick two clues pinned on the board." },
+  selected: { ar: "محدد", en: "Selected" },
+  analyzeLink: { ar: "تحليل الرابط", en: "Analyze the link" },
+  newDeduction: { ar: "استنتاج جديد", en: "New deduction" },
+  savedNote: { ar: "انحفظ باللوحة تحت «الاستنتاجات».", en: "Saved on the board under “Deductions”." },
+  noClearLink: { ar: "ما في رابط واضح بين هالدليلين.", en: "There's no clear link between these two clues." },
+  deductions: { ar: "الاستنتاجات", en: "Deductions" },
+  useInInterrogation: { ar: "استخدم في الاستجواب", en: "Use in interrogation" },
+  openEvidence: { ar: "افتح", en: "Open" },
+  discovered: { ar: "مكتشف", en: "Found" },
+  close: { ar: "إغلاق", en: "Close" },
+  investigatorNote: { ar: "ملاحظة المحقق", en: "Investigator's note" },
+  observationNote: {
+    ar: "الملاحظة وصفية فقط — لمن يخص هذا الدليل يتحدد من ردود المشتبه فيهم.",
+    en: "This observation is descriptive only — who it points to is decided by the suspects' answers.",
+  },
+  forensicNote: { ar: "ملاحظة جنائية · خاصة بالخبير الجنائي", en: "Forensic note · for the forensic expert only" },
+  confrontWho: { ar: "واجه مين بهذا الدليل؟", en: "Who do you want to confront with this evidence?" },
+  back: { ar: "رجوع", en: "Back" },
+} as const;
 
 const ICONS = {
   watch: Watch,
@@ -60,6 +89,8 @@ export function EvidenceBoard({
   /** يستخدم استنتاج محفوظ بمواجهة مشتبه. */
   onUseDeduction?: (text: string, suspectId: string) => void;
 }) {
+  const { lang, pick } = useI18n();
+  const bt = <K extends keyof typeof BOARD_TEXT>(k: K) => pick(BOARD_TEXT[k].ar, BOARD_TEXT[k].en);
   const [openId, setOpenId] = useState<string | null>(null);
   const [linking, setLinking] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
@@ -96,9 +127,7 @@ export function EvidenceBoard({
   if (items.length === 0) {
     return (
       <div className="surface-panel cine-in px-5 py-10 text-center">
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          اللوحة فاضية. دقّقوا بمسرح الجريمة واسألوا المشتبه فيهم — كل شي تكتشفونه ينعلّق هني.
-        </p>
+        <p className="text-sm leading-relaxed text-muted-foreground">{bt("empty")}</p>
       </div>
     );
   }
@@ -112,12 +141,10 @@ export function EvidenceBoard({
             className="py-2.5"
             onClick={() => (linking ? resetLinking() : setLinking(true))}
           >
-            <Link2 className="size-4" /> {linking ? "إلغاء الربط" : "ربط دليلين"}
+            <Link2 className="size-4" /> {linking ? bt("cancelLink") : bt("linkEvidence")}
           </ActionButton>
           {linking && (
-            <p className="text-xs text-muted-foreground">
-              اختر دليلين مكتشفين ثم اضغط «تحليل الرابط».
-            </p>
+            <p className="text-xs text-muted-foreground">{bt("pickTwoHint")}</p>
           )}
         </div>
       )}
@@ -125,19 +152,17 @@ export function EvidenceBoard({
       {linking && (
         <div className="cine-in mb-4 rounded-xl border border-border bg-surface-2 p-3">
           {picked.length < 2 ? (
-            <p className="text-sm text-muted-foreground">
-              اختر دليلين من الأدلة المعلّقة على اللوحة.
-            </p>
+            <p className="text-sm text-muted-foreground">{bt("pickTwoFromBoard")}</p>
           ) : (
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-foreground">
-                محدد: {items
+                {bt("selected")}: {items
                   .filter((e) => picked.includes(e.id))
-                  .map((e) => e.title)
+                  .map((e) => pick(e.title, e.titleEn))
                   .join(" + ")}
               </p>
               <ActionButton className="py-2" onClick={() => tryLink(picked)}>
-                <Search className="size-4" /> تحليل الرابط
+                <Search className="size-4" /> {bt("analyzeLink")}
               </ActionButton>
             </div>
           )}
@@ -154,15 +179,15 @@ export function EvidenceBoard({
         >
           {linkResult.ok ? (
             <>
-              <Eyebrow>استنتاج جديد</Eyebrow>
+              <Eyebrow>{bt("newDeduction")}</Eyebrow>
               <h4 className="mt-1.5 flex items-center gap-2 text-base font-bold">
                 <Lightbulb className="size-4 shrink-0 text-evidence" /> {linkResult.title}
               </h4>
               <p className="mt-1.5 text-sm leading-relaxed">{linkResult.insight}</p>
-              <p className="mt-2 text-xs text-muted-foreground">انحفظ باللوحة تحت «الاستنتاجات».</p>
+              <p className="mt-2 text-xs text-muted-foreground">{bt("savedNote")}</p>
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">ما في رابط واضح بين هالدليلين.</p>
+            <p className="text-sm text-muted-foreground">{bt("noClearLink")}</p>
           )}
         </div>
       )}
@@ -182,7 +207,7 @@ export function EvidenceBoard({
 
       {(canLink || canConfront) && deductions.length > 0 && (
         <div className="mt-6 space-y-3">
-          <Eyebrow>الاستنتاجات</Eyebrow>
+          <Eyebrow>{bt("deductions")}</Eyebrow>
           {deductions.map((d) => (
             <DeductionCard key={d.id} deduction={d} onUse={canConfront ? onUseDeduction : undefined} />
           ))}
@@ -211,6 +236,7 @@ function DeductionCard({
   deduction: Deduction;
   onUse?: ((text: string, suspectId: string) => void) | undefined;
 }) {
+  const { pick } = useI18n();
   const [picking, setPicking] = useState(false);
   return (
     <div className="cine-in surface-panel border-evidence/35 p-4">
@@ -221,7 +247,7 @@ function DeductionCard({
       {onUse &&
         (!picking ? (
           <ActionButton variant="outline" className="mt-3 w-full py-2.5" onClick={() => setPicking(true)}>
-            استخدم في الاستجواب
+            {pick("استخدم في الاستجواب", "Use in interrogation")}
           </ActionButton>
         ) : (
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -233,17 +259,17 @@ function DeductionCard({
                   setPicking(false);
                   onUse(deduction.insight, s.id);
                 }}
-                className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 p-2.5 text-right transition-colors hover:border-primary/55"
+                className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 p-2.5 text-start transition-colors hover:border-primary/55"
               >
                 <img
                   src={s.portrait}
-                  alt={s.name}
+                  alt={pick(s.name, s.nameEn)}
                   loading="lazy"
                   className="size-10 shrink-0 rounded-lg border border-border object-cover object-top grayscale-[35%]"
                 />
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-bold">{s.name}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{s.role}</span>
+                  <span className="block truncate text-sm font-bold">{pick(s.name, s.nameEn)}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{pick(s.role, s.roleEn)}</span>
                 </span>
               </button>
             ))}
@@ -262,33 +288,35 @@ function BoardPin({
   onOpen: () => void;
   selected?: boolean;
 }) {
+  const { pick } = useI18n();
   const Icon = ICONS[item.icon];
+  const title = pick(item.title, item.titleEn);
   return (
     <button
       type="button"
       onClick={onOpen}
-      aria-label={`افتح ${item.title}`}
-      className={`group cine-in surface-panel relative flex w-full flex-col gap-3 p-3 text-right transition-all duration-300 hover:-translate-y-0.5 hover:border-evidence/55 ${
+      aria-label={`${pick("افتح", "Open")} ${title}`}
+      className={`group cine-in surface-panel relative flex w-full flex-col gap-3 p-3 text-start transition-all duration-300 hover:-translate-y-0.5 hover:border-evidence/55 ${
         selected ? "border-primary/70 ring-1 ring-primary/40" : ""
       }`}
     >
       {/* Evidence tape + pin details */}
-      <span className="pointer-events-none absolute -top-2 right-6 z-10 h-5 w-16 rotate-[-6deg] rounded-[2px] bg-evidence/25 ring-1 ring-evidence/35" />
-      <span className="pointer-events-none absolute -top-1.5 left-5 z-10 size-2.5 rounded-full bg-primary/80 shadow-[0_0_0_3px_color-mix(in_oklab,var(--primary)_22%,transparent)]" />
+      <span className="pointer-events-none absolute -top-2 end-6 z-10 h-5 w-16 rotate-[-6deg] rounded-[2px] bg-evidence/25 ring-1 ring-evidence/35" />
+      <span className="pointer-events-none absolute -top-1.5 start-5 z-10 size-2.5 rounded-full bg-primary/80 shadow-[0_0_0_3px_color-mix(in_oklab,var(--primary)_22%,transparent)]" />
       <span className="relative block h-36 w-full overflow-hidden rounded-lg border border-evidence/25">
         <SceneCrop
           crop={item.crop}
-          alt={item.title}
+          alt={title}
           className="absolute inset-0 size-full transition-transform duration-700 group-hover:scale-[1.05]"
         />
         <span className="absolute inset-0 bg-gradient-to-t from-card/85 via-transparent to-transparent" />
-        <span className="absolute bottom-2 left-2 rounded-md border border-evidence/40 bg-card/85 px-2 py-1 font-mono text-[0.65rem] text-evidence">
-          {item.number}
+        <span className="absolute bottom-2 start-2 rounded-md border border-evidence/40 bg-card/85 px-2 py-1 font-mono text-[0.65rem] text-evidence">
+          {pick(item.number, item.numberEn)}
         </span>
       </span>
       <span className="flex items-center gap-2">
         <Icon className="size-4 shrink-0 text-evidence" strokeWidth={1.7} />
-        <span className="truncate text-base font-bold">{item.title}</span>
+        <span className="truncate text-base font-bold">{title}</span>
       </span>
     </button>
   );
@@ -307,14 +335,17 @@ function EvidenceDetail({
   canConfront?: boolean;
   forensics?: boolean;
 }) {
+  const { pick } = useI18n();
+  const bt = <K extends keyof typeof BOARD_TEXT>(k: K) => pick(BOARD_TEXT[k].ar, BOARD_TEXT[k].en);
   const [picking, setPicking] = useState(false);
   const Icon = ICONS[item.icon];
+  const title = pick(item.title, item.titleEn);
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={item.title}
+      aria-label={title}
       onClick={onClose}
       className="fixed inset-0 z-50 overflow-y-auto bg-background/92 p-4 backdrop-blur-sm"
     >
@@ -324,24 +355,24 @@ function EvidenceDetail({
       >
         <SceneCrop
           crop={item.crop}
-          alt={item.title}
+          alt={title}
           detail
           className="aspect-[4/3] max-h-[62vh] w-full"
         />
         <div className="p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <span className="font-mono text-xs text-muted-foreground">{item.number}</span>
+              <span className="font-mono text-xs text-muted-foreground">{pick(item.number, item.numberEn)}</span>
               <h3 className="mt-1 flex items-center gap-2 text-xl font-bold">
-                <Icon className="size-5 shrink-0 text-evidence" strokeWidth={1.7} /> {item.title}
+                <Icon className="size-5 shrink-0 text-evidence" strokeWidth={1.7} /> {title}
               </h3>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <CaseTag tone="evidence">مكتشف</CaseTag>
+              <CaseTag tone="evidence">{bt("discovered")}</CaseTag>
               <button
                 type="button"
                 onClick={onClose}
-                aria-label="إغلاق"
+                aria-label={bt("close")}
                 className="rounded-lg border border-border bg-secondary p-2 text-muted-foreground transition-colors hover:text-foreground"
               >
                 <X className="size-4" />
@@ -350,44 +381,42 @@ function EvidenceDetail({
           </div>
 
           <div className="mt-4 rounded-xl border border-evidence/25 bg-evidence/8 p-4">
-            <Eyebrow>ملاحظة المحقق</Eyebrow>
-            <p className="mt-1.5 text-sm leading-relaxed">{item.observation}</p>
-            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-              الملاحظة وصفية فقط — لمن يخص هذا الدليل يتحدد من ردود المشتبه فيهم.
-            </p>
+            <Eyebrow>{bt("investigatorNote")}</Eyebrow>
+            <p className="mt-1.5 text-sm leading-relaxed">{pick(item.observation, item.observationEn)}</p>
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{bt("observationNote")}</p>
           </div>
 
-          {forensics && forensicNotes[item.id] && (
+          {forensics && (
             <div className="mt-4 rounded-xl border border-primary/30 bg-primary/8 p-4">
-              <Eyebrow>ملاحظة جنائية · خاصة بالخبير الجنائي</Eyebrow>
-              <p className="mt-1.5 text-sm leading-relaxed">{forensicNotes[item.id]}</p>
+              <Eyebrow>{bt("forensicNote")}</Eyebrow>
+              <p className="mt-1.5 text-sm leading-relaxed">{pick(item.detail, item.detailEn)}</p>
             </div>
           )}
 
           {!canConfront ? null : !picking ? (
             <ActionButton className="mt-5 w-full" onClick={() => setPicking(true)}>
-              استخدم في الاستجواب
+              {bt("useInInterrogation")}
             </ActionButton>
           ) : (
             <div className="mt-5">
-              <Eyebrow>واجه مين بهذا الدليل؟</Eyebrow>
+              <Eyebrow>{bt("confrontWho")}</Eyebrow>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 {suspects.map((s) => (
                   <button
                     key={s.id}
                     type="button"
                     onClick={() => onConfront(s.id)}
-                    className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 p-2.5 text-right transition-colors hover:border-primary/55"
+                    className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 p-2.5 text-start transition-colors hover:border-primary/55"
                   >
                     <img
                       src={s.portrait}
-                      alt={s.name}
+                      alt={pick(s.name, s.nameEn)}
                       loading="lazy"
                       className="size-11 shrink-0 rounded-lg border border-border object-cover object-top grayscale-[35%]"
                     />
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-bold">{s.name}</span>
-                      <span className="block truncate text-xs text-muted-foreground">{s.role}</span>
+                      <span className="block truncate text-sm font-bold">{pick(s.name, s.nameEn)}</span>
+                      <span className="block truncate text-xs text-muted-foreground">{pick(s.role, s.roleEn)}</span>
                     </span>
                   </button>
                 ))}
@@ -397,7 +426,7 @@ function EvidenceDetail({
                 className="mt-3 w-full"
                 onClick={() => setPicking(false)}
               >
-                رجوع
+                {bt("back")}
               </ActionButton>
             </div>
           )}
