@@ -17,7 +17,32 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { evidence as allEvidence } from "@/game/case-data";
 import { SceneCrop } from "@/components/game/scene-crop";
+import { useI18n } from "@/i18n";
 import type { EvidenceItem, Suspect } from "@/game/types";
+
+const UI_TEXT = {
+  stressLabel: { ar: "مؤشر التوتر", en: "Stress meter" },
+  onEdge: { ar: "على حد الانفجار", en: "About to break" },
+  veryTense: { ar: "متوتر بشدة", en: "Very tense" },
+  tense: { ar: "متوتر", en: "Tense" },
+  calm: { ar: "مرتاح", en: "Calm" },
+  confrontTag: { ar: "مواجهة بدليل", en: "Confronted with evidence" },
+  close: { ar: "إغلاق", en: "Close" },
+  foundAt: { ar: "مكان العثور", en: "Found at" },
+  viewDetails: { ar: "عرض التفاصيل", en: "View details" },
+  undiscovered: { ar: "دليل غير مكتشف", en: "Undiscovered evidence" },
+  locked: { ar: "مقفل", en: "Locked" },
+  zoomAlt: { ar: "تكبير صورة", en: "Zoom into image of" },
+  discovered: { ar: "مكتشف", en: "Found" },
+  photoOf: { ar: "صورة", en: "Photo of" },
+  age: { ar: "العمر", en: "Age" },
+  openFile: { ar: "ملف مفتوح", en: "Open file" },
+  timeLeft: { ar: "الوقت المتبقي", en: "Time left" },
+  finished: { ar: "انتهى", en: "Finished" },
+  available: { ar: "متاح", en: "Available" },
+  investigationProgress: { ar: "تقدم التحقيق", en: "Investigation progress" },
+  yearsOld: { ar: "سنة", en: "years old" },
+} as const;
 
 export function Panel({
   children,
@@ -85,13 +110,20 @@ function useEasedValue(target: number, step = 1) {
 }
 
 export function StressMeter({ value, compact = false }: { value: number; compact?: boolean }) {
+  const { pick } = useI18n();
   const shown = useEasedValue(value);
   const label =
-    shown >= 80 ? "على حد الانفجار" : shown >= 60 ? "متوتر بشدة" : shown >= 35 ? "متوتر" : "مرتاح";
+    shown >= 80
+      ? pick(UI_TEXT.onEdge.ar, UI_TEXT.onEdge.en)
+      : shown >= 60
+        ? pick(UI_TEXT.veryTense.ar, UI_TEXT.veryTense.en)
+        : shown >= 35
+          ? pick(UI_TEXT.tense.ar, UI_TEXT.tense.en)
+          : pick(UI_TEXT.calm.ar, UI_TEXT.calm.en);
   return (
     <div className="w-full">
       <div className="mb-1.5 flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">مؤشر التوتر</span>
+        <span className="text-muted-foreground">{pick(UI_TEXT.stressLabel.ar, UI_TEXT.stressLabel.en)}</span>
         <span dir="ltr" className="font-mono text-foreground">
           {shown}
           <span className="text-muted-foreground">%</span>
@@ -136,22 +168,23 @@ function formatClock(seconds: number) {
 
 /** Compact evidence card used inside the interrogation transcript. */
 export function EvidenceConfrontCard({ item }: { item: EvidenceItem }) {
+  const { pick } = useI18n();
   const Icon = EVIDENCE_ICONS[item.icon];
   return (
     <div className="flex items-start gap-3 rounded-2xl rounded-tr-sm border border-evidence/45 bg-evidence/8 px-3.5 py-3">
       <span className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-evidence/35">
-        <SceneCrop crop={item.crop} alt={item.title} className="absolute inset-0 size-full" />
+        <SceneCrop crop={item.crop} alt={pick(item.title, item.titleEn)} className="absolute inset-0 size-full" />
       </span>
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[0.65rem] text-muted-foreground">{item.number}</span>
+          <span className="font-mono text-[0.65rem] text-muted-foreground">{pick(item.number, item.numberEn)}</span>
           <CaseTag tone="evidence">
-            <Icon className="size-3" /> مواجهة بدليل
+            <Icon className="size-3" /> {pick(UI_TEXT.confrontTag.ar, UI_TEXT.confrontTag.en)}
           </CaseTag>
         </div>
-        <p className="mt-1 text-sm font-bold leading-tight">{item.title}</p>
+        <p className="mt-1 text-sm font-bold leading-tight">{pick(item.title, item.titleEn)}</p>
         <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-          {item.description}
+          {pick(item.description, item.descriptionEn)}
         </p>
       </div>
     </div>
@@ -159,11 +192,13 @@ export function EvidenceConfrontCard({ item }: { item: EvidenceItem }) {
 }
 
 function EvidenceLightbox({ item, onClose }: { item: EvidenceItem; onClose: () => void }) {
+  const { pick } = useI18n();
+  const title = pick(item.title, item.titleEn);
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={item.title}
+      aria-label={title}
       onClick={onClose}
       className="fixed inset-0 z-50 grid place-items-center bg-background/92 p-4 backdrop-blur-sm"
     >
@@ -173,21 +208,23 @@ function EvidenceLightbox({ item, onClose }: { item: EvidenceItem; onClose: () =
       >
         <SceneCrop
           crop={item.crop}
-          alt={item.title}
+          alt={title}
           detail
           className="aspect-[4/3] max-h-[70vh] w-full"
         />
         <div className="flex items-start justify-between gap-3 p-4">
           <div className="min-w-0">
-            <span className="font-mono text-xs text-muted-foreground">{item.number}</span>
-            <h3 className="mt-1 text-lg font-bold">{item.title}</h3>
-            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{item.detail}</p>
-            <p className="mt-2 text-xs text-muted-foreground">مكان العثور: {item.foundAt}</p>
+            <span className="font-mono text-xs text-muted-foreground">{pick(item.number, item.numberEn)}</span>
+            <h3 className="mt-1 text-lg font-bold">{title}</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{pick(item.detail, item.detailEn)}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {pick(UI_TEXT.foundAt.ar, UI_TEXT.foundAt.en)}: {pick(item.foundAt, item.foundAtEn)}
+            </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="إغلاق"
+            aria-label={pick(UI_TEXT.close.ar, UI_TEXT.close.en)}
             className="shrink-0 rounded-lg border border-border bg-secondary p-2 text-muted-foreground transition-colors hover:text-foreground"
           >
             <X className="size-4" />

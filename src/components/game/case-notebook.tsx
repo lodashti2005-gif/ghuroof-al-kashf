@@ -12,19 +12,25 @@ import { CaseTag, Eyebrow, EvidenceCard, Panel } from "@/components/game/ui";
 import { evidence, suspects } from "@/game/case-data";
 import { timelineRows } from "@/game/role-intel";
 import { useRoom } from "@/game/use-room";
+import { useI18n } from "@/i18n";
 
 type TabId = "evidence" | "statements" | "contradictions" | "timeline" | "notes";
 
-const TABS: { id: TabId; title: string; icon: typeof FileText }[] = [
-  { id: "evidence", title: "الأدلة المكتشفة", icon: FileText },
-  { id: "statements", title: "أقوال المشتبه فيهم", icon: MessageSquare },
-  { id: "contradictions", title: "التناقضات", icon: AlertTriangle },
-  { id: "timeline", title: "التسلسل الزمني", icon: Clock },
-  { id: "notes", title: "ملاحظات الفريق", icon: NotebookPen },
-];
+const TAB_LABELS: Record<TabId, { ar: string; en: string }> = {
+  evidence: { ar: "الأدلة المكتشفة", en: "Discovered evidence" },
+  statements: { ar: "أقوال المشتبه فيهم", en: "Suspect statements" },
+  contradictions: { ar: "التناقضات", en: "Contradictions" },
+  timeline: { ar: "التسلسل الزمني", en: "Timeline" },
+  notes: { ar: "ملاحظات الفريق", en: "Team notes" },
+};
 
-const time = (ms: number) =>
-  new Date(ms).toLocaleTimeString("ar-KW", { hour: "2-digit", minute: "2-digit" });
+const TABS: { id: TabId; icon: typeof FileText }[] = [
+  { id: "evidence", icon: FileText },
+  { id: "statements", icon: MessageSquare },
+  { id: "contradictions", icon: AlertTriangle },
+  { id: "timeline", icon: Clock },
+  { id: "notes", icon: NotebookPen },
+];
 
 function Empty({ text }: { text: string }) {
   return (
@@ -36,8 +42,15 @@ function Empty({ text }: { text: string }) {
 
 export function CaseNotebook() {
   const { room, me, actions } = useRoom();
+  const { lang, pick } = useI18n();
   const [tab, setTab] = useState<TabId>("evidence");
   const [text, setText] = useState("");
+
+  const time = (ms: number) =>
+    new Date(ms).toLocaleTimeString(lang === "en" ? "en-US" : "ar-KW", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
   const unlocked = room?.unlockedEvidence ?? [];
   const unlockedItems = evidence.filter((e) => unlocked.includes(e.id));
@@ -48,8 +61,8 @@ export function CaseNotebook() {
   const statementGroups = suspects
     .map((s) => ({
       id: s.id,
-      name: s.name,
-      role: s.role,
+      name: pick(s.name, s.nameEn),
+      role: pick(s.role, s.roleEn),
       lines: (room?.suspects[s.id]?.transcript ?? []).filter(
         (m) => m.role === "suspect" && m.text.trim().length > 0,
       ),
@@ -81,16 +94,18 @@ export function CaseNotebook() {
     setText("");
   };
 
+  const tt = (ar: string, en: string) => pick(ar, en);
+
   return (
     <Panel className="cine-in">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <Eyebrow>مرجع مشترك</Eyebrow>
+          <Eyebrow>{tt("مرجع مشترك", "Shared reference")}</Eyebrow>
           <h2 className="mt-1 flex items-center gap-2 text-xl font-bold">
-            <NotebookPen className="size-4 text-muted-foreground" /> دفتر القضية
+            <NotebookPen className="size-4 text-muted-foreground" /> {tt("دفتر القضية", "Case notebook")}
           </h2>
         </div>
-        <CaseTag>يتحدّث لحظياً لكل الفريق</CaseTag>
+        <CaseTag>{tt("يتحدّث لحظياً لكل الفريق", "Updates live for the whole team")}</CaseTag>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -108,7 +123,7 @@ export function CaseNotebook() {
                   : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Icon className="size-3.5" /> {t.title}
+              <Icon className="size-3.5" /> {tt(TAB_LABELS[t.id].ar, TAB_LABELS[t.id].en)}
               <span className="font-mono text-[0.65rem] opacity-80">{counts[t.id]}</span>
             </button>
           );
@@ -118,7 +133,12 @@ export function CaseNotebook() {
       <div className="mt-5">
         {tab === "evidence" &&
           (unlockedItems.length === 0 ? (
-            <Empty text="ما في أدلة مكتشفة بعد — ادخلوا مسرح الجريمة ودققوا بالتفاصيل." />
+            <Empty
+              text={tt(
+                "ما في أدلة مكتشفة بعد — ادخلوا مسرح الجريمة ودققوا بالتفاصيل.",
+                "No evidence discovered yet — head into the crime scene and look closely.",
+              )}
+            />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {unlockedItems.map((item) => (
@@ -129,7 +149,12 @@ export function CaseNotebook() {
 
         {tab === "statements" &&
           (statementGroups.length === 0 ? (
-            <Empty text="ما في أقوال محفوظة بعد — أي كلام يقوله المشتبه بالاستجواب ينحفظ هنا." />
+            <Empty
+              text={tt(
+                "ما في أقوال محفوظة بعد — أي كلام يقوله المشتبه بالاستجواب ينحفظ هنا.",
+                "No statements saved yet — anything a suspect says under interrogation is logged here.",
+              )}
+            />
           ) : (
             <div className="space-y-4">
               {statementGroups.map((g) => (
@@ -161,7 +186,12 @@ export function CaseNotebook() {
 
         {tab === "contradictions" &&
           (contradictions.length === 0 ? (
-            <Empty text="ما ينرصد تناقض إلا لمن يجمع الفريق معلومات كافية تكشفه — ما في شي بعد." />
+            <Empty
+              text={tt(
+                "ما ينرصد تناقض إلا لمن يجمع الفريق معلومات كافية تكشفه — ما في شي بعد.",
+                "A contradiction only shows up once the team has gathered enough to reveal it — nothing yet.",
+              )}
+            />
           ) : (
             <ul className="space-y-3">
               {contradictions.map((c) => (
@@ -178,21 +208,21 @@ export function CaseNotebook() {
                     </span>
                   </div>
                   <p className="mt-2 text-muted-foreground">
-                    <span className="text-foreground">قوله:</span> «{c.claim}»
+                    <span className="text-foreground">{tt("قوله:", "Said:")}</span> «{c.claim}»
                   </p>
                   <p className="mt-1 text-muted-foreground">
                     <span className="text-foreground">
                       {c.source === "evidence"
-                        ? "يتعارض مع دليل:"
+                        ? tt("يتعارض مع دليل:", "Conflicts with evidence:")
                         : c.source === "timeline"
-                          ? "يتعارض مع وقائع القضية:"
-                          : "يتعارض مع قوله السابق:"}
+                          ? tt("يتعارض مع وقائع القضية:", "Conflicts with the case facts:")
+                          : tt("يتعارض مع قوله السابق:", "Conflicts with an earlier statement:")}
                     </span>{" "}
                     {c.conflictsWith}
                   </p>
                   <p className="mt-1.5 font-mono text-[0.7rem] text-muted-foreground/80">
-                    رصده {c.author}
-                    {c.confronted ? " · تمت المواجهة" : ""}
+                    {tt("رصده", "Flagged by")} {c.author}
+                    {c.confronted ? tt(" · تمت المواجهة", " · Confronted") : ""}
                   </p>
                 </li>
               ))}
@@ -201,7 +231,12 @@ export function CaseNotebook() {
 
         {tab === "timeline" &&
           (timeline.length === 0 ? (
-            <Empty text="التسلسل الزمني يتبني من الأدلة والأقوال المكتشفة — ابدأوا التحقيق أول." />
+            <Empty
+              text={tt(
+                "التسلسل الزمني يتبني من الأدلة والأقوال المكتشفة — ابدأوا التحقيق أول.",
+                "The timeline builds up from discovered evidence and statements — start investigating first.",
+              )}
+            />
           ) : (
             <ul className="space-y-2">
               {timeline.map((r, i) => (
@@ -211,11 +246,13 @@ export function CaseNotebook() {
                     r.conflict ? "border-evidence/35 bg-evidence/5" : "border-border bg-surface-2"
                   }`}
                 >
-                  <span className="shrink-0 font-mono text-xs text-muted-foreground">{r.time}</span>
+                  <span className="shrink-0 font-mono text-xs text-muted-foreground">
+                    {pick(r.time, r.timeEn)}
+                  </span>
                   <span className="min-w-0">
-                    {r.text}
+                    {pick(r.text, r.textEn)}
                     <span className="ms-2 font-mono text-[0.65rem] text-muted-foreground">
-                      {r.kind === "claim" ? "قول مشتبه" : "تسجيل"}
+                      {r.kind === "claim" ? tt("قول مشتبه", "Suspect claim") : tt("تسجيل", "Record")}
                     </span>
                   </span>
                 </li>
@@ -235,7 +272,10 @@ export function CaseNotebook() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 rows={3}
-                placeholder="اكتب ملاحظة قصيرة يشوفها كل الفريق..."
+                placeholder={tt(
+                  "اكتب ملاحظة قصيرة يشوفها كل الفريق...",
+                  "Write a short note the whole team can see...",
+                )}
                 className="w-full resize-none rounded-xl border border-input bg-surface-2 px-3.5 py-3 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-primary/60"
               />
               <ActionButton
@@ -244,12 +284,12 @@ export function CaseNotebook() {
                 className="mt-2 w-full py-2.5"
                 disabled={!text.trim()}
               >
-                أضف الملاحظة
+                {tt("أضف الملاحظة", "Add note")}
               </ActionButton>
             </form>
 
             <ul className="mt-4 space-y-2">
-              {notes.length === 0 && <Empty text="ما في ملاحظات بعد." />}
+              {notes.length === 0 && <Empty text={tt("ما في ملاحظات بعد.", "No notes yet.")} />}
               {notes.map((n) => (
                 <li key={n.id} className="rounded-lg border border-border bg-surface-2 px-3 py-2.5">
                   <div className="flex items-center justify-between gap-2">
@@ -260,7 +300,7 @@ export function CaseNotebook() {
                     <button
                       type="button"
                       onClick={() => actions.removeNote(n.id)}
-                      aria-label="حذف الملاحظة"
+                      aria-label={tt("حذف الملاحظة", "Delete note")}
                       className="shrink-0 text-muted-foreground transition-colors hover:text-primary"
                     >
                       <Trash2 className="size-3.5" />

@@ -246,7 +246,7 @@ function InterrogationRoom() {
     actions.unlockEvidence(id);
     const item = getEvidence(id);
     if (item) {
-      setUnlockToast(item.title);
+      setUnlockToast(pick(item.title, item.titleEn));
       setTimeout(() => setUnlockToast(null), 3600);
     }
   };
@@ -425,7 +425,7 @@ function InterrogationRoom() {
 
   return (
     <GameShell
-      title={`${t("interrogation.titlePrefix")} · ${suspect.name}`}
+      title={`${t("interrogation.titlePrefix")} · ${pick(suspect.name, suspect.nameEn)}`}
       right={
         <span
           dir="ltr"
@@ -456,7 +456,7 @@ function InterrogationRoom() {
               {t("interrogation.claimsNote")}
             </p>
             <ul className="mt-3 space-y-2.5">
-              {suspect.known.map((k, i) => (
+              {pick(suspect.known, suspect.knownEn ?? suspect.known).map((k, i) => (
                 <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-muted-foreground">
                   <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-evidence" />
                   <span>{k}</span>
@@ -576,7 +576,7 @@ function InterrogationRoom() {
                   <span className="size-1.5 animate-pulse rounded-full bg-primary [animation-delay:150ms]" />
                   <span className="size-1.5 animate-pulse rounded-full bg-primary [animation-delay:300ms]" />
                 </span>
-                {t("interrogation.thinking", { name: suspect.name })}
+                {t("interrogation.thinking", { name: pick(suspect.name, suspect.nameEn) })}
               </div>
             )}
 
@@ -602,7 +602,11 @@ function InterrogationRoom() {
             {contradictionsOpen && (
               <div className="cine-in mb-3 rounded-xl border border-evidence/35 bg-evidence/5 p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <Eyebrow>{t("interrogation.contradictionsOn", { name: suspect.name })}</Eyebrow>
+                  <Eyebrow>
+                    {t("interrogation.contradictionsOn", {
+                      name: pick(suspect.name, suspect.nameEn),
+                    })}
+                  </Eyebrow>
                   <button
                     type="button"
                     onClick={() => setContradictionsOpen(false)}
@@ -666,7 +670,7 @@ function InterrogationRoom() {
                         onClick={() => confront(item.id)}
                         className="rounded-lg border border-evidence/45 bg-evidence/10 px-3 py-2 text-xs font-bold text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
                       >
-                        {item.title}
+                        {pick(item.title, item.titleEn)}
                       </button>
                     ))}
                   </div>
@@ -814,12 +818,14 @@ function InterrogationRoom() {
                   >
                     <img
                       src={s.portrait}
-                      alt={s.name}
+                      alt={pick(s.name, s.nameEn)}
                       loading="lazy"
                       className="size-12 shrink-0 rounded-lg border border-border object-cover object-top grayscale-[35%]"
                     />
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-bold">{s.name}</span>
+                      <span className="block truncate text-sm font-bold">
+                        {pick(s.name, s.nameEn)}
+                      </span>
                       <span
                         dir="ltr"
                         className="mt-0.5 block font-mono text-[0.65rem] text-muted-foreground"
