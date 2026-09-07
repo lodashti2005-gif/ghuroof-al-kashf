@@ -239,21 +239,23 @@ export function EvidenceCard({
   item,
   unlocked,
   onSelect,
-  selectLabel = "عرض التفاصيل",
+  selectLabel,
 }: {
   item: EvidenceItem;
   unlocked: boolean;
   onSelect?: () => void;
   selectLabel?: string;
 }) {
+  const { pick } = useI18n();
   const [zoom, setZoom] = useState(false);
+  const label = selectLabel ?? pick(UI_TEXT.viewDetails.ar, UI_TEXT.viewDetails.en);
 
   // Undiscovered evidence must leak nothing: no title, number, icon or hint.
   if (!unlocked) {
     return (
       <div
-        aria-label="دليل غير مكتشف"
-        className="cine-in surface-panel flex w-full flex-col gap-3 p-4 text-right opacity-70"
+        aria-label={pick(UI_TEXT.undiscovered.ar, UI_TEXT.undiscovered.en)}
+        className="cine-in surface-panel flex w-full flex-col gap-3 p-4 text-start opacity-70"
       >
         <div className="flex h-28 items-center justify-center rounded-xl border border-dashed border-border bg-surface-2">
           <Lock className="size-8 text-muted-foreground/60" strokeWidth={1.4} />
@@ -261,10 +263,10 @@ export function EvidenceCard({
         <div className="min-w-0">
           <div className="flex items-center justify-between gap-2">
             <span className="font-mono text-xs text-muted-foreground">🔒</span>
-            <CaseTag tone="muted">مقفل</CaseTag>
+            <CaseTag tone="muted">{pick(UI_TEXT.locked.ar, UI_TEXT.locked.en)}</CaseTag>
           </div>
           <h3 className="mt-1.5 truncate text-base font-bold text-muted-foreground">
-            دليل غير مكتشف
+            {pick(UI_TEXT.undiscovered.ar, UI_TEXT.undiscovered.en)}
           </h3>
         </div>
       </div>
@@ -272,44 +274,47 @@ export function EvidenceCard({
   }
 
   const Icon = EVIDENCE_ICONS[item.icon];
+  const title = pick(item.title, item.titleEn);
   return (
     <>
-      <div className="group cine-in surface-panel flex w-full flex-col gap-3 p-4 text-right transition-all duration-300 hover:border-evidence/50">
+      <div className="group cine-in surface-panel flex w-full flex-col gap-3 p-4 text-start transition-all duration-300 hover:border-evidence/50">
         <button
           type="button"
           onClick={() => setZoom(true)}
-          aria-label={`تكبير صورة ${item.title}`}
+          aria-label={`${pick(UI_TEXT.zoomAlt.ar, UI_TEXT.zoomAlt.en)} ${title}`}
           className="relative h-40 w-full overflow-hidden rounded-xl border border-evidence/25"
         >
           <SceneCrop
             crop={item.crop}
-            alt={item.title}
+            alt={title}
             className="absolute inset-0 size-full transition-transform duration-700 group-hover:scale-[1.04]"
           />
           <span className="absolute inset-0 bg-gradient-to-t from-card/85 via-transparent to-transparent" />
-          <span className="absolute bottom-2 left-2 grid size-8 place-items-center rounded-lg border border-evidence/40 bg-card/80 text-evidence">
+          <span className="absolute bottom-2 start-2 grid size-8 place-items-center rounded-lg border border-evidence/40 bg-card/80 text-evidence">
             <Maximize2 className="size-4" strokeWidth={1.6} />
           </span>
         </button>
         <div className="min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <span className="font-mono text-xs text-muted-foreground">{item.number}</span>
+            <span className="font-mono text-xs text-muted-foreground">{pick(item.number, item.numberEn)}</span>
             <CaseTag tone="evidence">
-              <Icon className="size-3" /> مكتشف
+              <Icon className="size-3" /> {pick(UI_TEXT.discovered.ar, UI_TEXT.discovered.en)}
             </CaseTag>
           </div>
-          <h3 className="mt-1.5 truncate text-base font-bold">{item.title}</h3>
+          <h3 className="mt-1.5 truncate text-base font-bold">{title}</h3>
           <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-            {item.description}
+            {pick(item.description, item.descriptionEn)}
           </p>
-          <p className="mt-1.5 text-xs text-muted-foreground/85">مكان العثور: {item.foundAt}</p>
+          <p className="mt-1.5 text-xs text-muted-foreground/85">
+            {pick(UI_TEXT.foundAt.ar, UI_TEXT.foundAt.en)}: {pick(item.foundAt, item.foundAtEn)}
+          </p>
           {onSelect && (
             <button
               type="button"
               onClick={onSelect}
               className="mt-3 w-full rounded-lg border border-evidence/45 bg-evidence/10 px-3 py-2 text-xs font-bold text-evidence transition-colors hover:bg-evidence/20"
             >
-              {selectLabel}
+              {label}
             </button>
           )}
         </div>
