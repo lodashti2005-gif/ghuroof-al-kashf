@@ -13,6 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { GAME_NAME } from "@/game/game-meta";
+import { useT } from "@/i18n";
+import { LanguageSwitcher } from "@/components/site/language-switcher";
 import { checkIsAdmin } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -33,6 +35,7 @@ export function AccountMenu() {
   const [signingOut, setSigningOut] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const fetchIsAdmin = useServerFn(checkIsAdmin);
+  const t = useT();
 
   useEffect(() => {
     let active = true;
@@ -86,7 +89,7 @@ export function AccountMenu() {
         to="/auth"
         className="font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
-        دخول
+        {t("common.signIn")}
       </Link>
     );
   }
@@ -112,12 +115,12 @@ export function AccountMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link to="/purchases" className="cursor-pointer">
-            مشترياتي
+            {t("common.myPurchases")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/cases" className="cursor-pointer">
-            القضايا
+            {t("common.cases")}
           </Link>
         </DropdownMenuItem>
         {isAdmin ? (
@@ -126,11 +129,18 @@ export function AccountMenu() {
             <DropdownMenuItem asChild>
               <Link to="/admin" className="cursor-pointer">
                 <ShieldCheck className="size-4" />
-                لوحة المالك
+                {t("common.ownerPanel")}
               </Link>
             </DropdownMenuItem>
           </>
         ) : null}
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="text-[11px] font-normal text-muted-foreground">
+          {t("lang.label")}
+        </DropdownMenuLabel>
+        <div className="px-2 pb-1.5">
+          <LanguageSwitcher />
+        </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={(e) => {
@@ -140,7 +150,7 @@ export function AccountMenu() {
           className="cursor-pointer text-destructive focus:text-destructive"
         >
           <LogOut className="size-4" />
-          {signingOut ? "جاري الخروج..." : "تسجيل الخروج"}
+          {signingOut ? t("common.signingOut") : t("common.signOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -14,6 +14,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CaseTrialGate } from "@/components/game/case-trial-gate";
 import { SiteFooter } from "@/components/site/footer";
+import { LanguageGate } from "@/components/site/language-switcher";
+import { LanguageProvider } from "@/i18n";
 import { noteRoute } from "@/game/room-store";
 import { trackEvent } from "@/lib/activity";
 
@@ -163,15 +165,18 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      {gated ? (
-        <CaseTrialGate caseId="last-night">
+      <LanguageProvider>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        {gated ? (
+          <CaseTrialGate caseId="last-night">
+            <Outlet />
+          </CaseTrialGate>
+        ) : (
           <Outlet />
-        </CaseTrialGate>
-      ) : (
-        <Outlet />
-      )}
-      <SiteFooter />
+        )}
+        <SiteFooter />
+        <LanguageGate />
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }
