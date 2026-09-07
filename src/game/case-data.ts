@@ -348,24 +348,31 @@ export const killerId = "yousef";
 
 export const solution = {
   killer: "يوسف",
+  killerEn: "Yousef",
   motive:
     "يوسف كان يحوّل فلوس الشركة لحسابه الخاص. بدر جمّع الأدلة بتلفونه وقاله بصراحة إن باچر بيروحون للمحامي. فلوس ومستقبل يوسف كلها كانت على المحك.",
+  motiveEn:
+    "Yousef had been funneling company money into his own account. Badr had gathered proof on his phone and told him plainly they'd see a lawyer the next day. Yousef's money and his entire future were on the line.",
   method:
     "طلع قدام الجميع 11:55 عشان يبني له عذر، ورجع بسيارته 01:38 ودخل بالمفتاح الاحتياطي بدون ما يكسر الباب. قدّم لبدر فنجال قهوة فيه مهدئ، وبعد ما خفّت حركته صارت مشادة انتهت بالوفاة والساعة تكسرت على 01:47. قبل ما يطلع 02:04 خذ تلفون بدر عشان يمسح ملف التحويلات.",
+  methodEn:
+    "He left in front of everyone at 11:55 PM to build himself an alibi, then drove back at 1:38 AM and let himself in with the spare key without forcing the door. He handed Badr a cup of coffee laced with a sedative, and once Badr had slowed down, a confrontation broke out that ended in his death, cracking the watch at 1:47. Before leaving at 2:04, he took Badr's phone to erase the transfer records.",
   timeline: [
-    { time: "11:48 م", text: "يوسف يرسل رسالة تهديد لبدر عشان يوقف موضوع المحامي." },
-    { time: "11:55 م", text: "يوسف يطلع من الشاليه قدام الجميع ويخلي انطباع إنه ترك القعدة." },
-    { time: "01:15 ص", text: "نورة تطلع، وبعدها ترجع خفية عشان ترد الخاتم." },
-    { time: "01:29 ص", text: "بدر يفتح ملف التحويلات البنكية بتلفونه." },
-    { time: "01:38 ص", text: "كاميرا المدخل تسجل سيارة يوسف داخلة مرة ثانية." },
-    { time: "01:42 ص", text: "يوسف يدخل بالمفتاح الاحتياطي ويقدم لبدر فنجال قهوة فيه مهدئ." },
-    { time: "01:47 ص", text: "المشادة تصير، الساعة تتكسر وتوقف على هذا الوقت." },
-    { time: "01:48 ص", text: "دانة تسمع باب ينسد وخطوات بالممر." },
-    { time: "02:04 ص", text: "يوسف يطلع وياه تلفون بدر عشان يخفي أدلة التحويلات." },
+    { time: "11:48 م", text: "يوسف يرسل رسالة تهديد لبدر عشان يوقف موضوع المحامي.", textEn: "Yousef sends Badr a threatening message to shut down the lawyer idea." },
+    { time: "11:55 م", text: "يوسف يطلع من الشاليه قدام الجميع ويخلي انطباع إنه ترك القعدة.", textEn: "Yousef leaves the chalet in front of everyone, giving the impression he'd left for good." },
+    { time: "01:15 ص", text: "نورة تطلع، وبعدها ترجع خفية عشان ترد الخاتم.", textEn: "Noura leaves, then quietly comes back to return the ring." },
+    { time: "01:29 ص", text: "بدر يفتح ملف التحويلات البنكية بتلفونه.", textEn: "Badr opens the bank transfer file on his phone." },
+    { time: "01:38 ص", text: "كاميرا المدخل تسجل سيارة يوسف داخلة مرة ثانية.", textEn: "The entrance camera records Yousef's car coming back in." },
+    { time: "01:42 ص", text: "يوسف يدخل بالمفتاح الاحتياطي ويقدم لبدر فنجال قهوة فيه مهدئ.", textEn: "Yousef lets himself in with the spare key and hands Badr a coffee laced with a sedative." },
+    { time: "01:47 ص", text: "المشادة تصير، الساعة تتكسر وتوقف على هذا الوقت.", textEn: "The confrontation happens; the watch is cracked and stops at this time." },
+    { time: "01:48 ص", text: "دانة تسمع باب ينسد وخطوات بالممر.", textEn: "Dana hears a door close and footsteps in the hallway." },
+    { time: "02:04 ص", text: "يوسف يطلع وياه تلفون بدر عشان يخفي أدلة التحويلات.", textEn: "Yousef leaves, taking Badr's phone with him to hide the transfer evidence." },
   ],
   decisive: {
     title: "توقيت كاميرا المدخل + المفتاح الاحتياطي",
+    titleEn: "The entrance camera timing + the spare key",
     text: "سيارة يوسف داخلة 01:38 وطالعة 02:04، والمفتاح الاحتياطي الناقص يفسر ليش الباب ما كان مكسور. الدليلين مع بعض يحطونه داخل الغرفة بوقت الوفاة.",
+    textEn: "Yousef's car arriving at 1:38 and leaving at 2:04, plus the missing spare key that explains why the door wasn't forced. Together, both clues place him inside the room at the time of death.",
   },
   provingClues: [
     "الساعة الواقفة على 01:47 تكسر رواية «الجميع طلعوا قبل 01:30».",
@@ -374,26 +381,45 @@ export const solution = {
     "الفنجال الثاني وفيه مهدئ يثبت إن أحد كان جالس مقابل بدر بالغرفة.",
     "اختفاء التلفون بعد فتح ملف التحويلات يربط الدافع بالجريمة.",
   ],
+  provingCluesEn: [
+    "The watch stopped at 1:47 breaks the story that everyone left before 1:30.",
+    "The entrance camera proves the car came back in at 1:38 and left at 2:04.",
+    "The missing spare key explains why the door wasn't forced.",
+    "The second cup, laced with sedative, proves someone sat across from Badr in the room.",
+    "The phone disappearing right after the transfer file was opened ties the motive to the crime.",
+  ],
   liars: [
     {
       name: "فهد",
+      nameEn: "Fahad",
       lie: "قال إنه نام من الساعة 01:00",
+      lieEn: "Claimed he'd been asleep since 1:00 AM",
       why: "كان صاحي، وخذ 400 دينار من محفظة بدر بعد ما لقاه، وخاف يتهمونه.",
+      whyEn: "He was awake, and took 400 dinars from Badr's wallet after finding him, then feared being blamed.",
     },
     {
       name: "نورة",
+      nameEn: "Noura",
       lie: "نكرت إنها رجعت للشاليه",
+      lieEn: "Denied coming back to the chalet",
       why: "رجعت ترد الخاتم، وشافت يوسف ياخذ التلفون، بس سكتت لأنه يعرف سر عن عائلتها.",
+      whyEn: "She came back to return the ring and saw Yousef take the phone, but stayed silent because he knows a secret about her family.",
     },
     {
       name: "يوسف",
+      nameEn: "Yousef",
       lie: "قال إنه طلع قبل 12 وما رجع",
+      lieEn: "Claimed he left before midnight and never came back",
       why: "هو القاتل. رجع بالمفتاح الاحتياطي وأخفى التلفون.",
+      whyEn: "He's the killer. He came back with the spare key and hid the phone.",
     },
     {
       name: "دانة",
+      nameEn: "Dana",
       lie: "قالت إن ذاكرتها ضعيفة بالأوقات",
+      lieEn: "Claimed her memory for times was unreliable",
       why: "عندها تسجيل صوتي دقيق للساعة 01:47، وخافت تتورط لو سلّمته.",
+      whyEn: "She has a precise audio recording from 1:47 AM, and was afraid of getting involved if she handed it over.",
     },
   ],
 };
