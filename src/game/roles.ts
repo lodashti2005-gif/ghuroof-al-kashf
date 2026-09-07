@@ -27,7 +27,8 @@ export const playerRoles: PlayerRole[] = [
     title: "المحقق",
     titleEn: "Lead Detective",
     mission: "ركّز على القضية كلها، اربط الأدلة بأقوال المشتبه فيهم ولاحظ التناقضات.",
-    missionEn: "Keep the whole case in view: tie the evidence to what the suspects say and catch the contradictions.",
+    missionEn:
+      "Keep the whole case in view: tie the evidence to what the suspects say and catch the contradictions.",
     repeatable: false,
   },
   {
@@ -37,7 +38,8 @@ export const playerRoles: PlayerRole[] = [
     title: "محقق الاستجواب",
     titleEn: "Interrogator",
     mission: "استجوب المشتبه فيهم، لاحظ تغير إجاباتهم والتناقضات ومؤشر التوتر.",
-    missionEn: "Question the suspects, watch their answers shift, and keep an eye on the stress meter.",
+    missionEn:
+      "Question the suspects, watch their answers shift, and keep an eye on the stress meter.",
     repeatable: true,
   },
   {
@@ -48,7 +50,8 @@ export const playerRoles: PlayerRole[] = [
     titleEn: "Forensics Expert",
     mission:
       "فتّش مسرح الجريمة بعناية، واكتشف الأدلة المخفية وحلّلها. انتبه للتفاصيل، فقد تكون بعض الأشياء أهم مما تبدو.",
-    missionEn: "Search the crime scene carefully, find the hidden evidence and read it. Watch the small details — some things matter more than they look.",
+    missionEn:
+      "Search the crime scene carefully, find the hidden evidence and read it. Watch the small details — some things matter more than they look.",
     repeatable: true,
   },
   {
@@ -58,7 +61,8 @@ export const playerRoles: PlayerRole[] = [
     title: "مسؤول المراقبة",
     titleEn: "Surveillance Officer",
     mission: "راقب الكاميرات والأوقات وتحركات الأشخاص قبل الجريمة وبعدها.",
-    missionEn: "Track the cameras, the timings and everyone's movements before and after the crime.",
+    missionEn:
+      "Track the cameras, the timings and everyone's movements before and after the crime.",
     repeatable: true,
   },
   {
@@ -78,13 +82,13 @@ export const playerRoles: PlayerRole[] = [
     title: "مسؤول الملف",
     titleEn: "Records Officer",
     mission: "دوّن الأقوال والتناقضات بملف القضية وخلي الفريق على نفس المعلومة.",
-    missionEn: "Log statements and contradictions in the case file and keep the team on the same page.",
+    missionEn:
+      "Log statements and contradictions in the case file and keep the team on the same page.",
     repeatable: true,
   },
 ];
 
-export const roleById = (id?: string | null) =>
-  playerRoles.find((r) => r.id === id) ?? undefined;
+export const roleById = (id?: string | null) => playerRoles.find((r) => r.id === id) ?? undefined;
 
 function shuffle<T>(list: T[]): T[] {
   const out = [...list];
@@ -132,4 +136,3 @@ export function assignRoles(
 
   return roles;
 }
-

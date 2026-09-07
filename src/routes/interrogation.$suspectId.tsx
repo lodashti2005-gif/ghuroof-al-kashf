@@ -21,13 +21,7 @@ import { EvidenceBoard } from "@/components/game/evidence-board";
 import { ActionButton, GameShell } from "@/components/game/shell";
 import { SuspectAvatar } from "@/components/game/suspect-avatar";
 import { AlertTriangle } from "lucide-react";
-import {
-  CaseTag,
-  EvidenceConfrontCard,
-  Eyebrow,
-  Panel,
-  StressMeter,
-} from "@/components/game/ui";
+import { CaseTag, EvidenceConfrontCard, Eyebrow, Panel, StressMeter } from "@/components/game/ui";
 import {
   INTERROGATION_SECONDS,
   evidence as allEvidence,
@@ -43,7 +37,6 @@ import { formatClock, useRoom } from "@/game/use-room";
 import { useTurn } from "@/game/use-turn";
 import { askSuspect } from "@/lib/interrogation.functions";
 import { useI18n } from "@/i18n";
-
 
 export const Route = createFileRoute("/interrogation/$suspectId")({
   validateSearch: (
@@ -92,9 +85,7 @@ function TypedText({ text, animate }: { text: string; animate: boolean }) {
   return <span className="min-w-0 flex-1">{text.slice(0, shown)}</span>;
 }
 
-
 // كل مشتبه له صوت بشري مستقل عبر ElevenLabs — التفاصيل في `@/game/voices`.
-
 
 function InterrogationRoom() {
   const { suspectId } = Route.useParams();
@@ -116,13 +107,13 @@ function InterrogationRoom() {
   const [typing, setTyping] = useState(false);
   const [unlockToast, setUnlockToast] = useState<string | null>(null);
   const [contradictionToast, setContradictionToast] = useState(false);
-  const [retry, setRetry] = useState<{ text: string; evidenceId?: string | undefined } | null>(null);
+  const [retry, setRetry] = useState<{ text: string; evidenceId?: string | undefined } | null>(
+    null,
+  );
   /** الدليل المطروح على الطاولة: يظهر كبطاقة بالمحادثة وينضم لأول سؤال يجي بعده. */
   const [pendingEvidence, setPendingEvidence] = useState<string | null>(null);
   const pendingRef = useRef<string | null>(null);
   pendingRef.current = pendingEvidence;
-
-
 
   const [confrontOpen, setConfrontOpen] = useState(false);
   const [suspectsOpen, setSuspectsOpen] = useState(false);
@@ -150,7 +141,6 @@ function InterrogationRoom() {
     }
   }
 
-
   const unlocked = useMemo(
     () => allEvidence.filter((e) => room?.unlockedEvidence.includes(e.id)),
     [room?.unlockedEvidence],
@@ -163,7 +153,6 @@ function InterrogationRoom() {
   );
 
   const sendRef = useRef<((text: string, evidenceId?: string) => void) | null>(null);
-
 
   // العدّاد المشترك مبني على وقت البداية المحفوظ بالغرفة: كل جهاز يعرضه محلياً
   // بدون ما يكتب بقاعدة البيانات كل ثانية. فتح المشتبه يشغّل عدّاده ويوقف غيره،
@@ -300,8 +289,10 @@ function InterrogationRoom() {
     }
 
     setTyping(true);
-    const history = [...baseTranscript, { role: "investigator" as const, author: me.name, text }]
-      .map((m) => ({ role: m.role, author: m.author, text: m.text }));
+    const history = [
+      ...baseTranscript,
+      { role: "investigator" as const, author: me.name, text },
+    ].map((m) => ({ role: m.role, author: m.author, text: m.text }));
 
     const requestReply = () =>
       ask({
@@ -369,7 +360,6 @@ function InterrogationRoom() {
 
   sendRef.current = send;
 
-
   /**
    * مواجهة بدليل: تظهر بطاقة الدليل داخل سجل المحادثة (صورة + اسم + وصف مختصر)،
    * وبعدها المشتبه فيه يرد مباشرة على هذا الدليل حسب شخصيته وأقواله السابقة.
@@ -397,8 +387,6 @@ function InterrogationRoom() {
       },
     );
   };
-
-
 
   confrontRef.current = confront;
 
@@ -435,7 +423,6 @@ function InterrogationRoom() {
     navigate({ to: "/interrogation/$suspectId", params: { suspectId: id } });
   };
 
-
   return (
     <GameShell
       title={`${t("interrogation.titlePrefix")} · ${suspect.name}`}
@@ -456,11 +443,7 @@ function InterrogationRoom() {
       <div className="grid gap-5 lg:grid-cols-[19rem_minmax(0,1fr)]">
         <aside className="min-w-0 space-y-5">
           <div className="surface-panel cine-in overflow-hidden p-0">
-            <SuspectAvatar
-              suspect={suspect}
-              state={state}
-              stress={runtime?.stress ?? 0}
-            />
+            <SuspectAvatar suspect={suspect} state={state} stress={runtime?.stress ?? 0} />
 
             <div className="border-t border-border p-4">
               <StressMeter value={runtime?.stress ?? 0} />
@@ -483,7 +466,11 @@ function InterrogationRoom() {
           </Panel>
 
           <div className="grid gap-2 sm:grid-cols-2">
-            <ActionButton variant="outline" className="w-full" onClick={() => setSuspectsOpen(true)}>
+            <ActionButton
+              variant="outline"
+              className="w-full"
+              onClick={() => setSuspectsOpen(true)}
+            >
               <Users className="size-4" /> {t("interrogation.suspects")}
             </ActionButton>
             <ActionButton variant="outline" className="w-full" onClick={() => setBoardOpen(true)}>
@@ -497,7 +484,6 @@ function InterrogationRoom() {
               <Search className="size-4" /> {t("interrogation.scene")}
             </ActionButton>
           </div>
-
 
           <ActionButton
             variant="danger"
@@ -533,13 +519,9 @@ function InterrogationRoom() {
                     : t("interrogation.live")}
               </CaseTag>
             </div>
-
           </div>
 
           {/* فشل الصوت لا يوقف المحادثة؛ تفاصيله تُسجّل في console والسيرفر. */}
-
-
-
 
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
             {(runtime?.transcript.length ?? 0) === 0 && (
@@ -556,7 +538,9 @@ function InterrogationRoom() {
                   className={`flex ${m.role === "investigator" ? "justify-end" : "justify-start"}`}
                 >
                   <div className="max-w-[85%] sm:max-w-[70%]">
-                    <p className="mb-1 font-mono text-[0.65rem] text-muted-foreground">{m.author}</p>
+                    <p className="mb-1 font-mono text-[0.65rem] text-muted-foreground">
+                      {m.author}
+                    </p>
                     {confronted ? (
                       <EvidenceConfrontCard item={confronted} />
                     ) : (
@@ -572,7 +556,6 @@ function InterrogationRoom() {
                         ) : (
                           <span className="min-w-0 flex-1">{m.text}</span>
                         )}
-
                       </div>
                     )}
                     {m.role === "suspect" && m.flagged && (
@@ -585,7 +568,6 @@ function InterrogationRoom() {
                 </div>
               );
             })}
-
 
             {typing && (
               <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
@@ -614,7 +596,6 @@ function InterrogationRoom() {
                 </button>
               </div>
             )}
-
           </div>
 
           <div className="border-t border-border px-5 py-4">
@@ -693,10 +674,6 @@ function InterrogationRoom() {
               </div>
             )}
 
-
-
-
-
             {!locked && evidenceAsks.length > 0 && (
               <div className="cine-in mb-3 rounded-xl border border-evidence/30 bg-evidence/5 p-3">
                 <Eyebrow>{t("interrogation.evidenceAsks")}</Eyebrow>
@@ -732,11 +709,7 @@ function InterrogationRoom() {
               </div>
             )}
 
-
-
-
             <form
-
               className="flex items-end gap-2"
               onSubmit={(e) => {
                 e.preventDefault();
@@ -763,9 +736,6 @@ function InterrogationRoom() {
                 }
                 className="min-h-[4.5rem] min-w-0 flex-1 resize-none rounded-xl border border-input bg-surface-2 px-3.5 py-3 text-base leading-relaxed outline-none placeholder:text-muted-foreground/70 focus:border-primary/60 disabled:opacity-50 sm:text-sm"
               />
-
-
-
 
               <button
                 type="button"
@@ -889,9 +859,7 @@ function InterrogationRoom() {
                 <X className="size-5" />
               </button>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {t("interrogation.boardHint")}
-            </p>
+            <p className="mt-2 text-xs text-muted-foreground">{t("interrogation.boardHint")}</p>
             <div className="mt-4">
               <EvidenceBoard
                 unlockedIds={room?.unlockedEvidence ?? []}
@@ -912,7 +880,7 @@ function InterrogationRoom() {
                     setDraft(text);
                     return;
                   }
-                  
+
                   navigate({
                     to: "/interrogation/$suspectId",
                     params: { suspectId: targetId },
@@ -966,4 +934,3 @@ function InterrogationRoom() {
     </GameShell>
   );
 }
-

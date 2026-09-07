@@ -7,19 +7,12 @@ import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shel
 import { EvidenceBoard } from "@/components/game/evidence-board";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { caseFile, evidence, getEvidence } from "@/game/case-data";
-import {
-  SCENE_EVIDENCE_IDS,
-  SCENE_START_VIEW,
-  getSceneView,
-  sceneImageSize,
-} from "@/game/scene";
-
+import { SCENE_EVIDENCE_IDS, SCENE_START_VIEW, getSceneView, sceneImageSize } from "@/game/scene";
 
 import { playDiscoverySting } from "@/game/discovery-fx";
 import { useRoom } from "@/game/use-room";
 import { useI18n } from "@/i18n";
 import { useTurn } from "@/game/use-turn";
-
 
 export const Route = createFileRoute("/scene")({
   head: () => ({
@@ -47,7 +40,6 @@ function SceneRoute() {
   const { discussion, awaitingNextRound, finalPhase } = useTurn();
   // بعد ما يفتح المضيف «القرار الأخير» يتوقف اكتشاف أي دليل جديد.
   const discoveryPaused = discussion || awaitingNextRound || finalPhase;
-
 
   const [found, setFound] = useState<string | null>(null);
   const [miss, setMiss] = useState<string | null>(null);
@@ -133,7 +125,6 @@ function SceneRoute() {
     setToast(t("scene.discovered"));
     playDiscoverySting();
   };
-
 
   const foundItem = found ? getEvidence(found) : undefined;
   const foundAdded = !!found && unlockedIds.includes(found);
@@ -306,9 +297,7 @@ function SceneRoute() {
               <Search className="size-3.5 shrink-0" />
               {t("scene.hint")}
             </div>
-
           </div>
-
 
           {/* Side board: only what the team already discovered. */}
           <aside className="surface-panel cine-in h-fit p-4">
@@ -396,35 +385,33 @@ function SceneRoute() {
             <div className="p-5">
               <div className="flex items-center justify-between gap-3">
                 <span className="font-mono text-xs text-muted-foreground">{foundItem.number}</span>
-                <CaseTag tone="evidence">{foundAdded ? t("scene.discoveredTag") : t("scene.suspiciousTag")}</CaseTag>
+                <CaseTag tone="evidence">
+                  {foundAdded ? t("scene.discoveredTag") : t("scene.suspiciousTag")}
+                </CaseTag>
               </div>
               <h2 className="mt-2 text-xl font-bold">{foundItem.title}</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {foundItem.description}
               </p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                {t("scene.relationNote")}
-              </p>
+              <p className="mt-2 text-xs text-muted-foreground">{t("scene.relationNote")}</p>
               <div className="mt-5 flex flex-col gap-2 sm:flex-row">
                 {foundAdded ? (
                   <ActionButton variant="outline" className="w-full" disabled>
                     <Check className="size-4" /> {t("scene.onBoard")}
                   </ActionButton>
                 ) : (
-                  <ActionButton className="w-full" onClick={() => inspect(foundItem.id, { x: 50, y: 50 })}>
+                  <ActionButton
+                    className="w-full"
+                    onClick={() => inspect(foundItem.id, { x: 50, y: 50 })}
+                  >
                     <Fingerprint className="size-4" /> {t("scene.addToBoard")}
                   </ActionButton>
                 )}
-                <ActionButton
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setFound(null)}
-                >
+                <ActionButton variant="outline" className="w-full" onClick={() => setFound(null)}>
                   {t("scene.backToScene")}
                 </ActionButton>
               </div>
             </div>
-
           </div>
         </div>
       )}
@@ -456,34 +443,34 @@ function SceneRoute() {
               </button>
             </div>
             <div className="mt-4">
-            <EvidenceBoard
-              unlockedIds={unlockedIds}
-              compact
-              deductions={room?.deductions ?? []}
-              onDeduction={(link) =>
-                actions.addDeduction({
-                  linkId: link.id,
-                  title: link.title,
-                  insight: link.insight,
-                  evidenceIds: link.pair,
-                  author: me?.name ?? t("shell.investigator"),
-                })
-              }
-              onUseDeduction={(text, suspectId) =>
-                navigate({
-                  to: "/interrogation/$suspectId",
-                  params: { suspectId },
-                  search: { ask: text },
-                })
-              }
-              onConfront={(evidenceId, suspectId) =>
-                navigate({
-                  to: "/interrogation/$suspectId",
-                  params: { suspectId },
-                  search: { confront: evidenceId },
-                })
-              }
-            />
+              <EvidenceBoard
+                unlockedIds={unlockedIds}
+                compact
+                deductions={room?.deductions ?? []}
+                onDeduction={(link) =>
+                  actions.addDeduction({
+                    linkId: link.id,
+                    title: link.title,
+                    insight: link.insight,
+                    evidenceIds: link.pair,
+                    author: me?.name ?? t("shell.investigator"),
+                  })
+                }
+                onUseDeduction={(text, suspectId) =>
+                  navigate({
+                    to: "/interrogation/$suspectId",
+                    params: { suspectId },
+                    search: { ask: text },
+                  })
+                }
+                onConfront={(evidenceId, suspectId) =>
+                  navigate({
+                    to: "/interrogation/$suspectId",
+                    params: { suspectId },
+                    search: { confront: evidenceId },
+                  })
+                }
+              />
             </div>
           </div>
         </div>

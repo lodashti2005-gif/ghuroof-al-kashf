@@ -75,11 +75,17 @@ export const en = {
     },
     "7": {
       title: "Watch the clock",
-      body: ["Each suspect has limited interrogation time.", "Plan your questions and don't waste it."],
+      body: [
+        "Each suspect has limited interrogation time.",
+        "Plan your questions and don't waste it.",
+      ],
     },
     "8": {
       title: "Work together",
-      body: ["No single player can do everything.", "Use each other's roles and connect what you know."],
+      body: [
+        "No single player can do everything.",
+        "Use each other's roles and connect what you know.",
+      ],
     },
     "9": {
       title: "The final accusation",
@@ -252,7 +258,8 @@ export const en = {
     voteStatus: "Voting status",
     votedOf: "{{n}} of {{total}} have voted",
     secretNote: "Votes are fully secret — nobody sees who voted for whom, only the count.",
-    noVoteNote: "You don't have a vote this round — only those who backed a tied suspect vote again.",
+    noVoteNote:
+      "You don't have a vote this round — only those who backed a tied suspect vote again.",
     afterDiscussion: "Voting opens after the discussion",
     waitingVotes: "Waiting for the remaining votes",
     confirm: "Lock in my accusation",

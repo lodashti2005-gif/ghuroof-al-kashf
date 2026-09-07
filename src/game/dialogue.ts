@@ -105,7 +105,16 @@ const TOPIC_UNLOCK: Partial<Record<Topic, string>> = {
 const TOPIC_WEIGHT: Record<string, Partial<Record<Topic, number>>> = {
   fahad: { money: 9, accuse: 8, alibi: 5, phone: 4, door: 4, default: 1 },
   noura: { relation: 9, alibi: 8, accuse: 7, phone: 5, watch: 4, default: 1 },
-  yousef: { camera: 12, door: 11, money: 10, coffee: 9, phone: 8, accuse: 7, threat: 8, default: 2 },
+  yousef: {
+    camera: 12,
+    door: 11,
+    money: 10,
+    coffee: 9,
+    phone: 8,
+    accuse: 7,
+    threat: 8,
+    default: 2,
+  },
   dana: { accuse: 4, coffee: 3, watch: 3, default: 1 },
 };
 
@@ -322,7 +331,13 @@ export function generateSuspectReply(ctx: ReplyContext): ReplyResult {
   // ---- stress: questions only, never time ----
   const base = weights[topic] ?? weights.default ?? 1;
   const multiplier =
-    pressure === "evidence" ? 1.9 : pressure === "contradiction" ? 1.5 : pressure === "sensitive" ? 1 : 0.4;
+    pressure === "evidence"
+      ? 1.9
+      : pressure === "contradiction"
+        ? 1.5
+        : pressure === "sensitive"
+          ? 1
+          : 0.4;
   let delta = base * multiplier;
   if (aggressive) delta += 4;
   if (calm) delta -= 3;
@@ -339,7 +354,12 @@ export function generateSuspectReply(ctx: ReplyContext): ReplyResult {
   // never reveal the deepest line in the very first exchange
   const totalAsked = ctx.transcript.filter((m) => m.role === "investigator").length;
   if (totalAsked < 1) level = 0;
-  if (level === lines.length - 1 && lines.length > 1 && ctx.stress < 28 && pressure !== "evidence") {
+  if (
+    level === lines.length - 1 &&
+    lines.length > 1 &&
+    ctx.stress < 28 &&
+    pressure !== "evidence"
+  ) {
     level = Math.max(0, lines.length - 2);
   }
 

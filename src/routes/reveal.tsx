@@ -44,7 +44,9 @@ function Reveal() {
   const killer = getSuspect(killerId)!;
 
   useEffect(() => {
-    const timers = STEP_DELAYS.map((ms, i) => setTimeout(() => setStep((s) => Math.max(s, i + 1)), ms));
+    const timers = STEP_DELAYS.map((ms, i) =>
+      setTimeout(() => setStep((s) => Math.max(s, i + 1)), ms),
+    );
     return () => timers.forEach(clearTimeout);
   }, []);
 
@@ -227,7 +229,9 @@ function Reveal() {
             </p>
             <div className="mt-6">
               <Eyebrow>{t("reveal.motive")}</Eyebrow>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{solution.motive}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {solution.motive}
+              </p>
             </div>
           </div>
         </div>

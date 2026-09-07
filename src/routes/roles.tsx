@@ -124,7 +124,8 @@ function RolesScreen() {
 
   // كل اللاعبين جاهزين → المضيف يفتح القضية للفريق كله تلقائياً (وزر احتياطي أدناه).
   useEffect(() => {
-    if (isHost && allReady && allRolesAssigned && room?.phase === "roles") actions.setPhase("intro");
+    if (isHost && allReady && allRolesAssigned && room?.phase === "roles")
+      actions.setPhase("intro");
   }, [isHost, allReady, allRolesAssigned, room?.phase, actions]);
 
   return (
