@@ -46,7 +46,6 @@ export interface CaseSummary {
 const CHALET_CASE_ID = "last-night";
 const LAST_TRIP_CASE_ID = "last-trip";
 
-
 /**
  * سجل القضايا المتوفرة داخل اللعبة.
  *
@@ -105,15 +104,12 @@ export const caseRegistry: CaseSummary[] = [
     price: "3.000 د.ك",
     free: false,
   },
-
 ];
-
 
 /** القضية الحالية المفعّلة. */
 export const ACTIVE_CASE_ID = CHALET_CASE_ID;
 
-export const activeCase =
-  caseRegistry.find((c) => c.id === ACTIVE_CASE_ID) ?? caseRegistry[0]!;
+export const activeCase = caseRegistry.find((c) => c.id === ACTIVE_CASE_ID) ?? caseRegistry[0]!;
 
 export const getCaseById = (id: string) => caseRegistry.find((c) => c.id === id);
 

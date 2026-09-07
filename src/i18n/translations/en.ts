@@ -128,11 +128,12 @@ export const en = {
     buyWithPrice: "Buy the case — {{price}}",
     startTrial: "Start the free trial — 10 minutes",
     continueTrial: "Resume your trial ({{clock}})",
-    trialEnded: "Your free trial on this device is over — buy the case and pick up where you left off",
+    trialEnded:
+      "Your free trial on this device is over — buy the case and pick up where you left off",
     needAccount: "Buying needs an account —",
     signIn: "Sign in",
     home: "Home",
-    moment: "One moment..."
+    moment: "One moment...",
   },
   trial: {
     over: "Your free trial has ended",

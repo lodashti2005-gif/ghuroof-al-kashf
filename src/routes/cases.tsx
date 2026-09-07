@@ -86,21 +86,21 @@ function CasesPage() {
 
         <ResumeCaseButton className="mt-6" />
 
-
-
-
         <section className="mt-8">
-          <h2 className="font-display text-sm font-bold text-muted-foreground">{t("store.allCases")}</h2>
+          <h2 className="font-display text-sm font-bold text-muted-foreground">
+            {t("store.allCases")}
+          </h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {cases.map((item) => (
               <CaseCard key={item.id} item={item} signedIn={signedIn} />
             ))}
-
           </div>
         </section>
 
         <section className="mt-12 pb-6">
-          <h2 className="font-display text-sm font-bold text-muted-foreground">{t("store.myCases")}</h2>
+          <h2 className="font-display text-sm font-bold text-muted-foreground">
+            {t("store.myCases")}
+          </h2>
           {loading ? (
             <p className="mt-3 text-sm text-muted-foreground">{t("common.loading")}</p>
           ) : myCases.length === 0 ? (
@@ -196,7 +196,9 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
       </div>
 
       <div className="flex flex-1 flex-col gap-4 p-5">
-        <p className="text-sm leading-relaxed text-muted-foreground">{pick(item.teaser, item.teaserEn)}</p>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          {pick(item.teaser, item.teaserEn)}
+        </p>
 
         <ul className="grid grid-cols-2 gap-2 font-mono text-[11px] text-muted-foreground">
           <li className="inline-flex items-center gap-1.5">
@@ -301,7 +303,6 @@ function TrialCta({ item }: { item: StoreCase }) {
     );
   }
 
-
   if (trial?.started) {
     return (
       <Link
@@ -335,4 +336,3 @@ function TrialCta({ item }: { item: StoreCase }) {
     </button>
   );
 }
-
