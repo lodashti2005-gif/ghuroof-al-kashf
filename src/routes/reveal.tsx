@@ -190,7 +190,9 @@ function Reveal() {
             <ul className="mt-3 space-y-3">
               {teamContradictions.map((c) => (
                 <li key={c.id} className="rounded-xl border border-border bg-surface-2 p-3.5">
-                  <p className="text-xs font-bold">{c.suspectName}</p>
+                  <p className="text-xs font-bold">
+                    {pick(c.suspectName, getSuspect(c.suspectId)?.nameEn || c.suspectName)}
+                  </p>
                   <p className="mt-1 text-sm leading-relaxed">«{c.claim}»</p>
                   <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
                     {t("reveal.conflictsWith", { text: c.conflictsWith })}
@@ -304,11 +306,13 @@ function Reveal() {
               <Eyebrow>{t("reveal.missedClues")}</Eyebrow>
             </div>
             <ul className="mt-3 space-y-2.5">
-              {solution.provingClues.slice(0, 3).map((c, i) => (
-                <li key={i} className="text-sm leading-relaxed text-muted-foreground">
-                  {c}
-                </li>
-              ))}
+              {pick(solution.provingClues, solution.provingCluesEn)
+                .slice(0, 3)
+                .map((c, i) => (
+                  <li key={i} className="text-sm leading-relaxed text-muted-foreground">
+                    {c}
+                  </li>
+                ))}
               {evidence
                 .filter((item) => !unlocked.includes(item.id))
                 .map((item) => (
@@ -375,7 +379,7 @@ function Reveal() {
             { k: t("reveal.sumFound"), v: `${score.evidenceFound}/${score.evidenceTotal}` },
             { k: t("reveal.sumContradictions"), v: `${score.contradictions}` },
             { k: t("reveal.sumDuration"), v: formatDuration(score.seconds, lang) },
-            { k: t("reveal.sumAccused"), v: score.accusedName },
+            { k: t("reveal.sumAccused"), v: pick(score.accusedName, score.accusedNameEn) },
             { k: t("reveal.sumKiller"), v: pick(solution.killer, solution.killerEn) },
             { k: t("reveal.sumTotal"), v: `${score.total}/100` },
           ].map((row) => (

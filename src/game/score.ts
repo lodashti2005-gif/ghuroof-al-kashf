@@ -27,6 +27,7 @@ export interface TeamScore {
   seconds: number;
   accused?: string | undefined;
   accusedName: string;
+  accusedNameEn: string;
   correct: boolean;
 }
 
@@ -85,6 +86,8 @@ export function computeTeamScore(room: RoomState | null): TeamScore {
     100,
   );
 
+  const accusedSuspect = suspects.find((s) => s.id === accused);
+
   return {
     total,
     rank: rankFor(total),
@@ -96,7 +99,8 @@ export function computeTeamScore(room: RoomState | null): TeamScore {
     suspectReplies,
     seconds,
     accused,
-    accusedName: suspects.find((s) => s.id === accused)?.name ?? "—",
+    accusedName: accusedSuspect?.name ?? "—",
+    accusedNameEn: accusedSuspect?.nameEn ?? "—",
     correct,
     breakdown: [
       {
