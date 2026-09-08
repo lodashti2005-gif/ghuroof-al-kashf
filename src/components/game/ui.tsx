@@ -95,7 +95,8 @@ function useEasedValue(target: number, step = 1) {
         last = t;
         const diff = clamped - shownRef.current;
         if (diff !== 0) {
-          const move = Math.sign(diff) * Math.min(Math.abs(diff), Math.max(step, Math.abs(diff) / 8));
+          const move =
+            Math.sign(diff) * Math.min(Math.abs(diff), Math.max(step, Math.abs(diff) / 8));
           shownRef.current = Math.round(shownRef.current + move);
           setShown(shownRef.current);
         }
@@ -123,7 +124,9 @@ export function StressMeter({ value, compact = false }: { value: number; compact
   return (
     <div className="w-full">
       <div className="mb-1.5 flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">{pick(UI_TEXT.stressLabel.ar, UI_TEXT.stressLabel.en)}</span>
+        <span className="text-muted-foreground">
+          {pick(UI_TEXT.stressLabel.ar, UI_TEXT.stressLabel.en)}
+        </span>
         <span dir="ltr" className="font-mono text-foreground">
           {shown}
           <span className="text-muted-foreground">%</span>
@@ -173,11 +176,17 @@ export function EvidenceConfrontCard({ item }: { item: EvidenceItem }) {
   return (
     <div className="flex items-start gap-3 rounded-2xl rounded-tr-sm border border-evidence/45 bg-evidence/8 px-3.5 py-3">
       <span className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-evidence/35">
-        <SceneCrop crop={item.crop} alt={pick(item.title, item.titleEn)} className="absolute inset-0 size-full" />
+        <SceneCrop
+          crop={item.crop}
+          alt={pick(item.title, item.titleEn)}
+          className="absolute inset-0 size-full"
+        />
       </span>
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[0.65rem] text-muted-foreground">{pick(item.number, item.numberEn)}</span>
+          <span className="font-mono text-[0.65rem] text-muted-foreground">
+            {pick(item.number, item.numberEn)}
+          </span>
           <CaseTag tone="evidence">
             <Icon className="size-3" /> {pick(UI_TEXT.confrontTag.ar, UI_TEXT.confrontTag.en)}
           </CaseTag>
@@ -214,9 +223,13 @@ function EvidenceLightbox({ item, onClose }: { item: EvidenceItem; onClose: () =
         />
         <div className="flex items-start justify-between gap-3 p-4">
           <div className="min-w-0">
-            <span className="font-mono text-xs text-muted-foreground">{pick(item.number, item.numberEn)}</span>
+            <span className="font-mono text-xs text-muted-foreground">
+              {pick(item.number, item.numberEn)}
+            </span>
             <h3 className="mt-1 text-lg font-bold">{title}</h3>
-            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{pick(item.detail, item.detailEn)}</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+              {pick(item.detail, item.detailEn)}
+            </p>
             <p className="mt-2 text-xs text-muted-foreground">
               {pick(UI_TEXT.foundAt.ar, UI_TEXT.foundAt.en)}: {pick(item.foundAt, item.foundAtEn)}
             </p>
@@ -296,7 +309,9 @@ export function EvidenceCard({
         </button>
         <div className="min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <span className="font-mono text-xs text-muted-foreground">{pick(item.number, item.numberEn)}</span>
+            <span className="font-mono text-xs text-muted-foreground">
+              {pick(item.number, item.numberEn)}
+            </span>
             <CaseTag tone="evidence">
               <Icon className="size-3" /> {pick(UI_TEXT.discovered.ar, UI_TEXT.discovered.en)}
             </CaseTag>
@@ -337,6 +352,7 @@ export function SuspectCard({
   timeLeft?: number;
   href?: { to: string; params?: Record<string, string> };
 }) {
+  const { pick } = useI18n();
 
   const body = (
     <div className="surface-panel cine-in flex h-full flex-col gap-4 overflow-hidden p-0 transition-colors duration-300 hover:border-primary/45 sm:grid sm:grid-cols-[11rem_minmax(0,1fr)]">
@@ -344,7 +360,7 @@ export function SuspectCard({
       <div className="relative h-44 w-full overflow-hidden sm:h-full sm:min-h-[15rem]">
         <img
           src={suspect.portrait}
-          alt={`صورة ${suspect.name}`}
+          alt={`${pick(UI_TEXT.photoOf.ar, UI_TEXT.photoOf.en)} ${pick(suspect.name, suspect.nameEn)}`}
           loading="lazy"
           width={912}
           height={1104}
@@ -352,7 +368,8 @@ export function SuspectCard({
         />
         <div className="absolute inset-0 bg-gradient-to-t from-card/90 to-transparent sm:bg-gradient-to-l sm:from-transparent sm:to-card/80" />
         <span className="absolute bottom-2 right-3 font-mono text-[0.65rem] text-muted-foreground sm:hidden">
-          العمر {suspect.age}
+          {pick(UI_TEXT.age.ar, UI_TEXT.age.en)} {suspect.age}{" "}
+          {pick(UI_TEXT.yearsOld.ar, UI_TEXT.yearsOld.en)}
         </span>
       </div>
 
@@ -360,7 +377,7 @@ export function SuspectCard({
         <div className="min-w-0">
           <div className="flex items-start justify-between gap-2">
             <h3 className="min-w-0 truncate text-lg font-bold leading-tight sm:text-xl">
-              {suspect.name}
+              {pick(suspect.name, suspect.nameEn)}
             </h3>
             <span
               dir="ltr"
@@ -370,19 +387,19 @@ export function SuspectCard({
             </span>
           </div>
           <div className="mt-2 flex flex-wrap gap-2">
-            <CaseTag>{suspect.role}</CaseTag>
+            <CaseTag>{pick(suspect.role, suspect.roleEn)}</CaseTag>
             {typeof stress !== "number" && (
               <CaseTag tone="danger">
-                <Fingerprint className="size-3" /> ملف مفتوح
+                <Fingerprint className="size-3" /> {pick(UI_TEXT.openFile.ar, UI_TEXT.openFile.en)}
               </CaseTag>
             )}
           </div>
           <p className="mt-2.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-            {suspect.personality}
+            {pick(suspect.personality, suspect.personalityEn)}
           </p>
           {suspect.known[0] && (
             <p className="mt-2 line-clamp-2 border-r-2 border-border pe-0 ps-2.5 text-xs leading-relaxed text-muted-foreground/85">
-              {suspect.known[0]}
+              {pick(suspect.known[0], suspect.knownEn?.[0] || suspect.known[0])}
             </p>
           )}
         </div>
@@ -391,12 +408,18 @@ export function SuspectCard({
           <div className="mt-auto space-y-2.5">
             {typeof timeLeft === "number" && (
               <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-surface-2 px-2.5 py-1.5">
-                <span className="text-xs text-muted-foreground">الوقت المتبقي</span>
+                <span className="text-xs text-muted-foreground">
+                  {pick(UI_TEXT.timeLeft.ar, UI_TEXT.timeLeft.en)}
+                </span>
                 <span
                   dir="ltr"
                   className={cn(
                     "font-mono text-xs",
-                    timeLeft <= 0 ? "text-muted-foreground" : timeLeft < 60 ? "text-primary" : "text-foreground",
+                    timeLeft <= 0
+                      ? "text-muted-foreground"
+                      : timeLeft < 60
+                        ? "text-primary"
+                        : "text-foreground",
                   )}
                 >
                   {formatClock(timeLeft)}
@@ -407,11 +430,14 @@ export function SuspectCard({
               <div className="min-w-0 flex-1">
                 <StressMeter value={stress} compact />
               </div>
-              <CaseTag tone={finished ? "muted" : "danger"}>{finished ? "انتهى" : "متاح"}</CaseTag>
+              <CaseTag tone={finished ? "muted" : "danger"}>
+                {finished
+                  ? pick(UI_TEXT.finished.ar, UI_TEXT.finished.en)
+                  : pick(UI_TEXT.available.ar, UI_TEXT.available.en)}
+              </CaseTag>
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
@@ -428,8 +454,8 @@ export function SuspectCard({
   );
 }
 
-
 export function ProgressRing({ value, label }: { value: number; label: string }) {
+  const { pick } = useI18n();
   return (
     <div className="flex items-center gap-4">
       <div
@@ -443,7 +469,9 @@ export function ProgressRing({ value, label }: { value: number; label: string })
         </span>
       </div>
       <div className="min-w-0">
-        <Eyebrow>تقدم التحقيق</Eyebrow>
+        <Eyebrow>
+          {pick(UI_TEXT.investigationProgress.ar, UI_TEXT.investigationProgress.en)}
+        </Eyebrow>
         <p className="mt-1 truncate text-sm text-muted-foreground">{label}</p>
       </div>
     </div>

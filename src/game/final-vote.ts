@@ -12,6 +12,7 @@ import type { RoomState } from "./types";
 export interface VoteTally {
   id: string;
   name: string;
+  nameEn: string;
   count: number;
 }
 
@@ -52,7 +53,12 @@ export function tallyFor(room: RoomState | null, round: number): VoteTally[] {
     .filter(([playerId]) => eligible.has(playerId))
     .map(([, suspectId]) => suspectId);
   return candidatesFor(room)
-    .map((s) => ({ id: s.id, name: s.name, count: values.filter((v) => v === s.id).length }))
+    .map((s) => ({
+      id: s.id,
+      name: s.name,
+      nameEn: s.nameEn ?? s.name,
+      count: values.filter((v) => v === s.id).length,
+    }))
     .sort((a, b) => b.count - a.count);
 }
 

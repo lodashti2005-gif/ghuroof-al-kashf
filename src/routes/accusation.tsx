@@ -248,14 +248,16 @@ function Accusation() {
                 key={row.id}
                 className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-2 px-4 py-3"
               >
-                <span className="truncate text-sm font-bold">{row.name}</span>
+                <span className="truncate text-sm font-bold">{pick(row.name, row.nameEn)}</span>
                 <span className="font-mono text-sm text-primary">{row.count}</span>
               </li>
             ))}
           </ul>
           {!accused && shownLeaders.length > 1 && (
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              {t("accusation.tieAgain", { names: shownLeaders.map((l) => l.name).join(joiner) })}
+              {t("accusation.tieAgain", {
+                names: shownLeaders.map((l) => pick(l.name, l.nameEn)).join(joiner),
+              })}
             </p>
           )}
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
