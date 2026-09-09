@@ -266,5 +266,25 @@ export const LAST_TRIP_JASSIM_CONFRONT_LINES: Record<string, string> = {
   "lt-call-log": "هذا ما يخصني، أسألوا عبدالله عن مكالمته.",
 };
 
-export const getJassimConfrontLine = (id: string | null | undefined) =>
-  (id && LAST_TRIP_JASSIM_CONFRONT_LINES[id]) || null;
+/** نفس الردود بالإنجليزية — تُستخدم لما يكون اللاعب مختار English. */
+export const LAST_TRIP_JASSIM_CONFRONT_LINES_EN: Record<string, string> = {
+  "nasser-wet": "I washed my hands at the sink, so what? That doesn't mean I did anything.",
+  "mishal-trash": "Just tissues, I tossed them in the bin before going into the coffee shop. What's strange about that?",
+  "mishal-argue": "Sounds like my voice? The station was full of people, how are you so sure it was me?",
+  "lt-tissue": "Yes the tissues are mine, I used them and threw them out. Where's the problem?",
+  "lt-faucet": "Yes I went into the far restroom, but that doesn't mean I did anything to Rashid.",
+  "lt-shoe-print": "Yes I went into the far restroom, but that doesn't mean I did anything to Rashid.",
+  "lt-corridor-cam": "Yes I walked through the corridor… I never said I didn't move from my seat.",
+  "lt-coffee-cam": "Yes that's me at the coffee shop door, and I threw tissues in the bin. What about it?",
+  "lt-coffee-cup": "That's just my cup, I had coffee at the shop like everyone else.",
+  "lt-call-log": "That has nothing to do with me, ask Abdullah about his own call.",
+};
+
+export const getJassimConfrontLine = (
+  id: string | null | undefined,
+  lang: "ar" | "en" = "ar",
+) => {
+  if (!id) return null;
+  const dict = lang === "en" ? LAST_TRIP_JASSIM_CONFRONT_LINES_EN : LAST_TRIP_JASSIM_CONFRONT_LINES;
+  return dict[id] ?? LAST_TRIP_JASSIM_CONFRONT_LINES[id] ?? null;
+};
