@@ -733,8 +733,10 @@ export function leaveRoom() {
  */
 export const startIntro = () =>
   update((s) => {
+    // بدء فعلي للقضية من غرفة الانتظار → المقدمة تبدأ من أولها.
+    // لو الغرفة أصلاً بمرحلة المقدمة نحافظ على المشهد الحالي (بدون إعادة).
+    if (s.phase !== "intro" || s.intro === null) s.intro = 0;
     s.phase = "intro";
-    if (s.intro === null) s.intro = 0;
     // بداية القضية الفعلية = بداية عدّاد التجربة المجانية (لقضية «آخر رحلة» فقط).
     if (s.caseId === "last-trip" && s.ltTrial === null)
       s.ltTrial = { startedAt: Date.now(), unlocked: false };
