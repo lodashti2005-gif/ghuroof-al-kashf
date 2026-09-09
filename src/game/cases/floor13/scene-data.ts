@@ -18,7 +18,9 @@ export interface Floor13Rect {
 export interface Floor13EvidencePoint {
   id: string;
   title: string;
+  titleEn?: string;
   description: string;
+  descriptionEn?: string;
   /** موقع الدليل بالعالم [x, y, z] */
   position: [number, number, number];
   /** مسافة التفاعل بالمتر */
