@@ -425,7 +425,9 @@ function LastTripInterrogationRoute() {
               >
                 <Clock className="size-4" /> {formatInterrogationClock(remaining)}
               </span>
-              <CaseTag>{tt("evidenceCount", { found: foundEvidence.length, total: foundEvidence.length })}</CaseTag>
+              <CaseTag>
+                {pick("الأدلة", "Evidence")} {foundEvidence.length}
+              </CaseTag>
 
               <ActionButton variant="outline" onClick={finishInterrogation}>
                 <Gavel className="size-4" /> {tt("finishInterrogation")}
