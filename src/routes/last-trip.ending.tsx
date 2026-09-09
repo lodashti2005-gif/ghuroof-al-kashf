@@ -139,9 +139,9 @@ function LastTripEndingRoute() {
           {beats.slice(0, shown).map((b, i) => (
             <Panel key={b.title} className={cn("cine-in", i === shown - 1 && "border-primary/40")}>
               <Eyebrow>
-                {i + 1}. {pick(b.title, b.titleEn)}
+                {i + 1}. {b.title}
               </Eyebrow>
-              <p className="mt-2 text-sm leading-relaxed">{pick(b.text, b.textEn)}</p>
+              <p className="mt-2 text-sm leading-relaxed">{b.text}</p>
             </Panel>
           ))}
         </div>
