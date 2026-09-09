@@ -70,7 +70,8 @@ export function ResumeCaseButton({ className = "" }: { className?: string }) {
 
   if (!saved) return null;
 
-  const title = caseRegistry.find((c) => c.id === saved.caseId)? undefined : undefined;
+  const meta = caseRegistry.find((c) => c.id === saved.caseId);
+  const title = pick(meta?.title, meta?.titleEn) ?? pick("القضية", "the case");
 
   return (
     <button
@@ -89,7 +90,9 @@ export function ResumeCaseButton({ className = "" }: { className?: string }) {
       className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-primary/45 bg-primary/10 px-6 py-3.5 font-display text-base font-bold text-primary transition-colors hover:bg-primary/15 disabled:opacity-60 ${className}`}
     >
       <History className="size-4.5" />
-      {busy ? "نرجّعك لمكانك..." : `متابعة القضية · ${title}`}
+      {busy
+        ? pick("نرجّعك لمكانك...", "Taking you back...")
+        : pick(`متابعة القضية · ${title}`, `Continue the case · ${title}`)}
     </button>
   );
 }

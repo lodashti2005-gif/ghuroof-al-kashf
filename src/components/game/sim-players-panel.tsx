@@ -11,10 +11,12 @@ import { ActionButton } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { lastTripRoles } from "@/game/cases/last-trip-roles";
 import * as sim from "@/game/sim-players";
+import { useI18n } from "@/i18n";
 import { useRoom } from "@/game/use-room";
 import { cn } from "@/lib/utils";
 
 export function SimPlayersPanel() {
+  const { pick } = useI18n();
   const { sim: state, room } = useRoom();
 
   return (
@@ -22,24 +24,25 @@ export function SimPlayersPanel() {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Users2 className="size-4 text-primary" />
-          <Eyebrow>محاكاة لاعبين (اختبار)</Eyebrow>
+          <Eyebrow>{pick("محاكاة لاعبين (اختبار)", "Player simulation (test)")}</Eyebrow>
         </div>
         {state.active ? (
-          <CaseTag tone="evidence">شغّال</CaseTag>
+          <CaseTag tone="evidence">{pick("شغّال", "Running")}</CaseTag>
         ) : (
-          <CaseTag tone="muted">متوقف</CaseTag>
+          <CaseTag tone="muted">{pick("متوقف", "Stopped")}</CaseTag>
         )}
       </div>
 
       {!state.active ? (
         <>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-            شغّل لاعبَين إضافيين بنفس الجهاز بدون حساب ولا دفع، وبدّل الهوية بينهم
-            لتجربة المواجهة التجريبية بأدوار مختلفة. محلي بالكامل — ما يظهر لأي
-            لاعب ثاني.
+            {pick(
+              "شغّل لاعبَين إضافيين بنفس الجهاز بدون حساب ولا دفع، وبدّل الهوية بينهم لتجربة المواجهة التجريبية بأدوار مختلفة. محلي بالكامل — ما يظهر لأي لاعب ثاني.",
+              "Run two extra players on this same device with no account and no payment, and switch identities between them to test the confrontation with different roles. Fully local — no other player sees it.",
+            )}
           </p>
           <ActionButton className="mt-4 w-full justify-center" onClick={() => sim.enableSim(2)}>
-            <UserPlus className="size-4" /> شغّل لاعبَين وهميين
+            <UserPlus className="size-4" /> {pick("شغّل لاعبَين وهميين", "Run two simulated players")}
           </ActionButton>
         </>
       ) : (
@@ -55,7 +58,8 @@ export function SimPlayersPanel() {
                   : "border-border bg-secondary/50 text-muted-foreground",
               )}
             >
-              هويتي الحقيقية {room?.code ? `· غرفة ${room.code}` : ""}
+              {pick("هويتي الحقيقية", "My real identity")}{" "}
+              {room?.code ? pick(`· غرفة ${room.code}`, `· Room ${room.code}`) : ""}
             </button>
 
             {state.players.map((p) => (
@@ -75,7 +79,7 @@ export function SimPlayersPanel() {
                     className="block w-full truncate text-right text-xs font-semibold"
                   >
                     {p.name}
-                    {state.asId === p.id && <span className="ms-2 text-primary">(الهوية الحالية)</span>}
+                    {state.asId === p.id && <span className="ms-2 text-primary">{pick("(الهوية الحالية)", "(current identity)")}</span>}
                   </button>
                   <select
                     value={p.roleId}
@@ -92,7 +96,7 @@ export function SimPlayersPanel() {
                 <button
                   type="button"
                   onClick={() => sim.removeSimPlayer(p.id)}
-                  aria-label={`حذف ${p.name}`}
+                  aria-label={pick(`حذف ${p.name}`, `Remove ${p.name}`)}
                   className="grid size-8 place-items-center rounded-lg border border-border text-muted-foreground hover:text-primary"
                 >
                   <X className="size-3.5" />
@@ -103,16 +107,18 @@ export function SimPlayersPanel() {
 
           <div className="mt-4 flex flex-wrap gap-2">
             <ActionButton variant="outline" className="px-4 py-2 text-xs" onClick={() => sim.addSimPlayer()}>
-              <UserPlus className="size-3.5" /> أضف لاعب وهمي
+              <UserPlus className="size-3.5" /> {pick("أضف لاعب وهمي", "Add a simulated player")}
             </ActionButton>
             <ActionButton variant="ghost" className="px-4 py-2 text-xs" onClick={() => sim.disableSim()}>
-              أوقف المحاكاة
+              {pick("أوقف المحاكاة", "Stop the simulation")}
             </ActionButton>
           </div>
 
           <p className="mt-3 text-[0.7rem] leading-relaxed text-muted-foreground">
-            المواجهة التجريبية تبقى معزولة: ما تنعكس على أي لاعب حقيقي ولا تستهلك
-            مواجهة القضية.
+            {pick(
+              "المواجهة التجريبية تبقى معزولة: ما تنعكس على أي لاعب حقيقي ولا تستهلك مواجهة القضية.",
+              "The test confrontation stays isolated: it doesn't affect any real player and doesn't use up the case confrontation.",
+            )}
           </p>
         </>
       )}
