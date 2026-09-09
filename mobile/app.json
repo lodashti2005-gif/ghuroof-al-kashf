@@ -8,6 +8,12 @@
     "scheme": "waralsalfa",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0b0c0f",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#0b0c0f"
+    },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "bundleIdentifier": "com.waralsalfa.app",
