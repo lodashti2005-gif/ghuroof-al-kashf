@@ -15,7 +15,12 @@ import { lastTripEvidenceForSuspect } from "@/game/cases/last-trip-evidence";
 import { lastTripWitnessClaimsForSuspect } from "@/game/cases/last-trip-witness-claims";
 
 import { useLastTripRole } from "@/game/cases/last-trip-role-state";
-import { LAST_TRIP_DENIED_MESSAGE } from "@/game/cases/last-trip-roles";
+import {
+  LAST_TRIP_DENIED_MESSAGE,
+  LAST_TRIP_DENIED_MESSAGE_EN,
+} from "@/game/cases/last-trip-roles";
+import { lastTripT } from "@/game/cases/last-trip-strings";
+import { useI18n } from "@/i18n";
 import {
   formatInterrogationClock,
   useLastTripTimer,
@@ -113,6 +118,11 @@ function LastTripInterrogationRoute() {
   const endRef = useRef<HTMLDivElement>(null);
   const { remaining, expired } = useLastTripTimer(suspectId);
   const { inRoom, room, role, can } = useLastTripRole();
+  const { lang, dir, pick } = useI18n();
+  const tt = (key: Parameters<typeof lastTripT>[1], vars?: Record<string, string | number>) =>
+    lastTripT(lang, key, vars);
+  const deniedMessage = pick(LAST_TRIP_DENIED_MESSAGE, LAST_TRIP_DENIED_MESSAGE_EN);
+  const investigatorLabel = tt("investigator");
 
   // المحقق هو الوحيد اللي يرسل الأسئلة، والباقي يشاهد السؤال والرد والتوتر.
   const isInterrogator = can("interrogate");
@@ -224,14 +234,14 @@ function LastTripInterrogationRoute() {
     async (text: string, confront: { evidenceId?: string; witnessId?: string } | null) => {
       if (!suspect || busy || expired || !text.trim()) return;
       if (!isInterrogator) {
-        setDenied(LAST_TRIP_DENIED_MESSAGE);
+        setDenied(deniedMessage);
         return;
       }
       const confrontId = confront?.evidenceId ?? confront?.witnessId ?? null;
       // مواجهة مستهلكة من أي لاعب بالغرفة ما تتكرر مرة ثانية.
       if (confrontId && confronts.includes(confrontId)) {
         setPending(null);
-        setDenied("هذي المواجهة صارت قبل — ما تنفع تتكرر.");
+        setDenied(tt("repeatedConfront"));
         return;
       }
 
@@ -239,7 +249,7 @@ function LastTripInterrogationRoute() {
       const question: Line = { id: crypto.randomUUID(), role: "investigator", text };
       const history = [...lines, question];
       if (inRoom) {
-        store.pushMessage(suspectId, { role: "investigator", author: "المحقق", text });
+        store.pushMessage(suspectId, { role: "investigator", author: investigatorLabel, text });
         // تُسجّل المواجهة فوراً بالحالة المشتركة قبل انتظار الرد.
         if (confrontId) store.recordConfront(suspectId, confrontId);
       } else {
@@ -262,13 +272,14 @@ function LastTripInterrogationRoute() {
             message: text,
             stress,
             unlockedEvidence: availableIds,
+            lang,
             confrontEvidenceId: confront?.evidenceId ?? null,
             confrontWitnessId: confront?.witnessId ?? null,
             confrontHistory: confronts,
             contradictionCount,
             transcript: history.slice(-20).map((l) => ({
               role: l.role,
-              author: l.role === "investigator" ? "المحقق" : suspect.name,
+              author: l.role === "investigator" ? investigatorLabel : pick(suspect.name, suspect.nameEn),
               text: l.text,
             })),
           },
@@ -276,7 +287,7 @@ function LastTripInterrogationRoute() {
         if (inRoom) {
           store.pushMessage(suspectId, {
             role: "suspect",
-            author: suspect.name,
+            author: pick(suspect.name, suspect.nameEn),
             text: reply.text,
             ...(reply.contradiction ? { flagged: true } : {}),
           });
@@ -285,11 +296,11 @@ function LastTripInterrogationRoute() {
           if (reply.contradiction) {
             store.addContradiction({
               suspectId,
-              suspectName: suspect.name,
+              suspectName: pick(suspect.name, suspect.nameEn),
               claim: reply.text.slice(0, 200),
-              conflictsWith: "كلامه ما يركب مع دليل أو قول مكتشف",
+              conflictsWith: tt("contradictionFlag"),
               source: "statement",
-              author: "المحقق",
+              author: investigatorLabel,
             });
           }
         } else {
@@ -314,6 +325,11 @@ function LastTripInterrogationRoute() {
     },
     [
       ask,
+      lang,
+      pick,
+      tt,
+      deniedMessage,
+      investigatorLabel,
       busy,
       expired,
       availableIds,
@@ -339,11 +355,11 @@ function LastTripInterrogationRoute() {
 
   if (!suspect) {
     return (
-      <div dir="rtl" className="min-h-screen bg-background p-6">
+      <div dir={dir} className="min-h-screen bg-background p-6">
         <Panel className="mx-auto max-w-lg text-center">
-          <p className="text-sm text-muted-foreground">ما فيه مشتبه فيه بهذا المعرّف.</p>
+          <p className="text-sm text-muted-foreground">{tt("noSuspectAtId")}</p>
           <Link to="/last-trip/suspects" className="mt-4 inline-block">
-            <ActionButton variant="outline">رجوع للشخصيات</ActionButton>
+            <ActionButton variant="outline">{tt("backToSuspects")}</ActionButton>
           </Link>
         </Panel>
       </div>
@@ -352,20 +368,19 @@ function LastTripInterrogationRoute() {
 
   if (detectiveMissing) {
     return (
-      <div dir="rtl" className="grid min-h-screen place-items-center bg-background px-4 py-10">
+      <div dir={dir} className="grid min-h-screen place-items-center bg-background px-4 py-10">
         <Panel className="cine-in w-full max-w-lg text-center">
-          <Eyebrow>غرفة الاستجواب</Eyebrow>
-          <h1 className="mt-3 text-2xl font-bold">ما فيه محقق بالفريق</h1>
+          <Eyebrow>{tt("interrogationRoom")}</Eyebrow>
+          <h1 className="mt-3 text-2xl font-bold">{tt("noDetective")}</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            الاستجواب يحتاج لاعب بدور «المحقق». رجّعوا لصفحة الشخصيات وتأكدوا إن كل
-            اللاعبين داخلين وأخذوا أدوارهم، وبعدها ارجعوا للاستجواب.
+            {tt("noDetectiveDesc")}
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             <Link to="/last-trip/suspects">
-              <ActionButton>رجوع للشخصيات</ActionButton>
+              <ActionButton>{tt("backToSuspects")}</ActionButton>
             </Link>
             <Link to="/last-trip/scene">
-              <ActionButton variant="outline">مسرح الجريمة</ActionButton>
+              <ActionButton variant="outline">{tt("crimeScene")}</ActionButton>
             </Link>
           </div>
         </Panel>
@@ -374,28 +389,29 @@ function LastTripInterrogationRoute() {
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-background px-4 py-6 sm:px-6">
+    <div dir={dir} className="min-h-screen bg-background px-4 py-6 sm:px-6">
       <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-[1fr_320px]">
         <div className="space-y-4">
           <Panel className="cine-in flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <img
                 src={suspect.portrait}
-                alt={`صورة ${suspect.name}`}
+                alt={tt("photoOf", { name: pick(suspect.name, suspect.nameEn) })}
                 width={96}
                 height={120}
                 className="size-16 rounded-md object-cover object-top grayscale-[30%]"
               />
               <div>
-                <Eyebrow>غرفة الاستجواب</Eyebrow>
-                <h1 className="mt-1 text-xl font-bold">{suspect.name}</h1>
+                <Eyebrow>{tt("interrogationRoom")}</Eyebrow>
+                <h1 className="mt-1 text-xl font-bold">{pick(suspect.name, suspect.nameEn)}</h1>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  {suspect.relation} · {suspect.age} سنة
+                  {pick(suspect.relation, suspect.relationEn)} ·{" "}
+                  {tt("yearsOld", { n: suspect.age })}
                 </p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {role && <CaseTag>دورك: {role.title}</CaseTag>}
+              {role && <CaseTag>{tt("yourRole", { role: pick(role.title, role.titleEn) })}</CaseTag>}
               <span
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-mono text-sm tabular-nums",
@@ -405,24 +421,24 @@ function LastTripInterrogationRoute() {
                       ? "border-primary/50 bg-primary/10 text-primary"
                       : "border-border bg-secondary text-foreground",
                 )}
-                aria-label="الوقت المتبقي لاستجواب هذا المشتبه فيه"
+                aria-label={tt("timeRemainingAria")}
               >
                 <Clock className="size-4" /> {formatInterrogationClock(remaining)}
               </span>
-              <CaseTag>الأدلة {foundEvidence.length}</CaseTag>
+              <CaseTag>{tt("evidenceCount", { found: foundEvidence.length, total: foundEvidence.length })}</CaseTag>
 
               <ActionButton variant="outline" onClick={finishInterrogation}>
-                <Gavel className="size-4" /> أنهِ الاستجواب
+                <Gavel className="size-4" /> {tt("finishInterrogation")}
               </ActionButton>
               <Link to="/last-trip/suspects">
                 <ActionButton variant="outline">
-                  <Users className="size-4" /> الشخصيات
+                  <Users className="size-4" /> {tt("characters")}
                 </ActionButton>
               </Link>
 
               <Link to="/last-trip/scene">
                 <ActionButton variant="outline">
-                  <ArrowRight className="size-4" /> مسرح الجريمة
+                  <ArrowRight className="size-4" /> {tt("crimeScene")}
                 </ActionButton>
               </Link>
             </div>
@@ -432,9 +448,7 @@ function LastTripInterrogationRoute() {
             <div className="max-h-[52vh] space-y-3 overflow-y-auto pl-1">
               {lines.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  {isInterrogator
-                    ? "ابدأ بسؤال. اسأله بلهجتك عادي: «وين كنت وقتها؟»، «شنو كنت تسوي؟»"
-                    : "المحقق هو اللي يسأل — أنت تشوف السؤال والرد ومؤشر التوتر لحظة بلحظة."}
+                  {isInterrogator ? tt("startWithQuestion") : tt("watchOnly")}
                 </p>
               )}
               {lines.map((l) => (
@@ -448,23 +462,27 @@ function LastTripInterrogationRoute() {
                   )}
                 >
                   <p className="mb-1 text-[0.65rem] text-muted-foreground">
-                    {l.role === "investigator" ? "المحقق" : suspect.name}
+                    {l.role === "investigator" ? investigatorLabel : pick(suspect.name, suspect.nameEn)}
                   </p>
                   <p>{l.text}</p>
                   {l.contradiction && (
                     <p className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-2 py-1 text-[0.7rem] text-primary">
-                      <FileWarning className="size-3.5" /> في شي بكلامه ما يركب مع الدليل
+                      <FileWarning className="size-3.5" /> {tt("contradictionFlag")}
                     </p>
                   )}
                 </div>
               ))}
-              {busy && <p className="text-xs text-muted-foreground">…{suspect.name} يفكر</p>}
+              {busy && (
+                <p className="text-xs text-muted-foreground">
+                  {tt("thinking", { name: pick(suspect.name, suspect.nameEn) })}
+                </p>
+              )}
               <div ref={endRef} />
             </div>
 
             {pending && !expired && (
               <p className="mt-3 rounded-md border border-evidence/40 bg-evidence/10 px-2.5 py-2 text-xs text-evidence">
-                مواجهة مرفقة مع سؤالك الجاي.
+                {tt("pendingConfront")}
               </p>
             )}
 
@@ -476,7 +494,7 @@ function LastTripInterrogationRoute() {
 
             {expired && (
               <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-2.5 py-2 text-xs text-destructive">
-                خلص وقت استجواب {suspect.name} — ما تقدر ترسل أسئلة جديدة له.
+                {tt("interrogationExpired", { name: pick(suspect.name, suspect.nameEn) })}
               </p>
             )}
 
@@ -492,17 +510,17 @@ function LastTripInterrogationRoute() {
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   disabled={expired}
-                  placeholder={expired ? "انتهى وقت هذا المشتبه فيه" : "اكتب سؤالك…"}
+                  placeholder={expired ? tt("questionPlaceholderExpired") : tt("questionPlaceholder")}
                   className="min-w-0 flex-1 rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary/60 disabled:opacity-60"
                 />
                 <ActionButton type="submit" disabled={busy || expired || !draft.trim()}>
-                  <Send className="size-4" /> إرسال
+                  <Send className="size-4" /> {tt("send")}
                 </ActionButton>
               </form>
             ) : (
               <p className="mt-4 flex items-center gap-2 rounded-md border border-border bg-secondary/40 px-3 py-2.5 text-xs text-muted-foreground">
-                <Lock className="size-3.5 shrink-0" /> إرسال الأسئلة من اختصاص المحقق —{" "}
-                {LAST_TRIP_DENIED_MESSAGE}
+                <Lock className="size-3.5 shrink-0" /> {tt("interrogateDeniedPrefix")}
+                {deniedMessage}
               </p>
             )}
           </Panel>
@@ -514,10 +532,10 @@ function LastTripInterrogationRoute() {
           </Panel>
 
           <Panel className="cine-in">
-            <Eyebrow>مواجهة بدليل</Eyebrow>
+            <Eyebrow>{tt("confrontWithEvidence")}</Eyebrow>
             {foundEvidence.length === 0 ? (
               <p className="mt-2 text-xs text-muted-foreground">
-                ما عندك أدلة مكتشفة بعد. روح مسرح الجريمة أول.
+                {tt("noEvidenceYet")}
               </p>
             ) : (
               <div className="mt-3 space-y-2">
@@ -528,21 +546,21 @@ function LastTripInterrogationRoute() {
                     disabled={busy || expired || confronts.includes(e.id)}
                     onClick={() => {
                       if (!isInterrogator) {
-                        setDenied(LAST_TRIP_DENIED_MESSAGE);
+                        setDenied(deniedMessage);
                         return;
                       }
                       setPending({ evidenceId: e.id });
-                      setDraft(`شنو تقول عن ${e.title}؟`);
+                      setDraft(tt("whatDoYouSay", { title: pick(e.title, e.titleEn) }));
                     }}
                     className={cn(
-                      "w-full rounded-md border border-border bg-secondary px-2.5 py-2 text-right text-xs hover:border-evidence/60",
+                      "w-full rounded-md border border-border bg-secondary px-2.5 py-2 text-start text-xs hover:border-evidence/60",
                       confrontDisabled && "opacity-60",
                     )}
                   >
-                    {e.title}
+                    {pick(e.title, e.titleEn)}
                     {confronts.includes(e.id) && (
                       <span className="ms-2 text-[0.65rem] text-muted-foreground">
-                        · تمت المواجهة
+                        · {tt("confrontDone")}
                       </span>
                     )}
                   </button>
@@ -552,10 +570,10 @@ function LastTripInterrogationRoute() {
           </Panel>
 
           <Panel className="cine-in">
-            <Eyebrow>مواجهة بأقوال شاهد</Eyebrow>
+            <Eyebrow>{tt("confrontWithWitness")}</Eyebrow>
             {witnessClaims.length === 0 && (
               <p className="mt-2 text-xs text-muted-foreground">
-                ما فيه أقوال شهود تخص {suspect.name}.
+                {tt("noWitnessClaims", { name: pick(suspect.name, suspect.nameEn) })}
               </p>
             )}
             <div className="mt-3 space-y-2">
@@ -566,21 +584,21 @@ function LastTripInterrogationRoute() {
                   disabled={busy || expired || confronts.includes(c.id)}
                   onClick={() => {
                     if (!isInterrogator) {
-                      setDenied(LAST_TRIP_DENIED_MESSAGE);
+                      setDenied(deniedMessage);
                       return;
                     }
                     setPending({ witnessId: c.id });
-                    setDraft(`${c.text} شنو ردك؟`);
+                    setDraft(tt("whatsYourReply", { text: pick(c.text, c.textEn) }));
                   }}
                   className={cn(
-                    "w-full rounded-md border border-border bg-secondary px-2.5 py-2 text-right text-xs hover:border-primary/60",
+                    "w-full rounded-md border border-border bg-secondary px-2.5 py-2 text-start text-xs hover:border-primary/60",
                     confrontDisabled && "opacity-60",
                   )}
                 >
-                  {c.label}
+                  {pick(c.label, c.labelEn)}
                   {confronts.includes(c.id) && (
                     <span className="ms-2 text-[0.65rem] text-muted-foreground">
-                      · تمت المواجهة
+                      · {tt("confrontDone")}
                     </span>
                   )}
                 </button>
@@ -590,11 +608,11 @@ function LastTripInterrogationRoute() {
 
           {/* لوحة المحلل — من اختصاص المحلل فقط. */}
           <Panel className="cine-in">
-            <Eyebrow>التناقضات وربط الأقوال</Eyebrow>
+            <Eyebrow>{tt("contradictionsBoard")}</Eyebrow>
             {isAnalyst ? (
               (room?.contradictions ?? []).length === 0 ? (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  ما انرصد أي تناقض حتى الآن — تابع الاستجواب.
+                  {tt("noContradictionsYet")}
                 </p>
               ) : (
                 <ul className="mt-3 space-y-2">
@@ -612,18 +630,18 @@ function LastTripInterrogationRoute() {
               )
             ) : (
               <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                <Lock className="size-3.5 shrink-0" /> {LAST_TRIP_DENIED_MESSAGE}
+                <Lock className="size-3.5 shrink-0" /> {deniedMessage}
               </p>
             )}
           </Panel>
 
           <SimPlayersPanel />
 
-          <ConfrontLab suspectId={suspectId} suspectName={suspect.name} />
+          <ConfrontLab suspectId={suspectId} suspectName={pick(suspect.name, suspect.nameEn)} />
 
           <Panel className="cine-in">
 
-            <Eyebrow>المشتبه فيهم</Eyebrow>
+            <Eyebrow>{tt("suspectsListEyebrow")}</Eyebrow>
             <div className="mt-3 flex flex-wrap gap-2">
               {lastTripSuspects.map((s) => (
                 <Link
@@ -637,7 +655,7 @@ function LastTripInterrogationRoute() {
                       : "border-border bg-secondary text-muted-foreground",
                   )}
                 >
-                  {s.name}
+                  {pick(s.name, s.nameEn)}
                 </Link>
               ))}
             </div>
