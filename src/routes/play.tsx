@@ -13,6 +13,7 @@ import {
   activeCase,
 } from "@/game/game-meta";
 import { useI18n } from "@/i18n";
+import { ROOM_ERROR_EN } from "@/game/room-store";
 import { useRoom } from "@/game/use-room";
 
 
