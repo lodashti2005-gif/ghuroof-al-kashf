@@ -127,7 +127,16 @@ export function discoverLastTripEvidence(id: string): boolean {
 
   // مزامنة مع الغرفة المشتركة (تتجاهل نفسها إذا ماكو غرفة).
   unlockEvidence(id);
-  addNote({ author: "مسرح الجريمة", tag: "دليل", text: `${item.title} — ${item.observation}` });
+  // لغة اللاعب اللي اكتشف الدليل — نفس المفتاح المستخدم بنظام الترجمة.
+  const isEn =
+    typeof window !== "undefined" && window.localStorage.getItem("wr_lang") === "en";
+  addNote({
+    author: isEn ? "Crime scene" : "مسرح الجريمة",
+    tag: isEn ? "Evidence" : "دليل",
+    text: isEn
+      ? `${item.titleEn ?? item.title} — ${item.observationEn ?? item.observation}`
+      : `${item.title} — ${item.observation}`,
+  });
   return true;
 }
 
