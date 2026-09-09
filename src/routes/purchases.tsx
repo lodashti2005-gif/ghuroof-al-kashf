@@ -252,7 +252,7 @@ function PurchasesPage() {
                                 className="rounded-lg border border-border/50 bg-card/30 px-3 py-2 text-[12px]"
                               >
                                 <div className="flex flex-wrap items-center justify-between gap-2">
-                                  <span className="text-foreground">{ev.label}</span>
+                                  <span className="text-foreground">{pick(ev.label, ev.labelEn ?? ev.label)}</span>
                                   <span
                                     className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-display text-[10px] ${evUi.className}`}
                                   >

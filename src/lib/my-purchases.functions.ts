@@ -38,6 +38,8 @@ export interface MyPurchaseEvent {
   status: PurchaseUiStatus;
   /** وصف مختصر للنتيجة بالعربي. */
   label: string;
+  /** نفس الوصف بالإنجليزي. */
+  labelEn: string;
   transactionId: string | null;
   eventType: string | null;
   amount: number | null;
@@ -59,13 +61,13 @@ const OUTCOME_STATUS: Record<string, PurchaseUiStatus> = {
   rejected: "failed",
 };
 
-const OUTCOME_LABEL: Record<string, string> = {
-  granted: "تأكيد الدفع — فُتحت القضية",
-  duplicate: "حدث مكرر — ما تكرر الفتح",
-  ignored: "حدث غير معني",
-  missing_custom_data: "بيانات ناقصة",
-  db_error: "خطأ أثناء التسجيل",
-  rejected: "مرفوض — توقيع غير صحيح",
+const OUTCOME_LABEL: Record<string, { ar: string; en: string }> = {
+  granted: { ar: "تأكيد الدفع — فُتحت القضية", en: "Payment confirmed — case unlocked" },
+  duplicate: { ar: "حدث مكرر — ما تكرر الفتح", en: "Duplicate event — unlock not repeated" },
+  ignored: { ar: "حدث غير معني", en: "Unrelated event" },
+  missing_custom_data: { ar: "بيانات ناقصة", en: "Missing data" },
+  db_error: { ar: "خطأ أثناء التسجيل", en: "Recording error" },
+  rejected: { ar: "مرفوض — توقيع غير صحيح", en: "Rejected — invalid signature" },
 };
 
 function normalize(status: string): PurchaseUiStatus {
@@ -129,7 +131,8 @@ export const listMyPurchases = createServerFn({ method: "POST" })
           id: h.id,
           source: "webhook",
           status: OUTCOME_STATUS[h.outcome] ?? "pending",
-          label: OUTCOME_LABEL[h.outcome] ?? h.outcome,
+          label: OUTCOME_LABEL[h.outcome]?.ar ?? h.outcome,
+          labelEn: OUTCOME_LABEL[h.outcome]?.en ?? h.outcome,
           transactionId: h.transaction_id ?? null,
           eventType: h.event_type ?? null,
           amount: h.amount != null ? Number(h.amount) : null,
@@ -161,6 +164,12 @@ export const listMyPurchases = createServerFn({ method: "POST" })
             : status === "failed"
               ? "عملية مرفوضة"
               : "عملية بانتظار التأكيد",
+        labelEn:
+          status === "paid"
+            ? "Transaction confirmed — case unlocked"
+            : status === "failed"
+              ? "Transaction declined"
+              : "Transaction awaiting confirmation",
         transactionId: row.provider_ref ?? null,
         eventType: row.provider ?? null,
         amount: row.amount != null ? Number(row.amount) : row.amount_kwd != null ? Number(row.amount_kwd) : null,
