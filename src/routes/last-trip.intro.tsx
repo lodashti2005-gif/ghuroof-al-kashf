@@ -12,9 +12,11 @@ import { ArrowLeft, ArrowRight, Search, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { ActionButton } from "@/components/game/shell";
-import { lastTripCase } from "@/game/cases/last-trip";
+import { LAST_TRIP_CASE_ID, lastTripCase } from "@/game/cases/last-trip";
 import { lastTripT } from "@/game/cases/last-trip-strings";
+import { useRoom } from "@/game/use-room";
 import { useI18n } from "@/i18n";
+
 import coffeeShop from "@/assets/scene-last-trip/coffee-shop.jpg";
 import corridor from "@/assets/scene-last-trip/corridor.jpg";
 import entrance from "@/assets/scene-last-trip/entrance.jpg";
@@ -316,12 +318,42 @@ const SCENES: Scene[] = [
   },
 ];
 
+/** علامة «قرأ المقدمة» لكل غرفة/جلسة — تمنع لوب المقدمة بعد الرجوع أو التحديث. */
+const introSeenKey = (roomCode: string | null | undefined) =>
+  `wr_intro_seen:${LAST_TRIP_CASE_ID}:${roomCode ?? "solo"}`;
+
+function markIntroSeen(roomCode: string | null | undefined) {
+  try {
+    window.localStorage.setItem(introSeenKey(roomCode), "1");
+  } catch {
+    /* التخزين غير متاح — الاعتماد على مرحلة الغرفة */
+  }
+}
+
 function LastTripIntroRoute() {
   const navigate = useNavigate();
   const { lang, dir, pick } = useI18n();
+  const { room, isHost, actions } = useRoom();
 
   const [step, setStep] = useState(0);
   const scene = SCENES[Math.min(step, SCENES.length - 1)]!;
+
+  // المقدمة تمت قراءتها سابقاً (نفس الغرفة/الجلسة) أو القضية بدأت فعلاً →
+  // ننتقل مباشرة للمرحلة التالية بدون إعادة عرض المقدمة.
+  useEffect(() => {
+    const inRoom = !!room && room.caseId === LAST_TRIP_CASE_ID;
+    if (inRoom && room && room.phase !== "intro" && room.phase !== "lobby") {
+      navigate({ to: "/last-trip/scene", replace: true });
+      return;
+    }
+    let seen = false;
+    try {
+      seen = window.localStorage.getItem(introSeenKey(room?.code)) === "1";
+    } catch {
+      seen = false;
+    }
+    if (seen) navigate({ to: "/last-trip/scene", replace: true });
+  }, [room, navigate]);
 
   const [shown, setShown] = useState(1);
   useEffect(() => {
@@ -335,17 +367,27 @@ function LastTripIntroRoute() {
   const skipToEndOfScene = () => setShown(scene.lines.length);
   const done = shown >= scene.lines.length;
 
+  const finishIntro = () => {
+    markIntroSeen(room?.code);
+    // المضيف يحرّك الغرفة للمرحلة التالية فيتبعه بقية الفريق تلقائياً.
+    if (room && room.caseId === LAST_TRIP_CASE_ID && isHost && room.phase === "intro") {
+      actions.setPhase("investigation");
+    }
+    navigate({ to: "/last-trip/scene", replace: true });
+  };
+
   const advance = () => {
     if (!done) {
       skipToEndOfScene();
       return;
     }
     if (step >= SCENES.length - 1) {
-      navigate({ to: "/last-trip/scene" });
+      finishIntro();
       return;
     }
     setStep((n) => n + 1);
   };
+
 
   const NextIcon = dir === "rtl" ? ArrowLeft : ArrowRight;
 
@@ -442,10 +484,13 @@ function LastTripIntroRoute() {
           </ActionButton>
           <Link
             to="/last-trip/scene"
+            replace
+            onClick={() => markIntroSeen(room?.code)}
             className="font-mono text-[11px] text-muted-foreground underline-offset-4 hover:underline"
           >
             {lastTripT(lang, "skipIntro")}
           </Link>
+
         </div>
       </div>
     </main>

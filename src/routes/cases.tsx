@@ -118,8 +118,9 @@ function CasesPage() {
                     </p>
                     <p className="mt-1 inline-flex items-center gap-1.5 font-mono text-[11px] text-primary">
                       <BadgeCheck className="size-3.5" />{" "}
-                      {item.free ? t("store.trialBadge") : t("store.purchased")}
+                      {item.purchased ? t("store.purchased") : t("store.trialBadge")}
                     </p>
+
                   </div>
                   <Link
                     to={item.id === "last-trip" ? "/last-trip/lobby" : "/play"}
@@ -172,8 +173,9 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
           {item.owned ? (
             <>
               <BadgeCheck className="size-3.5" />{" "}
-              {item.free ? t("store.trialBadge") : t("store.purchased")}
+              {item.purchased ? t("store.purchased") : t("store.trialBadge")}
             </>
+
           ) : (
             <>
               <Lock className="size-3.5" /> {t("store.locked")}
@@ -223,10 +225,13 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
           <span className="font-mono text-[11px] text-muted-foreground">
             {soon
               ? t("store.inPrep")
-              : item.owned
-                ? t("store.tryFirstTen")
-                : t("store.needsPurchase")}
+              : item.purchased
+                ? t("store.purchased")
+                : item.owned
+                  ? t("store.tryFirstTen")
+                  : t("store.needsPurchase")}
           </span>
+
         </div>
 
         <div className="mt-auto">
@@ -235,7 +240,7 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
               to={item.id === "last-trip" ? "/last-trip/lobby" : "/play"}
               onClick={() => {
                 // تتبّع تسويقي فقط.
-                void trackEvent(item.free ? "trial_click" : "case_start", {
+                void trackEvent(item.purchased || !item.free ? "case_start" : "trial_click", {
                   caseId: item.id,
                   path: "/cases",
                 });
@@ -243,8 +248,9 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-display text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.02]"
             >
               <Play className="size-4" />{" "}
-              {item.free ? t("store.tryFirstTen") : t("store.startCase")}
+              {item.free && !item.purchased ? t("store.tryFirstTen") : t("store.startCase")}
             </Link>
+
           ) : soon ? (
             <button
               type="button"
