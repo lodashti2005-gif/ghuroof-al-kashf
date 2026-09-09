@@ -222,7 +222,8 @@ export function Floor13Experience({ onExit }: { onExit: () => void }) {
             <div className="absolute right-4 top-4 flex items-center gap-2 rounded-full border border-amber-200/20 bg-black/55 px-4 py-2 text-sm backdrop-blur">
               <span className="text-amber-200/70">{pick(F13.foundEvidence.ar, F13.foundEvidence.en)}</span>
               <span className="font-bold text-amber-100">
-                {toArabicDigits(found.size)}/{toArabicDigits(FLOOR13_EVIDENCE_TOTAL)}
+                {pick(toArabicDigits(found.size), String(found.size))}/
+                {pick(toArabicDigits(FLOOR13_EVIDENCE_TOTAL), String(FLOOR13_EVIDENCE_TOTAL))}
               </span>
             </div>
 
