@@ -13,6 +13,8 @@ import { lastTripEvidence } from "@/game/cases/last-trip-evidence";
 import { useLastTripInterrogations } from "@/game/cases/last-trip-interrogation-progress";
 import { useLastTripAccusation } from "@/game/cases/last-trip-accusation";
 import { getLastTripFoundSnapshot, subscribeLastTripProgress, getLastTripFoundServerSnapshot } from "@/game/cases/last-trip-progress";
+import { lastTripT } from "@/game/cases/last-trip-strings";
+import { useI18n } from "@/i18n";
 import { useRoom } from "@/game/use-room";
 import { judgeLastTripAccusation } from "@/lib/last-trip-ending.functions";
 import { cn } from "@/lib/utils";
@@ -55,6 +57,9 @@ function LastTripAccusationRoute() {
   const { room, actions } = useRoom();
   const navigate = useNavigate();
   const judge = useServerFn(judgeLastTripAccusation);
+  const { lang, dir, pick } = useI18n();
+  const tt = (key: Parameters<typeof lastTripT>[1], vars?: Record<string, string | number>) =>
+    lastTripT(lang, key, vars);
 
   const [picked, setPicked] = useState<string | null>(null);
   const [reasons, setReasons] = useState<string[]>([]);
@@ -89,7 +94,7 @@ function LastTripAccusationRoute() {
     if (!picked || busy) return;
     const playerId = actions.getSession()?.playerId ?? null;
     if (!room || room.caseId !== "last-trip" || !playerId) {
-      setJudgeError("الاتهام النهائي يحتاج غرفة قضية «آخر رحلة» — افتح غرفة أو ادخل برمز.");
+      setJudgeError(tt("accusationRoomError"));
       return;
     }
     setBusy(true);
@@ -100,7 +105,7 @@ function LastTripAccusationRoute() {
       });
       confirm(picked, verdict.correct, reasons);
     } catch {
-      setJudgeError("ما قدرنا نسجّل الاتهام — تأكد إنك داخل غرفة القضية وجرب مرة ثانية.");
+      setJudgeError(tt("accusationJudgeError"));
     } finally {
       setBusy(false);
     }
@@ -108,29 +113,29 @@ function LastTripAccusationRoute() {
 
 
   return (
-    <div dir="rtl" className="min-h-screen bg-background px-4 py-6 sm:px-6">
+    <div dir={dir} className="min-h-screen bg-background px-4 py-6 sm:px-6">
       <div className="mx-auto max-w-5xl space-y-5">
         <Panel className="cine-in flex flex-wrap items-center justify-between gap-4">
           <div className="min-w-0">
-            <Eyebrow>المرحلة الأخيرة</Eyebrow>
+            <Eyebrow>{tt("finalStage")}</Eyebrow>
             <h1 className="mt-1.5 text-xl font-bold sm:text-2xl">
-              الاختيار النهائي — {lastTripCase.title}
+              {tt("accusationTitle", { title: pick(lastTripCase.title, lastTripCase.titleEn) })}
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
               {!allDone
-                ? "لازم تخلصون استجواب كل الشخصيات قبل الاتهام."
+                ? tt("accusationDescLocked")
                 : acc.stage === "result"
-                  ? "تم تسجيل اتهام الفريق — النتيجة تحت."
-                  : "خلصتوا استجواب كل الشخصيات. اختاروا منو تتهمونه."}
+                  ? tt("accusationDescResult")
+                  : tt("accusationDescReady")}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <CaseTag tone="danger">
-              الاستجوابات {count}/{total}
+              {tt("interrogationsCount", { count, total })}
             </CaseTag>
             <Link to="/last-trip/suspects">
               <ActionButton variant="outline">
-                <ArrowRight className="size-4" /> الشخصيات
+                <ArrowRight className="size-4" /> {tt("characters")}
               </ActionButton>
             </Link>
           </div>
@@ -138,12 +143,13 @@ function LastTripAccusationRoute() {
 
         {!allDone ? (
           <Panel className="cine-in flex items-center gap-3 text-sm text-muted-foreground">
-            <Lock className="size-4 shrink-0" /> الاتهام مقفل — باقي {total - count} استجواب.
+            <Lock className="size-4 shrink-0" /> {tt("accusationLocked", { n: total - count })}
           </Panel>
         ) : acc.stage === "result" ? (
           <ResultPanel
             correct={acc.result === "correct"}
-            name={accusedSuspect?.name ?? ""}
+            lang={lang}
+            name={accusedSuspect ? pick(accusedSuspect.name, accusedSuspect.nameEn) : ""}
             attempts={acc.attempts.length}
             onRetry={retry}
             onEnding={() => {
@@ -161,7 +167,7 @@ function LastTripAccusationRoute() {
                   disabled={busy}
                   onClick={() => setPicked(s.id)}
                   className={cn(
-                    "cine-in overflow-hidden rounded-lg border bg-surface-2 text-right transition-colors",
+                    "cine-in overflow-hidden rounded-lg border bg-surface-2 text-start transition-colors",
                     picked === s.id
                       ? "border-primary ring-1 ring-primary/40"
                       : "border-border hover:border-primary/50",
@@ -170,7 +176,7 @@ function LastTripAccusationRoute() {
                   <div className="relative">
                     <img
                       src={s.portrait}
-                      alt={`صورة ${s.name}`}
+                      alt={tt("photoOf", { name: pick(s.name, s.nameEn) })}
                       width={912}
                       height={1104}
                       loading="lazy"
@@ -182,8 +188,10 @@ function LastTripAccusationRoute() {
                       aria-hidden="true"
                     />
                     <div className="absolute inset-x-4 bottom-3">
-                      <h2 className="text-xl font-bold">{s.name}</h2>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{s.relation}</p>
+                      <h2 className="text-xl font-bold">{pick(s.name, s.nameEn)}</h2>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {pick(s.relation, s.relationEn)}
+                      </p>
                     </div>
                   </div>
                 </button>
@@ -192,9 +200,9 @@ function LastTripAccusationRoute() {
 
             {unlockedEvidence.length > 0 && (
               <Panel className="cine-in">
-                <Eyebrow>أسباب الاتهام (اختياري)</Eyebrow>
+                <Eyebrow>{tt("accusationReasonsEyebrow")}</Eyebrow>
                 <p className="mt-1.5 text-sm text-muted-foreground">
-                  اختاروا الأدلة اللي بنيتوا عليها الاتهام.
+                  {tt("accusationReasonsDesc")}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {unlockedEvidence.map((e) => {
@@ -216,7 +224,7 @@ function LastTripAccusationRoute() {
                         )}
                       >
                         {on && <Check className="me-1 inline size-3" />}
-                        {e.title}
+                        {pick(e.title, e.titleEn)}
                       </button>
                     );
                   })}
@@ -227,11 +235,16 @@ function LastTripAccusationRoute() {
             <Panel className="cine-in flex flex-wrap items-center justify-between gap-4">
               <p className="text-sm text-muted-foreground">
                 {picked
-                  ? `اخترتوا: ${lastTripSuspects.find((s) => s.id === picked)?.name ?? ""}`
-                  : "اختاروا متهم من فوق."}
+                  ? tt("youPicked", {
+                      name: (() => {
+                        const s = lastTripSuspects.find((x) => x.id === picked);
+                        return s ? pick(s.name, s.nameEn) : "";
+                      })(),
+                    })
+                  : tt("pickSuspect")}
               </p>
               <ActionButton variant="danger" disabled={!picked || busy} onClick={() => void submit()}>
-                <Gavel className="size-4" /> {busy ? "جاري التسجيل…" : "تأكيد الاتهام"}
+                <Gavel className="size-4" /> {busy ? tt("recording") : tt("confirmAccusation")}
               </ActionButton>
             </Panel>
 
@@ -248,17 +261,21 @@ function LastTripAccusationRoute() {
 
 function ResultPanel({
   correct,
+  lang,
   name,
   attempts,
   onRetry,
   onEnding,
 }: {
   correct: boolean;
+  lang: "ar" | "en";
   name: string;
   attempts: number;
   onRetry: () => void;
   onEnding: () => void;
 }) {
+  const tt = (key: Parameters<typeof lastTripT>[1], vars?: Record<string, string | number>) =>
+    lastTripT(lang, key, vars);
   return (
     <Panel
       className={cn(
@@ -273,29 +290,29 @@ function ResultPanel({
           <X className="size-5 text-destructive" />
         )}
         <h2 className="text-2xl font-extrabold">
-          {correct ? "اتهام صحيح" : "الاتهام غير صحيح"}
+          {correct ? tt("correctAccusation") : tt("wrongAccusation")}
         </h2>
       </div>
       <p className="text-sm leading-relaxed text-muted-foreground">
         {correct
-          ? `وصلتوا للقاتل: ${name}. ربطتوا الأدلة مع التناقضات بكلامه، والخط الزمني اللي حاول يركبه ما ثبت أمام اللي اكتشفتوه.`
-          : `${name} مب القاتل. الأدلة والتناقضات تشير لشخص ثاني — راجعوا كلام الشهود والخط الزمني وأعيدوا الاتهام، أو شوفوا النهاية.`}
+          ? tt("correctAccusationDesc", { name })
+          : tt("wrongAccusationDesc", { name })}
       </p>
       {attempts > 1 && (
-        <p className="text-xs text-muted-foreground">عدد محاولات الاتهام: {attempts}</p>
+        <p className="text-xs text-muted-foreground">{tt("attemptsCount", { n: attempts })}</p>
       )}
       <div className="flex flex-wrap gap-2">
         {correct ? (
           <ActionButton variant="danger" onClick={onEnding}>
-            <ScrollText className="size-4" /> كشف الحل
+            <ScrollText className="size-4" /> {tt("revealSolution")}
           </ActionButton>
         ) : (
           <>
             <ActionButton onClick={onRetry}>
-              <RotateCcw className="size-4" /> إعادة الاتهام
+              <RotateCcw className="size-4" /> {tt("retryAccusation")}
             </ActionButton>
             <ActionButton variant="outline" onClick={onEnding}>
-              <ScrollText className="size-4" /> مشاهدة النهاية
+              <ScrollText className="size-4" /> {tt("watchEnding")}
             </ActionButton>
           </>
         )}

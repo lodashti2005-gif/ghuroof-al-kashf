@@ -58,7 +58,7 @@ export function ConfrontLab({
   suspectId: string;
   suspectName: string;
 }) {
-  const { pick } = useI18n();
+  const { lang, pick } = useI18n();
   const ask = useServerFn(askLastTripSuspect);
   const [open, setOpen] = useState(false);
   const [evidenceId, setEvidenceId] = useState("");
@@ -96,6 +96,7 @@ export function ConfrontLab({
           suspectId,
           message: text,
           stress,
+          lang,
           // بيئة معزولة: نفتح الدليل المختار للتجربة فقط داخل هذا النداء.
           unlockedEvidence: evidence ? [evidence.id] : [],
           confrontEvidenceId: evidence?.id ?? null,

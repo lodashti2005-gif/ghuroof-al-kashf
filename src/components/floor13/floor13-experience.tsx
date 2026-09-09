@@ -4,7 +4,37 @@ import {
   FLOOR13_EVIDENCE_TOTAL,
   type Floor13EvidencePoint,
 } from "@/game/cases/floor13/scene-data";
+import { useI18n } from "@/i18n";
 import type { Floor13Controls } from "./floor13-player";
+
+/** نصوص «الطابق ١٣» بلغتين — تُختار حسب لغة اللاعب. */
+const F13 = {
+  move: { ar: "تحرّك", en: "Move" },
+  loadingFloor: { ar: "جاري تحميل الطابق…", en: "Loading the floor…" },
+  foundEvidence: { ar: "الأدلة المكتشفة", en: "Evidence found" },
+  exit: { ar: "خروج", en: "Exit" },
+  roomHint: {
+    ar: "الغرفة ١٣٠٦ في نهاية الممر على اليمين",
+    en: "Room 1306 is at the end of the corridor on the right",
+  },
+  allFound: { ar: "تم جمع جميع الأدلة", en: "All the evidence has been collected" },
+  dragToLook: { ar: "اسحب إصبعك لتحريك النظر", en: "Drag your finger to look around" },
+  inspect: { ar: "افحص 🔍", en: "Inspect 🔍" },
+  discovered: {
+    ar: "تم اكتشافه • غرفة ١٣٠٦ / الطابق ١٣",
+    en: "Discovered • Room 1306 / Floor 13",
+  },
+  close: { ar: "إغلاق", en: "Close" },
+  brand: { ar: "ورا السالفة", en: "Wara Al-Salfa" },
+  floorTitle: { ar: "الطابق ١٣", en: "Floor 13" },
+  intro: {
+    ar: "المصعد يتوقف عند الطابق الثالث عشر. الممر ساكت، والغرفة ١٣٠٦ باقي بابها مفتوح…",
+    en: "The lift stops on the thirteenth floor. The corridor is silent, and room 1306 still has its door open…",
+  },
+  enter: { ar: "ادخل الطابق ١٣", en: "Enter Floor 13" },
+  loadingScene: { ar: "جاري تحميل المشهد…", en: "Loading the scene…" },
+  back: { ar: "رجوع", en: "Back" },
+} as const;
 
 const Floor13Canvas = lazy(() => import("./floor13-canvas"));
 
@@ -36,6 +66,7 @@ function useKeys() {
 
 /** عصا تحكم لمس (أسفل يسار الشاشة). */
 function Joystick({ controls }: { controls: React.RefObject<Floor13Controls> }) {
+  const { pick } = useI18n();
   const base = useRef<HTMLDivElement>(null);
   const [knob, setKnob] = useState({ x: 0, y: 0 });
 
@@ -83,12 +114,13 @@ function Joystick({ controls }: { controls: React.RefObject<Floor13Controls> }) 
         className="absolute left-1/2 top-1/2 h-14 w-14 rounded-full border border-amber-200/40 bg-amber-100/20"
         style={{ transform: `translate(calc(-50% + ${knob.x}px), calc(-50% + ${knob.y}px))` }}
       />
-      <span className="absolute -top-6 right-0 text-[11px] text-amber-100/50">تحرّك</span>
+      <span className="absolute -top-6 right-0 text-[11px] text-amber-100/50">{pick(F13.move.ar, F13.move.en)}</span>
     </div>
   );
 }
 
 export function Floor13Experience({ onExit }: { onExit: () => void }) {
+  const { pick } = useI18n();
   const controls = useRef<Floor13Controls>({ move: { x: 0, y: 0 }, look: { dx: 0, dy: 0 } });
   const keys = useKeys();
   const [entered, setEntered] = useState(false);
@@ -175,7 +207,7 @@ export function Floor13Experience({ onExit }: { onExit: () => void }) {
             onPointerUp={onLookUp}
             onPointerCancel={onLookUp}
           >
-            <Suspense fallback={<LoadingVeil label="جاري تحميل الطابق…" />}>
+            <Suspense fallback={<LoadingVeil label={pick(F13.loadingFloor.ar, F13.loadingFloor.en)} />}>
               <Floor13Canvas
                 controls={controls}
                 keys={keys}
@@ -188,7 +220,7 @@ export function Floor13Experience({ onExit }: { onExit: () => void }) {
           {/* ===== HUD ===== */}
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute right-4 top-4 flex items-center gap-2 rounded-full border border-amber-200/20 bg-black/55 px-4 py-2 text-sm backdrop-blur">
-              <span className="text-amber-200/70">الأدلة المكتشفة</span>
+              <span className="text-amber-200/70">{pick(F13.foundEvidence.ar, F13.foundEvidence.en)}</span>
               <span className="font-bold text-amber-100">
                 {toArabicDigits(found.size)}/{toArabicDigits(FLOOR13_EVIDENCE_TOTAL)}
               </span>
@@ -198,25 +230,25 @@ export function Floor13Experience({ onExit }: { onExit: () => void }) {
               onClick={onExit}
               className="pointer-events-auto absolute left-4 top-4 rounded-full border border-amber-200/20 bg-black/55 px-4 py-2 text-sm text-amber-100/90 backdrop-blur active:scale-95"
             >
-              ← خروج
+              ← {pick(F13.exit.ar, F13.exit.en)}
             </button>
 
             <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-100/45" />
 
             <div className="absolute bottom-24 left-1/2 -translate-x-1/2 text-center text-[11px] text-amber-100/35">
-              الغرفة ١٣٠٦ في نهاية الممر على اليمين
+              {pick(F13.roomHint.ar, F13.roomHint.en)}
             </div>
 
             {completed && (
               <div className="absolute left-1/2 top-16 w-max max-w-[90vw] -translate-x-1/2 rounded-full border border-emerald-300/35 bg-emerald-950/70 px-5 py-2 text-center text-sm font-semibold text-emerald-100 backdrop-blur">
-                تم جمع جميع الأدلة
+                {pick(F13.allFound.ar, F13.allFound.en)}
               </div>
             )}
 
             <Joystick controls={controls} />
 
             <span className="absolute bottom-8 right-6 text-[11px] text-amber-100/40">
-              اسحب إصبعك لتحريك النظر
+              {pick(F13.dragToLook.ar, F13.dragToLook.en)}
             </span>
 
             {near && !card && (
@@ -224,7 +256,7 @@ export function Floor13Experience({ onExit }: { onExit: () => void }) {
                 onClick={inspect}
                 className="pointer-events-auto absolute bottom-32 left-1/2 -translate-x-1/2 rounded-full border border-amber-300/40 bg-amber-100/10 px-7 py-3 text-base font-semibold text-amber-100 shadow-lg backdrop-blur active:scale-95"
               >
-                افحص 🔍
+                {pick(F13.inspect.ar, F13.inspect.en)}
               </button>
             )}
           </div>
@@ -234,15 +266,15 @@ export function Floor13Experience({ onExit }: { onExit: () => void }) {
             <div className="absolute inset-0 z-20 flex items-end justify-center bg-black/55 p-5 pb-10 backdrop-blur-sm">
               <div className="w-full max-w-md rounded-2xl border border-amber-200/25 bg-[#14110e]/95 p-5 shadow-2xl">
                 <div className="mb-1 text-[11px] tracking-widest text-amber-300/60">
-                  تم اكتشافه • غرفة ١٣٠٦ / الطابق ١٣
+                  {pick(F13.discovered.ar, F13.discovered.en)}
                 </div>
-                <h3 className="mb-2 text-lg font-bold text-amber-100">{card.title}</h3>
-                <p className="mb-4 text-sm leading-relaxed text-amber-50/70">{card.description}</p>
+                <h3 className="mb-2 text-lg font-bold text-amber-100">{pick(card.title, card.titleEn)}</h3>
+                <p className="mb-4 text-sm leading-relaxed text-amber-50/70">{pick(card.description, card.descriptionEn)}</p>
                 <button
                   onClick={() => setCard(null)}
                   className="w-full rounded-xl border border-amber-200/25 bg-amber-100/10 py-3 text-sm font-semibold text-amber-100 active:scale-[0.98]"
                 >
-                  إغلاق
+                  {pick(F13.close.ar, F13.close.en)}
                 </button>
               </div>
             </div>
@@ -265,6 +297,7 @@ function LoadingVeil({ label }: { label: string }) {
 
 /** شاشة تحميل سينمائية قصيرة قبل دخول الـ3D (وتضمن إيماءة مستخدم على الجوال). */
 function IntroGate({ onEnter, onExit }: { onEnter: () => void; onExit: () => void }) {
+  const { pick } = useI18n();
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setReady(true), 1600);
@@ -273,10 +306,10 @@ function IntroGate({ onEnter, onExit }: { onEnter: () => void; onExit: () => voi
 
   return (
     <div className="flex h-full flex-col items-center justify-center gap-6 px-6 text-center">
-      <div className="text-[11px] tracking-[0.3em] text-amber-300/50">ورا السالفة</div>
-      <h1 className="text-3xl font-black text-amber-100">الطابق ١٣</h1>
+      <div className="text-[11px] tracking-[0.3em] text-amber-300/50">{pick(F13.brand.ar, F13.brand.en)}</div>
+      <h1 className="text-3xl font-black text-amber-100">{pick(F13.floorTitle.ar, F13.floorTitle.en)}</h1>
       <p className="max-w-sm text-sm leading-relaxed text-amber-50/55">
-        المصعد يتوقف عند الطابق الثالث عشر. الممر ساكت، والغرفة ١٣٠٦ باقي بابها مفتوح…
+        {pick(F13.intro.ar, F13.intro.en)}
       </p>
       <div className="h-[2px] w-56 overflow-hidden rounded bg-amber-200/10">
         <div
@@ -289,13 +322,13 @@ function IntroGate({ onEnter, onExit }: { onEnter: () => void; onExit: () => voi
           onClick={onEnter}
           className="rounded-full border border-amber-300/40 bg-amber-100/10 px-8 py-3 font-semibold text-amber-100 active:scale-95"
         >
-          ادخل الطابق ١٣
+          {pick(F13.enter.ar, F13.enter.en)}
         </button>
       ) : (
-        <span className="text-xs text-amber-100/40">جاري تحميل المشهد…</span>
+        <span className="text-xs text-amber-100/40">{pick(F13.loadingScene.ar, F13.loadingScene.en)}</span>
       )}
       <button onClick={onExit} className="text-xs text-amber-100/35 underline">
-        رجوع
+        {pick(F13.back.ar, F13.back.en)}
       </button>
     </div>
   );

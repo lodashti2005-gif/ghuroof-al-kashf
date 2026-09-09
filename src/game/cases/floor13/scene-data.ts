@@ -18,7 +18,9 @@ export interface Floor13Rect {
 export interface Floor13EvidencePoint {
   id: string;
   title: string;
+  titleEn?: string;
   description: string;
+  descriptionEn?: string;
   /** موقع الدليل بالعالم [x, y, z] */
   position: [number, number, number];
   /** مسافة التفاعل بالمتر */
@@ -68,6 +70,8 @@ export const FLOOR13_EVIDENCE: Floor13EvidencePoint[] = [
     id: "f13-elevator-keycard",
     title: "بطاقة مفتاح مرمية",
     description: "بطاقة غرفة بلاستيكية على السجادة قرب المصعد، رقمها ممسوح بخدش عمودي.",
+    titleEn: "Discarded key card",
+    descriptionEn: "A plastic room card on the carpet near the lift, its number scratched out with a vertical gouge.",
     position: [-0.72, 0.02, -1.5],
     radius: 1.7,
   },
@@ -75,6 +79,8 @@ export const FLOOR13_EVIDENCE: Floor13EvidencePoint[] = [
     id: "f13-corridor-suitcase",
     title: "حقيبة سفر متروكة",
     description: "حقيبة جلدية قديمة متروكة عند طوفة الممر، أقفالها مفتوحة.",
+    titleEn: "Abandoned suitcase",
+    descriptionEn: "An old leather suitcase left against the corridor wall, its latches open.",
     position: [0.92, 0.2, -7.2],
     radius: 1.7,
   },
@@ -82,6 +88,8 @@ export const FLOOR13_EVIDENCE: Floor13EvidencePoint[] = [
     id: "f13-corridor-phone",
     title: "هاتف مطفي",
     description: "جهاز مطفي متروك جنب الطوفة قبل باب ١٣٠٦، شاشته مشقوقة.",
+    titleEn: "Dead phone",
+    descriptionEn: "A switched-off phone left by the wall just before door 1306, its screen cracked.",
     position: [-0.95, 0.05, -12.9],
     radius: 1.7,
   },
@@ -89,6 +97,8 @@ export const FLOOR13_EVIDENCE: Floor13EvidencePoint[] = [
     id: "f13-door-lock-scratch",
     title: "خدوش على قفل الباب",
     description: "خدوش معدنية حديثة حول قفل غرفة ١٣٠٦ — الباب فُتح بالقوة.",
+    titleEn: "Scratches on the door lock",
+    descriptionEn: "Fresh metal scratches around the lock of room 1306 — the door was forced.",
     position: [1.52, 1.05, -14.5],
     radius: 1.5,
   },
@@ -96,6 +106,8 @@ export const FLOOR13_EVIDENCE: Floor13EvidencePoint[] = [
     id: "f13-desk-note",
     title: "ورقة على المكتب",
     description: "ورقة عند النافذة مكتوب فيها سطر واحد بخط مستعجل: «لا تفتح».",
+    titleEn: "Note on the desk",
+    descriptionEn: "A sheet by the window with one hurried line on it: \u00ab\u0644\u0627 \u062a\u0641\u062a\u062d\u00bb (\u201cdo not open\u201d).",
     position: [3.05, 0.79, -19.0],
     radius: 1.6,
   },
@@ -103,6 +115,8 @@ export const FLOOR13_EVIDENCE: Floor13EvidencePoint[] = [
     id: "f13-nightstand-earring",
     title: "حلق ذهبي صغير",
     description: "حلق مفرد على الكومدينة جانب السرير، قفله مكسور.",
+    titleEn: "Small gold earring",
+    descriptionEn: "A single earring on the nightstand beside the bed, its clasp broken.",
     position: [7.05, 0.73, -16.35],
     radius: 1.5,
   },
