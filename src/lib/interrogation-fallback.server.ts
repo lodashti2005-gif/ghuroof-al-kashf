@@ -80,7 +80,65 @@ const TENSE_LINES = [
   "أنا ما مسوي شي، وكل مرة تعيد نفس الشي عليّ.",
 ];
 
+/**
+ * English fallback lines — same character, same facts, same short length.
+ * Used only when the model call fails while the player is on English.
+ */
+const EN_LINES = {
+  lastSeen: "The last time I saw Badr was before we all split up at the chalet.",
+  whereabouts: "I don't remember exactly where I was at that hour.",
+  withYou: "As far as I remember, nobody was with me at that moment.",
+  phone: "I don't know where Badr's phone is — I never paid attention to it.",
+  camera: "The camera? I have no idea who turned it.",
+  coffee: "I don't know who made the coffee, honestly.",
+  repeat: [
+    "I already told you what I was doing. That's all I have.",
+    "Why do you keep repeating the same question? My answer hasn't changed.",
+    "What exactly do you want to know? Ask me straight and I'll answer.",
+  ],
+  tense: [
+    "Enough, I'm fed up with this tone. Ask your question and I'll answer.",
+    "I didn't do anything, and you keep throwing the same thing at me.",
+  ],
+  generic: "I'm not sure exactly, but that's all I know.",
+};
+
+/** English keywords, so the same topics are recognised on English questions. */
+function enTopic(message: string): keyof typeof EN_LINES | null {
+  const q = message.toLowerCase();
+  if (/(last time|when did you see|last saw)/.test(q)) return "lastSeen";
+  if (/(where were you|where was you|what time|o'clock|1:30|1:40)/.test(q)) return "whereabouts";
+  if (/(who was with you|anyone with you|with you)/.test(q)) return "withYou";
+  if (/(phone|mobile|cell)/.test(q)) return "phone";
+  if (/camera/.test(q)) return "camera";
+  if (/(coffee|cup)/.test(q)) return "coffee";
+  return null;
+}
+
+function fallbackReplyEn(profile: SuspectProfile, data: InterrogationInput): AiReply {
+  const repeat = isRepeat(data);
+  const tense = data.stress >= 55;
+  const seed = data.transcript.length + data.message.length + profile.name.length;
+  const topic = enTopic(data.message);
+
+  let text: string;
+  if (topic) text = EN_LINES[topic] as string;
+  else if (repeat) text = EN_LINES.repeat[seed % EN_LINES.repeat.length]!;
+  else if (tense) text = EN_LINES.tense[seed % EN_LINES.tense.length]!;
+  else text = EN_LINES.generic;
+
+  return {
+    text,
+    stressDelta: repeat ? 2 : 1,
+    state: tense ? "defensive" : repeat ? "suspicious" : "thinking",
+    unlock: null,
+    level: 1,
+    contradiction: false,
+  };
+}
+
 export function fallbackReply(profile: SuspectProfile, data: InterrogationInput): AiReply {
+  if (data.lang === "en") return fallbackReplyEn(profile, data);
   const q = normalize(data.message);
   const repeat = isRepeat(data);
   const tense = data.stress >= 55;
