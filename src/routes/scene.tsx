@@ -282,7 +282,7 @@ function SceneRoute() {
                   </button>
                 )}
                 <span className="pointer-events-auto rounded-lg bg-black/50 px-2.5 py-1 font-mono text-[11px] tracking-widest text-white/80">
-                  {view.label}
+                  {pick(view.label, view.labelEn)}
                 </span>
               </div>
 
