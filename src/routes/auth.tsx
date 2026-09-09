@@ -7,6 +7,7 @@ import { Eyebrow } from "@/components/game/ui";
 import { GAME_NAME } from "@/game/game-meta";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/activity";
+import { useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { pick, dir } = useI18n();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,7 +43,12 @@ function AuthPage() {
     const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
     if (url.searchParams.get("reset") === "1") {
       setMode("in");
-      setMsg("تم تغيير كلمة السر بنجاح — سجّل دخولك بكلمة السر الجديدة.");
+      setMsg(
+        pick(
+          "تم تغيير كلمة السر بنجاح — سجّل دخولك بكلمة السر الجديدة.",
+          "Your password was changed — sign in with the new password.",
+        ),
+      );
       window.history.replaceState({}, "", "/auth");
       return;
     }
@@ -63,11 +70,11 @@ function AuthPage() {
     setError(null);
     setMsg(null);
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-      setError("اكتب إيميل صحيح");
+      setError(pick("اكتب إيميل صحيح", "Enter a valid email address"));
       return;
     }
     if (password.length < 6) {
-      setError("كلمة السر لازم ٦ حروف على الأقل");
+      setError(pick("كلمة السر لازم ٦ حروف على الأقل", "Password must be at least 6 characters"));
       return;
     }
     setBusy(true);
@@ -78,7 +85,7 @@ function AuthPage() {
       });
       setBusy(false);
       if (err) {
-        setError("الإيميل أو كلمة السر غلط");
+        setError(pick("الإيميل أو كلمة السر غلط", "Wrong email or password"));
         return;
       }
       navigate({ to: "/cases" });
@@ -91,13 +98,16 @@ function AuthPage() {
     });
     setBusy(false);
     if (err) {
-      setError("ما قدرنا نسجّل الحساب، جرب إيميل ثاني");
+      setError(pick("ما قدرنا نسجّل الحساب، جرب إيميل ثاني", "We couldn't create the account — try another email"));
       return;
     }
     void trackEvent("signup", { path: "/auth" });
     setPending(true);
     setMsg(
-      "تم إنشاء الحساب وأرسلنا لك إيميل التأكيد. افتح الإيميل واضغط على سطر «تأكيد البريد الإلكتروني» — كل السطر رابط قابل للضغط، وإذا ما ظهر لك زر واضح انسخ الرابط والصقه في المتصفح. بعد التأكيد ارجع هنا وسجّل دخول.",
+      pick(
+        "تم إنشاء الحساب وأرسلنا لك إيميل التأكيد. افتح الإيميل واضغط على سطر «تأكيد البريد الإلكتروني» — كل السطر رابط قابل للضغط، وإذا ما ظهر لك زر واضح انسخ الرابط والصقه في المتصفح. بعد التأكيد ارجع هنا وسجّل دخول.",
+        "Your account was created and we sent you a confirmation email. Open it and tap the \"Confirm your email\" line — the whole line is a link. If you don't see a clear button, copy the link and paste it into your browser. Once confirmed, come back here and sign in.",
+      ),
     );
   };
 
@@ -106,7 +116,12 @@ function AuthPage() {
     setError(null);
     setMsg(null);
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-      setError("اكتب إيميلك أولاً عشان نرسل لك رابط إعادة التعيين");
+      setError(
+        pick(
+          "اكتب إيميلك أولاً عشان نرسل لك رابط إعادة التعيين",
+          "Enter your email first so we can send the reset link",
+        ),
+      );
       return;
     }
     setBusy(true);
@@ -115,11 +130,19 @@ function AuthPage() {
     });
     setBusy(false);
     if (err) {
-      setError("ما قدرنا نرسل رابط إعادة التعيين، جرب بعد شوي");
+      setError(
+        pick(
+          "ما قدرنا نرسل رابط إعادة التعيين، جرب بعد شوي",
+          "We couldn't send the reset link — try again shortly",
+        ),
+      );
       return;
     }
     setMsg(
-      "أرسلنا لك رابط إعادة تعيين كلمة السر على إيميلك. افتح الرابط واختر كلمة سر جديدة، وإذا ما ظهر لك زر واضح انسخ الرابط والصقه في المتصفح.",
+      pick(
+        "أرسلنا لك رابط إعادة تعيين كلمة السر على إيميلك. افتح الرابط واختر كلمة سر جديدة، وإذا ما ظهر لك زر واضح انسخ الرابط والصقه في المتصفح.",
+        "We emailed you a password reset link. Open it and choose a new password; if you don't see a clear button, copy the link and paste it into your browser.",
+      ),
     );
   };
 
@@ -128,7 +151,7 @@ function AuthPage() {
     setMsg(null);
     const raw = pasted.trim();
     if (!raw) {
-      setError("الصق الرابط اللي وصلك في الإيميل");
+      setError(pick("الصق الرابط اللي وصلك في الإيميل", "Paste the link you received in the email"));
       return;
     }
     let tokenHash: string | null = null;
@@ -148,7 +171,12 @@ function AuthPage() {
       if (/^[A-Za-z0-9_-]{6,}$/.test(raw)) tokenHash = raw;
     }
     if (!tokenHash) {
-      setError("الرابط غير مكتمل، انسخه كامل من الإيميل وجرب مرة ثانية");
+      setError(
+        pick(
+          "الرابط غير مكتمل، انسخه كامل من الإيميل وجرب مرة ثانية",
+          "That link is incomplete — copy the full link from the email and try again",
+        ),
+      );
       return;
     }
     setBusy(true);
@@ -158,7 +186,12 @@ function AuthPage() {
     });
     setBusy(false);
     if (err) {
-      setError("الرابط منتهي أو غير صحيح، أعد إرسال إيميل التأكيد وجرب الرابط الجديد");
+      setError(
+        pick(
+          "الرابط منتهي أو غير صحيح، أعد إرسال إيميل التأكيد وجرب الرابط الجديد",
+          "That link expired or is invalid — resend the confirmation email and use the new link",
+        ),
+      );
       return;
     }
     await supabase.auth.signOut();
@@ -166,14 +199,14 @@ function AuthPage() {
     setPending(false);
     setConfirmed(true);
     setMode("in");
-    setMsg("تم تأكيد بريدك، سجّل دخولك الحين.");
+    setMsg(pick("تم تأكيد بريدك، سجّل دخولك الحين.", "Your email is confirmed — sign in now."));
   };
 
   const resend = async () => {
     setError(null);
     setMsg(null);
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-      setError("اكتب إيميلك عشان نعيد الإرسال");
+      setError(pick("اكتب إيميلك عشان نعيد الإرسال", "Enter your email so we can resend it"));
       return;
     }
     setBusy(true);
@@ -184,15 +217,25 @@ function AuthPage() {
     });
     setBusy(false);
     if (err) {
-      setError("ما قدرنا نعيد الإرسال الحين، جرب بعد دقيقة");
+      setError(
+        pick(
+          "ما قدرنا نعيد الإرسال الحين، جرب بعد دقيقة",
+          "We couldn't resend it right now — try again in a minute",
+        ),
+      );
       return;
     }
-    setMsg("أرسلنا لك إيميل تأكيد جديد. تأكد من مجلد الإعلانات أو الـSpam.");
+    setMsg(
+      pick(
+        "أرسلنا لك إيميل تأكيد جديد. تأكد من مجلد الإعلانات أو الـSpam.",
+        "We sent a new confirmation email. Check your promotions or spam folder too.",
+      ),
+    );
   };
 
 
   return (
-    <div className="min-h-screen bg-background">
+    <div dir={dir} className="min-h-screen bg-background">
       <div className="mx-auto max-w-md px-5 py-8 sm:px-8">
         <header className="flex items-center justify-between gap-3">
           <Link to="/" className="flex items-center gap-2.5">
@@ -205,24 +248,30 @@ function AuthPage() {
             to="/cases"
             className="inline-flex items-center gap-1.5 font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
-            القضايا <ArrowRight className="size-3.5" />
+            {pick("القضايا", "Cases")}{" "}
+            <ArrowRight className={`size-3.5 ${dir === "ltr" ? "rotate-180" : ""}`} />
           </Link>
         </header>
 
         {confirmed && (
           <div className="cine-in mt-8 rounded-xl border border-evidence/50 bg-evidence/15 px-4 py-3.5 text-sm font-medium text-evidence">
-            تم تأكيد بريدك الإلكتروني بنجاح، تقدر تسجل الدخول الحين.
+            {pick(
+              "تم تأكيد بريدك الإلكتروني بنجاح، تقدر تسجل الدخول الحين.",
+              "Your email was confirmed — you can sign in now.",
+            )}
           </div>
         )}
 
         <div className="surface-panel cine-in mt-6 p-6">
-          <Eyebrow>حساب اللاعب</Eyebrow>
+          <Eyebrow>{pick("حساب اللاعب", "Player account")}</Eyebrow>
           <h1 className="mt-1 text-2xl font-bold">
-            {mode === "in" ? "دخول" : "حساب جديد"}
+            {mode === "in" ? pick("دخول", "Sign in") : pick("حساب جديد", "New account")}
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            الحساب يحتاجه اللي بيشتري القضية ويفتح الغرفة. باقي اللاعبين يدخلون برمز الغرفة
-            بدون حساب وبدون شراء.
+            {pick(
+              "الحساب يحتاجه اللي بيشتري القضية ويفتح الغرفة. باقي اللاعبين يدخلون برمز الغرفة بدون حساب وبدون شراء.",
+              "Only the person who buys the case and opens the room needs an account. Everyone else joins with the room code — no account, no purchase.",
+            )}
           </p>
 
           <form
@@ -233,7 +282,7 @@ function AuthPage() {
             }}
           >
             <label className="block">
-              <span className="mb-2 block text-sm text-muted-foreground">الإيميل</span>
+              <span className="mb-2 block text-sm text-muted-foreground">{pick("الإيميل", "Email")}</span>
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -243,7 +292,7 @@ function AuthPage() {
               />
             </label>
             <label className="block">
-              <span className="mb-2 block text-sm text-muted-foreground">كلمة السر</span>
+              <span className="mb-2 block text-sm text-muted-foreground">{pick("كلمة السر", "Password")}</span>
               <input
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -258,7 +307,7 @@ function AuthPage() {
                   onClick={() => void sendReset()}
                   className="mt-2 font-display text-xs text-primary transition-colors hover:text-foreground disabled:opacity-60"
                 >
-                  نسيت كلمة السر؟
+                  {pick("نسيت كلمة السر؟", "Forgot your password?")}
                 </button>
               )}
             </label>
@@ -275,7 +324,11 @@ function AuthPage() {
             )}
 
             <ActionButton type="submit" disabled={busy} className="w-full py-3.5 text-base">
-              {busy ? "لحظة..." : mode === "in" ? "دخول" : "إنشاء حساب"}
+              {busy
+                ? pick("لحظة...", "One moment...")
+                : mode === "in"
+                  ? pick("دخول", "Sign in")
+                  : pick("إنشاء حساب", "Create account")}
             </ActionButton>
           </form>
 
@@ -286,15 +339,17 @@ function AuthPage() {
               onClick={() => void resend()}
               className="mt-3 w-full rounded-xl border border-evidence/50 bg-evidence/10 px-4 py-2.5 font-display text-xs text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-60"
             >
-              ما وصلك إيميل التأكيد؟ أعد الإرسال
+              {pick("ما وصلك إيميل التأكيد؟ أعد الإرسال", "No confirmation email? Resend it")}
             </button>
           )}
 
           <div className="mt-5 rounded-xl border border-border bg-surface-2 p-4">
-            <p className="text-sm font-medium">تأكيد بلصق الرابط</p>
+            <p className="text-sm font-medium">{pick("تأكيد بلصق الرابط", "Confirm by pasting the link")}</p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              إذا الزر في الإيميل ما ظهر لك، انسخ رابط التأكيد من الإيميل والصقه هنا ونأكّد لك
-              بريدك مباشرة.
+              {pick(
+                "إذا الزر في الإيميل ما ظهر لك، انسخ رابط التأكيد من الإيميل والصقه هنا ونأكّد لك بريدك مباشرة.",
+                "If the button in the email didn't show up, copy the confirmation link from the email and paste it here and we'll confirm your address right away.",
+              )}
             </p>
             <textarea
               value={pasted}
@@ -310,7 +365,7 @@ function AuthPage() {
               onClick={() => void verifyPastedLink()}
               className="mt-2 w-full rounded-xl border border-primary/50 bg-primary/10 px-4 py-2.5 font-display text-xs text-primary transition-colors hover:bg-primary/20 disabled:opacity-60"
             >
-              {busy ? "لحظة..." : "أكّد بريدي من الرابط"}
+              {busy ? pick("لحظة...", "One moment...") : pick("أكّد بريدي من الرابط", "Confirm my email from the link")}
             </button>
           </div>
 
@@ -323,7 +378,9 @@ function AuthPage() {
             }}
             className="mt-4 w-full font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
-            {mode === "in" ? "ما عندك حساب؟ سجّل حساب جديد" : "عندك حساب؟ سجّل دخول"}
+            {mode === "in"
+              ? pick("ما عندك حساب؟ سجّل حساب جديد", "No account? Create one")
+              : pick("عندك حساب؟ سجّل دخول", "Already have an account? Sign in")}
           </button>
         </div>
       </div>

@@ -76,7 +76,16 @@ export const getSnapshot = () => {
 };
 export const getServerSnapshot = () => empty;
 
-const simNames = ["لاعب تجريبي ١", "لاعب تجريبي ٢", "لاعب تجريبي ٣", "لاعب تجريبي ٤", "لاعب تجريبي ٥"];
+/** لغة الواجهة الحالية — نقراها من عنصر الصفحة اللي يضبطه نظام اللغة. */
+function activeLang(): "ar" | "en" {
+  if (typeof document === "undefined") return "ar";
+  return document.documentElement.lang === "en" ? "en" : "ar";
+}
+
+const simNamesAr = ["لاعب تجريبي ١", "لاعب تجريبي ٢", "لاعب تجريبي ٣", "لاعب تجريبي ٤", "لاعب تجريبي ٥"];
+const simNamesEn = ["Test player 1", "Test player 2", "Test player 3", "Test player 4", "Test player 5"];
+/** أسماء اللاعبين الوهميين حسب لغة الواجهة الحالية. */
+const simNames = () => (activeLang() === "en" ? simNamesEn : simNamesAr);
 
 function freeRole(taken: Set<string>) {
   return lastTripRoles.find((r) => !taken.has(r.id))?.id ?? lastTripRoles[0]!.id;
@@ -89,7 +98,7 @@ export function enableSim(count = 2) {
   for (let i = 0; i < count; i++) {
     const roleId = freeRole(taken);
     taken.add(roleId);
-    players.push({ id: `sim-${i + 1}-${Math.random().toString(36).slice(2, 7)}`, name: simNames[i] ?? `لاعب ${i + 1}`, roleId });
+    players.push({ id: `sim-${i + 1}-${Math.random().toString(36).slice(2, 7)}`, name: simNames()[i] ?? (activeLang() === "en" ? `Player ${i + 1}` : `لاعب ${i + 1}`), roleId });
   }
   emit({ active: true, players, asId: null });
 }
@@ -104,7 +113,11 @@ export function addSimPlayer() {
   const roleId = freeRole(taken);
   const player: SimPlayer = {
     id: `sim-${s.players.length + 1}-${Math.random().toString(36).slice(2, 7)}`,
-    name: simNames[s.players.length] ?? `لاعب تجريبي ${s.players.length + 1}`,
+    name:
+      simNames()[s.players.length] ??
+      (activeLang() === "en"
+        ? `Test player ${s.players.length + 1}`
+        : `لاعب تجريبي ${s.players.length + 1}`),
     roleId,
   };
   emit({ ...s, active: true, players: [...s.players, player] });
@@ -129,9 +142,10 @@ export function actAs(id: string | null) {
   emit({ ...getSnapshot(), asId: id });
 }
 
+
 const simPlayer = (p: SimPlayer): Player => ({
   id: p.id,
-  name: `${p.name} (محاكاة)`,
+  name: `${p.name} ${activeLang() === "en" ? "(sim)" : "(محاكاة)"}`,
   isHost: false,
   joinedAt: Date.now(),
 });
