@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { ActionButton } from "@/components/game/shell";
 import { Eyebrow } from "@/components/game/ui";
 import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/reset-password")({
   ssr: false,
@@ -32,6 +33,7 @@ export const Route = createFileRoute("/reset-password")({
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
+  const { pick, dir } = useI18n();
   const [ready, setReady] = useState<boolean | null>(null);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -62,18 +64,23 @@ function ResetPasswordPage() {
   const save = async () => {
     setError(null);
     if (password.length < 6) {
-      setError("كلمة السر لازم ٦ حروف على الأقل");
+      setError(pick("كلمة السر لازم ٦ حروف على الأقل", "Password must be at least 6 characters"));
       return;
     }
     if (password !== confirm) {
-      setError("كلمتا السر ما تطابقن");
+      setError(pick("كلمتا السر ما تطابقن", "The passwords don't match"));
       return;
     }
     setBusy(true);
     const { error: err } = await supabase.auth.updateUser({ password });
     if (err) {
       setBusy(false);
-      setError("ما قدرنا نغيّر كلمة السر — يمكن الرابط منتهي. أرسل رابط جديد وحاول مرة ثانية.");
+      setError(
+        pick(
+          "ما قدرنا نغيّر كلمة السر — يمكن الرابط منتهي. أرسل رابط جديد وحاول مرة ثانية.",
+          "We couldn't change your password — the link may have expired. Request a new link and try again.",
+        ),
+      );
       return;
     }
     await supabase.auth.signOut();
@@ -82,36 +89,42 @@ function ResetPasswordPage() {
   };
 
   return (
-    <div dir="rtl" className="min-h-screen bg-background px-4 py-10">
+    <div dir={dir} className="min-h-screen bg-background px-4 py-10">
       <div className="mx-auto w-full max-w-md">
         <Link
           to="/auth"
           className="inline-flex items-center gap-1.5 font-display text-xs text-muted-foreground hover:text-foreground"
         >
-          رجوع لتسجيل الدخول <ArrowRight className="size-3.5" />
+          {pick("رجوع لتسجيل الدخول", "Back to sign in")}{" "}
+          <ArrowRight className={`size-3.5 ${dir === "ltr" ? "rotate-180" : ""}`} />
         </Link>
 
         <div className="surface-panel cine-in mt-6 p-6">
           <span className="grid size-11 place-items-center rounded-2xl border border-border bg-secondary/60">
             <KeyRound className="size-5 text-primary" />
           </span>
-          <Eyebrow className="mt-4">استعادة الحساب</Eyebrow>
-          <h1 className="mt-1 text-2xl font-bold">كلمة سر جديدة</h1>
+          <Eyebrow className="mt-4">{pick("استعادة الحساب", "Account recovery")}</Eyebrow>
+          <h1 className="mt-1 text-2xl font-bold">{pick("كلمة سر جديدة", "New password")}</h1>
 
           {ready === false ? (
             <>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                الرابط منتهي أو غير صحيح. أرسل رابط جديد لإعادة تعيين كلمة السر.
+                {pick(
+                  "الرابط منتهي أو غير صحيح. أرسل رابط جديد لإعادة تعيين كلمة السر.",
+                  "This link is invalid or expired. Request a new password reset link.",
+                )}
               </p>
               <Link
                 to="/auth"
                 className="mt-5 inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 font-display text-sm font-bold text-primary-foreground"
               >
-                إرسال رابط جديد
+                {pick("إرسال رابط جديد", "Send a new link")}
               </Link>
             </>
           ) : ready === null ? (
-            <p className="mt-3 text-sm text-muted-foreground">لحظة، نتحقق من الرابط…</p>
+            <p className="mt-3 text-sm text-muted-foreground">
+              {pick("لحظة، نتحقق من الرابط…", "One moment, checking the link…")}
+            </p>
           ) : (
             <form
               className="mt-5 space-y-4"
@@ -121,7 +134,9 @@ function ResetPasswordPage() {
               }}
             >
               <label className="block">
-                <span className="mb-2 block text-sm text-muted-foreground">كلمة السر الجديدة</span>
+                <span className="mb-2 block text-sm text-muted-foreground">
+                  {pick("كلمة السر الجديدة", "New password")}
+                </span>
                 <input
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -131,7 +146,9 @@ function ResetPasswordPage() {
                 />
               </label>
               <label className="block">
-                <span className="mb-2 block text-sm text-muted-foreground">تأكيد كلمة السر</span>
+                <span className="mb-2 block text-sm text-muted-foreground">
+                  {pick("تأكيد كلمة السر", "Confirm password")}
+                </span>
                 <input
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
@@ -148,7 +165,7 @@ function ResetPasswordPage() {
               )}
 
               <ActionButton type="submit" disabled={busy} className="w-full py-3.5 text-base">
-                {busy ? "لحظة..." : "حفظ كلمة السر"}
+                {busy ? pick("لحظة...", "One moment...") : pick("حفظ كلمة السر", "Save password")}
               </ActionButton>
             </form>
           )}
