@@ -194,7 +194,11 @@ function IntroSequence() {
   const navigate = useNavigate();
   const { dir, pick } = useI18n();
 
-  const step = Math.min(Math.max(room?.intro ?? 0, 0), SCENES.length - 1);
+  const rawStep = Math.max(room?.intro ?? 0, 0);
+  // المقدمة تُسجّل كمكتملة بتخزين رقم أكبر من آخر مشهد — فما تُعاد أبداً إلا
+  // بإعادة بدء القضية فعلياً (reset / بدء جديد من غرفة الانتظار).
+  const introDone = rawStep >= SCENES.length;
+  const step = Math.min(rawStep, SCENES.length - 1);
   const scene = SCENES[step]!;
   const lines = pick(scene.lines, scene.linesEn);
   const beats = pick(scene.beats, scene.beatsEn) ?? [];
@@ -206,7 +210,9 @@ function IntroSequence() {
     if (room.phase === "roles") navigate({ to: "/roles" });
     else if (room.phase === "lobby") navigate({ to: "/lobby" });
     else if (room.phase !== "intro") navigate({ to: "/case" });
-  }, [room, navigate]);
+    // المقدمة خلصت سابقاً → نكمل للخطوة التالية بدل إعادة عرضها.
+    else if (introDone) navigate({ to: "/case", replace: true });
+  }, [room, navigate, introDone]);
 
   // ظهور تدريجي للسطور، ويبدأ من جديد مع كل مشهد.
   const total = scene.lines.length + (scene.beats?.length ?? 0);
@@ -232,6 +238,8 @@ function IntroSequence() {
   const advance = () => {
     if (!isHost) return;
     if (step >= SCENES.length - 1) {
+      // نسجّل المقدمة كمكتملة قبل توزيع الأدوار حتى لا يرجع أي جهاز للمقدمة.
+      actions.setIntroStep(SCENES.length);
       void actions.startRoles(room.players.map((p) => p.id));
       navigate({ to: "/roles" });
       return;
