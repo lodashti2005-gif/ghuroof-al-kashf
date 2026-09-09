@@ -4,14 +4,17 @@
  * الأجهزة تشوف نفس المشهد، والتحديث أو الدخول المتأخر يوصل اللاعب لنفس المشهد
  * الحالي. آخر زر يشغّل نظام توزيع الأدوار الموجود نفسه بدون أي نظام جديد.
  * ما تكشف أي دليل ولا القاتل ولا أي معلومة يفترض تنكشف بالتحقيق.
+ *
+ * كل نص ظاهر للاعب مكتوب بالعربية والإنجليزية ويُختار حسب لغة اللاعب.
  */
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Loader2, Search, MessageSquare, Users2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Search, MessageSquare, Users2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { ActionButton } from "@/components/game/shell";
 import { useRoom } from "@/game/use-room";
 import { caseFile, suspects } from "@/game/case-data";
+import { useI18n } from "@/i18n";
 import chaletHero from "@/assets/scene-hero.jpg";
 import hallway from "@/assets/scene/hallway.jpg";
 
@@ -41,10 +44,13 @@ type Scene = {
   /** درجة تعتيم الصورة (٠ فاتح – ١ مظلم). */
   dim?: number;
   lines: string[];
+  linesEn: string[];
   cta: string;
+  ctaEn: string;
   kind?: "title" | "people" | "timeline" | "file" | "rules" | "ready";
   /** صفوف التسلسل الزمني — أوقات موجودة أصلاً بالقضية بدون أي حدث جديد. */
   beats?: { time: string; text: string }[];
+  beatsEn?: { time: string; text: string }[];
 };
 
 const SCENES: Scene[] = [
@@ -54,7 +60,9 @@ const SCENES: Scene[] = [
     image: chaletHero,
     dim: 0.42,
     lines: ["ورا السالفة", "قضية الشاليه", "ليلة كان المفروض تنتهي بشكل عادي..."],
+    linesEn: ["Wara Al-Salfa", "The Chalet Case", "A night that was supposed to end like any other..."],
     cta: "ابدأ القضية",
+    ctaEn: "Start the case",
   },
   {
     id: "day",
@@ -62,7 +70,9 @@ const SCENES: Scene[] = [
     image: chaletHero,
     dim: 0.34,
     lines: ["بدأ اليوم مثل أي تجمع عادي.", "خمسة أشخاص اجتمعوا في الشاليه..."],
+    linesEn: ["The day started like any ordinary get-together.", "Five people gathered at the chalet..."],
     cta: "كمل",
+    ctaEn: "Continue",
   },
   {
     id: "timeline",
@@ -70,71 +80,124 @@ const SCENES: Scene[] = [
     image: chaletHero,
     dim: 0.48,
     lines: ["أحداث الليلة"],
+    linesEn: ["That night, hour by hour"],
     beats: [
       { time: "10:30 م", text: "الكل كان مجتمع بالصالة." },
       { time: "بعدها بوقت قصير...", text: "بدأ كل واحد يتحرك بمكان مختلف." },
       { time: "قريب 01:30 ص", text: "حسب أقوالهم، القعدة خلصت... والباقي مو واضح." },
     ],
+    beatsEn: [
+      { time: "10:30 PM", text: "Everyone was together in the living room." },
+      { time: "Shortly after...", text: "They each drifted off to a different part of the place." },
+      { time: "Around 1:30 AM", text: "By their account the night wound down... the rest isn't clear." },
+    ],
     cta: "كمل",
+    ctaEn: "Continue",
   },
   {
     id: "shift",
     image: chaletHero,
     dim: 0.58,
     lines: ["لكن الليلة ما كملت مثل ما بدأت.", "صار شي داخل إحدى غرف الشاليه."],
+    linesEn: ["But the night didn't end the way it began.", "Something happened inside one of the chalet's rooms."],
     cta: "كمل",
+    ctaEn: "Continue",
   },
   {
     id: "discovery",
     image: hallway,
     dim: 0.4,
     lines: ["بعد فترة...", "انفتح باب الغرفة.", "ومن هني... بدأت القضية."],
+    linesEn: ["Some time later...", "The bedroom door opened.", "And from here... the case began."],
     cta: "كمل",
+    ctaEn: "Continue",
   },
   {
     id: "file",
     kind: "file",
     dim: 1,
     lines: ["كل شخص موجود بالشاليه عنده جزء من السالفة.", "مهمتكم تعرفون شنو صار فعلاً."],
+    linesEn: [
+      "Everyone at the chalet holds a piece of the story.",
+      "Your job is to work out what actually happened.",
+    ],
     cta: "كمل",
+    ctaEn: "Continue",
   },
   {
     id: "rules",
     kind: "rules",
     dim: 1,
     lines: ["لا تثق بأي استنتاج قبل ما تربط الأدلة."],
+    linesEn: ["Don't trust a conclusion before you connect the evidence."],
     cta: "كمل",
+    ctaEn: "Continue",
   },
   {
     id: "ready",
     kind: "ready",
     dim: 1,
     lines: ["القضية جاهزة.", "لكن قبل ما يبدأ التحقيق...", "كل واحد منكم له دور."],
+    linesEn: ["The case is ready.", "But before the investigation starts...", "each of you has a role."],
     cta: "وزّع الأدوار",
+    ctaEn: "Assign roles",
   },
 ];
 
 const RULES = [
-  { icon: Search, title: "فتش", text: "فتش مسرح الجريمة بنفسك." },
-  { icon: MessageSquare, title: "استجوب", text: "دقق بأقوال المشتبه فيهم." },
-  { icon: Users2, title: "ناقش", text: "شارك اللي اكتشفته مع فريقك." },
+  {
+    icon: Search,
+    title: "فتش",
+    titleEn: "Search",
+    text: "فتش مسرح الجريمة بنفسك.",
+    textEn: "Search the crime scene yourself.",
+  },
+  {
+    icon: MessageSquare,
+    title: "استجوب",
+    titleEn: "Question",
+    text: "دقق بأقوال المشتبه فيهم.",
+    textEn: "Scrutinise what the suspects say.",
+  },
+  {
+    icon: Users2,
+    title: "ناقش",
+    titleEn: "Discuss",
+    text: "شارك اللي اكتشفته مع فريقك.",
+    textEn: "Share what you found with your team.",
+  },
 ];
 
 /** أطراف الليلة كما هم معروفين للجميع — بدون أي وصف يوجّه الشك لأحد. */
 const CAST = [
-  { name: "فهد", portrait: suspects.find((s) => s.id === "fahad")?.portrait },
-  { name: "نوره", portrait: suspects.find((s) => s.id === "noura")?.portrait },
-  { name: "يوسف", portrait: suspects.find((s) => s.id === "yousef")?.portrait },
-  { name: "دانه", portrait: suspects.find((s) => s.id === "dana")?.portrait },
-  { name: "بدر", portrait: caseFile.victim.portrait },
+  { name: "فهد", nameEn: "Fahad", portrait: suspects.find((s) => s.id === "fahad")?.portrait },
+  { name: "نوره", nameEn: "Noura", portrait: suspects.find((s) => s.id === "noura")?.portrait },
+  { name: "يوسف", nameEn: "Yousef", portrait: suspects.find((s) => s.id === "yousef")?.portrait },
+  { name: "دانه", nameEn: "Dana", portrait: suspects.find((s) => s.id === "dana")?.portrait },
+  { name: "بدر", nameEn: "Badr", portrait: caseFile.victim.portrait },
 ];
+
+const UI = {
+  loading: { ar: "جاري تحميل ملف القضية...", en: "Loading the case file..." },
+  hostLeads: { ar: "القائد يتابع ملف القضية...", en: "The host is moving through the case file..." },
+  caseFileLabel: { ar: "ملف القضية", en: "Case file" },
+  rowCase: { ar: "القضية", en: "Case" },
+  rowStatus: { ar: "الحالة", en: "Status" },
+  statusOpen: { ar: "قيد التحقيق", en: "Under investigation" },
+  rowSuspects: { ar: "المشتبه فيهم", en: "Suspects" },
+  rowEvidence: { ar: "الأدلة", en: "Evidence" },
+  evidenceUnknown: { ar: "غير معروف", en: "Unknown" },
+} as const;
 
 function IntroSequence() {
   const { room, isHost, actions } = useRoom();
   const navigate = useNavigate();
+  const { dir, pick } = useI18n();
 
   const step = Math.min(Math.max(room?.intro ?? 0, 0), SCENES.length - 1);
   const scene = SCENES[step]!;
+  const lines = pick(scene.lines, scene.linesEn);
+  const beats = pick(scene.beats, scene.beatsEn) ?? [];
 
   // كل الأجهزة تتبع الحالة المشتركة: الأدوار وزّعت → شاشة الأدوار، والغرفة
   // رجعت للانتظار → غرفة الانتظار. ما نغيّر أي نظام موجود.
@@ -160,7 +223,7 @@ function IntroSequence() {
     return (
       <main className="grid min-h-screen place-items-center bg-background">
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" /> جاري تحميل ملف القضية...
+          <Loader2 className="size-4 animate-spin" /> {pick(UI.loading.ar, UI.loading.en)}
         </p>
       </main>
     );
@@ -177,9 +240,10 @@ function IntroSequence() {
   };
 
   const beatsShown = Math.max(0, shown - scene.lines.length);
+  const NextIcon = dir === "rtl" ? ArrowLeft : ArrowRight;
 
   return (
-    <main dir="rtl" className="relative min-h-screen overflow-hidden bg-background">
+    <main dir={dir} className="relative min-h-screen overflow-hidden bg-background">
       {scene.image && (
         <div key={scene.id} className="absolute inset-0">
           <img
@@ -216,22 +280,22 @@ function IntroSequence() {
         {scene.kind === "title" ? (
           <div className="mt-8 space-y-5">
             <p className="intro-line font-display text-sm tracking-[0.45em] text-muted-foreground">
-              {scene.lines[0]}
+              {lines[0]}
             </p>
             {shown >= 2 && (
               <h1 className="intro-line text-4xl font-black leading-tight sm:text-6xl">
-                {scene.lines[1]}
+                {lines[1]}
               </h1>
             )}
             {shown >= 3 && (
               <p className="intro-line text-base leading-relaxed text-muted-foreground sm:text-lg">
-                {scene.lines[2]}
+                {lines[2]}
               </p>
             )}
           </div>
         ) : (
           <div className="mt-8 space-y-4">
-            {scene.lines.slice(0, shown).map((line, i) => (
+            {lines.slice(0, shown).map((line, i) => (
               <p
                 key={line}
                 className={`intro-line ${
@@ -249,27 +313,30 @@ function IntroSequence() {
         {/* المشهد ٢ — أطراف الليلة */}
         {scene.kind === "people" && shown >= scene.lines.length && (
           <ul className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            {CAST.map((p, i) => (
-              <li
-                key={p.name}
-                className="intro-line w-24 shrink-0"
-                style={{ animationDelay: `${i * 160}ms` }}
-              >
-                <div className="aspect-square overflow-hidden rounded-2xl border border-border/70 bg-surface-2 grayscale-[35%]">
-                  {p.portrait && (
-                    <img src={p.portrait} alt={p.name} className="size-full object-cover" />
-                  )}
-                </div>
-                <p className="mt-2 font-display text-sm">{p.name}</p>
-              </li>
-            ))}
+            {CAST.map((p, i) => {
+              const name = pick(p.name, p.nameEn);
+              return (
+                <li
+                  key={p.name}
+                  className="intro-line w-24 shrink-0"
+                  style={{ animationDelay: `${i * 160}ms` }}
+                >
+                  <div className="aspect-square overflow-hidden rounded-2xl border border-border/70 bg-surface-2 grayscale-[35%]">
+                    {p.portrait && (
+                      <img src={p.portrait} alt={name} className="size-full object-cover" />
+                    )}
+                  </div>
+                  <p className="mt-2 font-display text-sm">{name}</p>
+                </li>
+              );
+            })}
           </ul>
         )}
 
         {/* المشهد ٣ — تسلسل قصير، حدث واحد بكل مرة */}
         {scene.kind === "timeline" && (
-          <ul className="mt-8 w-full max-w-xl space-y-3 text-right">
-            {(scene.beats ?? []).slice(0, beatsShown).map((b) => (
+          <ul className="mt-8 w-full max-w-xl space-y-3 text-start">
+            {beats.slice(0, beatsShown).map((b) => (
               <li
                 key={b.time}
                 className="intro-line rounded-2xl border border-border/70 bg-background/50 px-5 py-4 backdrop-blur-sm"
@@ -285,16 +352,22 @@ function IntroSequence() {
 
         {/* المشهد ٦ — ملف القضية */}
         {scene.kind === "file" && (
-          <div className="intro-line mt-8 w-full max-w-xl rounded-2xl border border-border bg-surface-2/80 p-6 text-right backdrop-blur-sm">
+          <div className="intro-line mt-8 w-full max-w-xl rounded-2xl border border-border bg-surface-2/80 p-6 text-start backdrop-blur-sm">
             <p className="font-mono text-[0.7rem] tracking-[0.3em] text-muted-foreground">
-              ملف القضية · {caseFile.code}
+              {pick(UI.caseFileLabel.ar, UI.caseFileLabel.en)} · {caseFile.code}
             </p>
             <dl className="mt-4 space-y-3 text-sm">
               {[
-                ["القضية", caseFile.title],
-                ["الحالة", "قيد التحقيق"],
-                ["المشتبه فيهم", "5"],
-                ["الأدلة", "غير معروف"],
+                [pick(UI.rowCase.ar, UI.rowCase.en), pick(caseFile.title, caseFile.titleEn)],
+                [
+                  pick(UI.rowStatus.ar, UI.rowStatus.en),
+                  pick(UI.statusOpen.ar, UI.statusOpen.en),
+                ],
+                [pick(UI.rowSuspects.ar, UI.rowSuspects.en), "5"],
+                [
+                  pick(UI.rowEvidence.ar, UI.rowEvidence.en),
+                  pick(UI.evidenceUnknown.ar, UI.evidenceUnknown.en),
+                ],
               ].map(([k, v]) => (
                 <div
                   key={k}
@@ -320,8 +393,12 @@ function IntroSequence() {
                   style={{ animationDelay: `${i * 180}ms` }}
                 >
                   <Icon className="mx-auto size-5 text-primary" />
-                  <h2 className="mt-3 font-display text-base font-bold">{r.title}</h2>
-                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{r.text}</p>
+                  <h2 className="mt-3 font-display text-base font-bold">
+                    {pick(r.title, r.titleEn)}
+                  </h2>
+                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                    {pick(r.text, r.textEn)}
+                  </p>
                 </li>
               );
             })}
@@ -331,11 +408,11 @@ function IntroSequence() {
         <div className="mt-10 w-full max-w-sm">
           {isHost ? (
             <ActionButton className="w-full py-3.5 text-base" onClick={advance}>
-              {scene.cta} <ArrowLeft className="size-4" />
+              {pick(scene.cta, scene.ctaEn)} <NextIcon className="size-4" />
             </ActionButton>
           ) : (
             <p className="rounded-xl border border-border bg-background/60 px-4 py-3 text-sm text-muted-foreground backdrop-blur-sm">
-              القائد يتابع ملف القضية...
+              {pick(UI.hostLeads.ar, UI.hostLeads.en)}
             </p>
           )}
         </div>
