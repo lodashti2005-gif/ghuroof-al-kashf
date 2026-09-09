@@ -99,6 +99,7 @@ export const ar = {
     trialBadge: "تجربة ١٠ دقائق",
     purchased: "تم الشراء ✓",
     startCase: "ابدأ القضية",
+    playNow: "العب الآن",
     buyCase: "شراء القضية",
     startPlay: "ابدأ اللعب",
     continuePlay: "أكمل اللعب",
