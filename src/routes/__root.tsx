@@ -8,7 +8,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -20,26 +20,37 @@ import { noteRoute } from "@/game/room-store";
 import { trackEvent } from "@/lib/activity";
 
 function NotFoundComponent() {
+  // بوابة الجذر: مزوّد اللغة غير متاح هنا، فنقرأ اللغة من عنصر html.
+  const [en, setEn] = useState(false);
+  useEffect(() => {
+    setEn(document.documentElement.lang === "en");
+  }, []);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-primary">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">الصفحة غير موجودة</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">
+          {en ? "Page not found" : "الصفحة غير موجودة"}
+        </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          يبدو أن الصفحة التي تبحث عنها غير موجودة أو تم نقلها.
+          {en
+            ? "This page doesn't exist or has been moved."
+            : "يبدو أن الصفحة التي تبحث عنها غير موجودة أو تم نقلها."}
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 font-display text-sm font-bold text-primary-foreground transition-all hover:scale-[1.01]"
           >
-            العودة للرئيسية
+            {en ? "Back home" : "العودة للرئيسية"}
           </Link>
         </div>
       </div>
     </div>
   );
 }
+
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
