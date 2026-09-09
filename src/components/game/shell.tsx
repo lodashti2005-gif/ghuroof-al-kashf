@@ -122,6 +122,7 @@ export function ActionButton({
 export function LeaveRoomButton() {
   const { actions } = useRoom();
   const navigate = useNavigate();
+  const { pick } = useI18n();
   return (
     <button
       type="button"
