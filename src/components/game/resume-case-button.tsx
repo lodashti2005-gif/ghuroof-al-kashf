@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 
 import { caseRegistry } from "@/game/game-meta";
 import * as store from "@/game/room-store";
+import { useI18n } from "@/i18n";
 
 const PLAY_PREFIXES = [
   "/lobby",
@@ -55,6 +56,7 @@ export function ResumeCaseButton({ className = "" }: { className?: string }) {
   const [saved, setSaved] = useState<store.SavedProgress | null>(null);
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
+  const { pick } = useI18n();
 
   useEffect(() => {
     let alive = true;
@@ -68,7 +70,7 @@ export function ResumeCaseButton({ className = "" }: { className?: string }) {
 
   if (!saved) return null;
 
-  const title = caseRegistry.find((c) => c.id === saved.caseId)?.title ?? "القضية";
+  const title = caseRegistry.find((c) => c.id === saved.caseId)? undefined : undefined;
 
   return (
     <button

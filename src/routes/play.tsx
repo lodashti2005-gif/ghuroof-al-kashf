@@ -5,7 +5,14 @@ import { useState } from "react";
 import heroScene from "@/assets/scene-hero.jpg";
 import { ActionButton } from "@/components/game/shell";
 import { Eyebrow } from "@/components/game/ui";
-import { GAME_NAME, GAME_TAGLINE, activeCase } from "@/game/game-meta";
+import {
+  GAME_NAME,
+  GAME_NAME_EN,
+  GAME_TAGLINE,
+  GAME_TAGLINE_EN,
+  activeCase,
+} from "@/game/game-meta";
+import { useI18n } from "@/i18n";
 import { useRoom } from "@/game/use-room";
 
 
@@ -30,12 +37,13 @@ type Mode = null | "create" | "join";
 
 function PlayCase() {
   const [mode, setMode] = useState<Mode>(null);
+  const { pick } = useI18n();
 
   return (
     <div className="relative min-h-screen overflow-hidden">
       <img
         src={heroScene}
-        alt="مسرح جريمة داخل شاليه معتم"
+        alt={pick("مسرح جريمة داخل شاليه معتم", "A crime scene inside a darkened chalet")}
         width={1920}
         height={1088}
         className="absolute inset-0 size-full object-cover opacity-70"
@@ -67,10 +75,10 @@ function PlayCase() {
               to="/cases"
               className="font-display text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
-              القضايا
+              {pick("القضايا", "Cases")}
             </Link>
             <span className="hidden font-mono text-xs text-muted-foreground sm:block">
-              ملف {activeCase.code} · سري
+              {pick(`ملف ${activeCase.code} · سري`, `File ${activeCase.code} · Classified`)}
             </span>
           </div>
         </header>
@@ -80,42 +88,53 @@ function PlayCase() {
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3.5 py-1.5">
             <span className="size-1.5 rounded-full bg-primary blink-record" />
             <span className="font-display text-xs tracking-wide text-primary">
-              قضية مفتوحة · أربعة مشتبهين
+              {pick("قضية مفتوحة · أربعة مشتبهين", "Open case · four suspects")}
             </span>
           </div>
 
-          <h1 className="text-5xl font-extrabold leading-[1.15] sm:text-7xl">{GAME_NAME}</h1>
+          <h1 className="text-5xl font-extrabold leading-[1.15] sm:text-7xl">{pick(GAME_NAME, GAME_NAME_EN)}</h1>
           <p className="mt-3 font-display text-xl font-bold text-primary sm:text-3xl">
-            {activeCase.title}
+            {pick(activeCase.title, activeCase.titleEn)}
           </p>
           <p className="mt-3 font-display text-base text-muted-foreground sm:text-xl">
-            {GAME_TAGLINE}
+            {pick(GAME_TAGLINE, GAME_TAGLINE_EN)}
           </p>
 
           <p className="mt-6 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            جمعة أصحاب، غرفة واحدة، وقضية قتل ما تنحل إلا بالتناقضات. حققوا مع المشتبهين، اجمعوا
-            الأدلة، وصوتوا على القاتل قبل ما ينتهي الوقت.
+            {pick(
+              "جمعة أصحاب، غرفة واحدة، وقضية قتل ما تنحل إلا بالتناقضات. حققوا مع المشتبهين، اجمعوا الأدلة، وصوتوا على القاتل قبل ما ينتهي الوقت.",
+              "A group of friends, one room, and a murder case that only cracks through contradictions. Interrogate the suspects, collect the evidence, and vote on the killer before time runs out.",
+            )}
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <ActionButton onClick={() => setMode("create")} className="px-7 py-3.5 text-base">
-              <Fingerprint className="size-4.5" /> ابدأ التحقيق
+              <Fingerprint className="size-4.5" /> {pick("ابدأ التحقيق", "Start investigating")}
             </ActionButton>
             <ActionButton
               variant="outline"
               onClick={() => setMode("join")}
               className="px-7 py-3.5 text-base"
             >
-              <KeyRound className="size-4.5" /> انضم لغرفة
+              <KeyRound className="size-4.5" /> {pick("انضم لغرفة", "Join a room")}
             </ActionButton>
           </div>
         </div>
 
         <footer className="grid gap-3 border-t border-border/60 pt-6 sm:grid-cols-3">
           {[
-            { k: "الضحية", v: "بدر · 32 سنة" },
-            { k: "الموقع", v: "شاليه خاص – الكويت" },
-            { k: "وقت الوفاة", v: "01:40 – 02:00 فجراً" },
+            {
+              k: pick("الضحية", "Victim"),
+              v: pick("بدر · 32 سنة", "Badr · 32 years old"),
+            },
+            {
+              k: pick("الموقع", "Location"),
+              v: pick("شاليه خاص – الكويت", "A private chalet — Kuwait"),
+            },
+            {
+              k: pick("وقت الوفاة", "Time of death"),
+              v: pick("01:40 – 02:00 فجراً", "1:40 – 2:00 AM"),
+            },
           ].map((row) => (
             <div key={row.k} className="min-w-0">
               <Eyebrow>{row.k}</Eyebrow>
@@ -132,6 +151,7 @@ function PlayCase() {
 
 function EntryModal({ mode, onClose }: { mode: "create" | "join"; onClose: () => void }) {
   const { actions } = useRoom();
+  const { dir, pick } = useI18n();
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
@@ -142,11 +162,11 @@ function EntryModal({ mode, onClose }: { mode: "create" | "join"; onClose: () =>
   const submit = async () => {
     const nickname = name.trim();
     if (nickname.length < 2) {
-      setError("اكتب اسم من حرفين على الأقل");
+      setError(pick("اكتب اسم من حرفين على الأقل", "Enter a name with at least two letters"));
       return;
     }
     if (mode === "join" && !/^\d{6}$/.test(code.trim())) {
-      setError("رمز الغرفة لازم يكون 6 أرقام");
+      setError(pick("رمز الغرفة لازم يكون 6 أرقام", "The room code must be 6 digits"));
       return;
     }
     setError(null);
@@ -157,7 +177,7 @@ function EntryModal({ mode, onClose }: { mode: "create" | "join"; onClose: () =>
         : await actions.joinRoom(code.trim(), nickname);
     setBusy(false);
     if (!res.ok) {
-      setError(res.error ?? "ما قدرنا ندخلك الغرفة");
+      setError(res.error ?? pick("ما قدرنا ندخلك الغرفة", "We couldn't get you into the room"));
       return;
     }
     navigate({ to: "/lobby" });
@@ -169,15 +189,17 @@ function EntryModal({ mode, onClose }: { mode: "create" | "join"; onClose: () =>
       <div className="surface-panel cine-in w-full max-w-md p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <Eyebrow>{mode === "create" ? "غرفة جديدة" : "دخول غرفة"}</Eyebrow>
+            <Eyebrow>{mode === "create" ? pick("غرفة جديدة", "New room") : pick("دخول غرفة", "Join a room")}</Eyebrow>
             <h2 className="mt-1 text-2xl font-bold">
-              {mode === "create" ? "ابدأ التحقيق" : "انضم لغرفة"}
+              {mode === "create"
+                ? pick("ابدأ التحقيق", "Start investigating")
+                : pick("انضم لغرفة", "Join a room")}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="إغلاق"
+            aria-label={pick("إغلاق", "Close")}
             className="grid size-8 shrink-0 place-items-center rounded-lg border border-border text-muted-foreground hover:text-foreground"
           >
             <X className="size-4" />
@@ -191,21 +213,21 @@ function EntryModal({ mode, onClose }: { mode: "create" | "join"; onClose: () =>
             submit();
           }}
         >
-          <Field label="اسمك بالتحقيق">
+          <Field label={pick("اسمك بالتحقيق", "Your investigator name")}>
             <input
               value={name}
               onChange={(e) => {
                 setName(e.target.value);
                 setError(null);
               }}
-              placeholder="مثال: أبو خالد"
+              placeholder={pick("مثال: أبو خالد", "e.g. Abu Khalid")}
               maxLength={18}
               className="w-full rounded-xl border border-input bg-surface-2 px-4 py-3 text-base outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-primary/60"
             />
           </Field>
 
           {mode === "join" && (
-            <Field label="رمز الغرفة (6 أرقام)">
+            <Field label={pick("رمز الغرفة (6 أرقام)", "Room code (6 digits)")}>
               <input
                 value={code}
                 inputMode="numeric"
@@ -227,8 +249,12 @@ function EntryModal({ mode, onClose }: { mode: "create" | "join"; onClose: () =>
           )}
 
           <ActionButton type="submit" disabled={busy} className="w-full py-3.5 text-base">
-            {busy ? "لحظة..." : mode === "create" ? "أنشئ الغرفة" : "دخول"}{" "}
-            <ArrowLeft className="size-4" />
+            {busy
+              ? pick("لحظة...", "One moment...")
+              : mode === "create"
+                ? pick("أنشئ الغرفة", "Create the room")
+                : pick("دخول", "Enter")}{" "}
+            <ArrowLeft className={`size-4 ${dir === "ltr" ? "rotate-180" : ""}`} />
           </ActionButton>
 
         </form>
