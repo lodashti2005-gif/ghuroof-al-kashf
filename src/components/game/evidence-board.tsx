@@ -112,7 +112,11 @@ export function EvidenceBoard({
       setLinkResult({ ok: false });
       return;
     }
-    setLinkResult({ ok: true, title: link.title, insight: link.insight });
+    setLinkResult({
+      ok: true,
+      title: pick(link.title, link.titleEn),
+      insight: pick(link.insight, link.insightEn),
+    });
     onDeduction?.({ id: link.id, title: link.title, insight: link.insight, pair: [...link.pair] });
   };
 
@@ -238,12 +242,15 @@ function DeductionCard({
 }) {
   const { pick } = useI18n();
   const [picking, setPicking] = useState(false);
+  const link = getEvidenceLink(deduction.linkId);
+  const title = pick(deduction.title, link?.titleEn ?? deduction.title);
+  const insight = pick(deduction.insight, link?.insightEn ?? deduction.insight);
   return (
     <div className="cine-in surface-panel border-evidence/35 p-4">
       <h4 className="flex items-center gap-2 text-base font-bold">
-        <Lightbulb className="size-4 shrink-0 text-evidence" /> {deduction.title}
+        <Lightbulb className="size-4 shrink-0 text-evidence" /> {title}
       </h4>
-      <p className="mt-1.5 text-sm leading-relaxed">{deduction.insight}</p>
+      <p className="mt-1.5 text-sm leading-relaxed">{insight}</p>
       {onUse &&
         (!picking ? (
           <ActionButton variant="outline" className="mt-3 w-full py-2.5" onClick={() => setPicking(true)}>
