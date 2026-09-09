@@ -28,6 +28,7 @@ import { accessFor } from "@/game/role-access";
 import { roleById } from "@/game/roles";
 import { useRoom } from "@/game/use-room";
 import { useTurn } from "@/game/use-turn";
+import { useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -47,6 +48,7 @@ export const Route = createFileRoute("/dashboard")({
 
 function Dashboard() {
   const { room, me, isHost, actions } = useRoom();
+  const { pick } = useI18n();
   const navigate = useNavigate();
 
   const { canAct } = useTurn();
@@ -59,7 +61,7 @@ function Dashboard() {
   const myRole = roleById(myRoleId);
   const share = (text: string) => {
     if (!me) return;
-    actions.addNote({ author: me.name, text, tag: myRole?.title ?? "الفريق" });
+    actions.addNote({ author: me.name, text, tag: pick(myRole?.title, myRole?.titleEn) ?? pick("الفريق", "Team") });
   };
 
   const unlocked = room?.unlockedEvidence ?? [];
@@ -79,7 +81,7 @@ function Dashboard() {
   }, [accusationOpen, navigate]);
 
   return (
-    <GameShell title="لوحة التحقيق" right={<LeaveRoomButton />}>
+    <GameShell title={pick("لوحة التحقيق", "Investigation board")} right={<LeaveRoomButton />}>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="min-w-0 space-y-6">
           <RoleBanner roleId={myRoleId} />
@@ -89,36 +91,46 @@ function Dashboard() {
             <div className="flex min-w-0 items-center gap-4">
               <img
                 src={caseFile.victim.portrait}
-                alt={`صورة الضحية ${caseFile.victim.name}`}
+                alt={pick(
+                  `صورة الضحية ${caseFile.victim.name}`,
+                  `Portrait of the victim ${caseFile.victim.nameEn}`,
+                )}
                 loading="lazy"
                 width={912}
                 height={1104}
                 className="size-20 shrink-0 rounded-xl border border-border object-cover object-top grayscale-[45%]"
               />
               <div className="min-w-0">
-                <Eyebrow>الضحية</Eyebrow>
-                <h2 className="mt-1 truncate text-xl font-bold">{caseFile.victim.name}</h2>
+                <Eyebrow>{pick("الضحية", "Victim")}</Eyebrow>
+                <h2 className="mt-1 truncate text-xl font-bold">{pick(caseFile.victim.name, caseFile.victim.nameEn)}</h2>
                 <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
-                  {caseFile.victim.timeOfDeath} · {caseFile.victim.location}
+                  {pick(caseFile.victim.timeOfDeath, caseFile.victim.timeOfDeathEn)} ·{" "}
+                  {pick(caseFile.victim.location, caseFile.victim.locationEn)}
                 </p>
               </div>
             </div>
             <ProgressRing
               value={progress}
-              label={`الأدلة المكتشفة: ${unlocked.length} · ${interrogated} استجوابات مغلقة`}
+              label={pick(
+                `الأدلة المكتشفة: ${unlocked.length} · ${interrogated} استجوابات مغلقة`,
+                `Evidence found: ${unlocked.length} · ${interrogated} interrogations closed`,
+              )}
             />
           </Panel>
 
           <Panel className="cine-in flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0">
-              <Eyebrow>معاينة الموقع</Eyebrow>
-              <h2 className="mt-1 text-lg font-bold">مسرح الجريمة</h2>
+              <Eyebrow>{pick("معاينة الموقع", "Location walkthrough")}</Eyebrow>
+              <h2 className="mt-1 text-lg font-bold">{pick("مسرح الجريمة", "Crime scene")}</h2>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                افحصوا الشاليه بأنفسكم ودققوا بالتفاصيل — الأدلة اللي تكتشفونها تنفتح باللوحة.
+                {pick(
+                  "افحصوا الشاليه بأنفسكم ودققوا بالتفاصيل — الأدلة اللي تكتشفونها تنفتح باللوحة.",
+                  "Search the chalet yourselves and study the details — whatever you find unlocks on the board.",
+                )}
               </p>
             </div>
             <ActionButton onClick={() => navigate({ to: "/scene" })}>
-              <Search className="size-4" /> ادخل مسرح الجريمة
+              <Search className="size-4" /> {pick("ادخل مسرح الجريمة", "Enter the crime scene")}
             </ActionButton>
           </Panel>
 
@@ -126,10 +138,10 @@ function Dashboard() {
           <section>
             <div className="mb-4 flex items-end justify-between gap-4">
               <div className="min-w-0">
-                <Eyebrow>الاستجواب</Eyebrow>
-                <h2 className="mt-1 text-xl font-bold">اختر مشتبه وابدأ</h2>
+                <Eyebrow>{pick("الاستجواب", "Interrogation")}</Eyebrow>
+                <h2 className="mt-1 text-xl font-bold">{pick("اختر مشتبه وابدأ", "Pick a suspect and start")}</h2>
               </div>
-              <CaseTag>5 دقائق لكل واحد</CaseTag>
+              <CaseTag>{pick("5 دقائق لكل واحد", "5 minutes each")}</CaseTag>
             </div>
             <div className="grid items-stretch gap-4 md:grid-cols-2">
               {suspects.map((s) => (
@@ -148,17 +160,24 @@ function Dashboard() {
           ) : roleAccess.interrogate ? (
             <WaitYourTurnNote />
           ) : (
-            <RoleLockedNote text="استجواب المشتبه فيهم مسؤولية «محقق الاستجواب» بالفريق." />
+            <RoleLockedNote
+              text={pick(
+                "استجواب المشتبه فيهم مسؤولية «محقق الاستجواب» بالفريق.",
+                "Interrogating the suspects is the team's Interrogation Detective's job.",
+              )}
+            />
           )}
 
           {access.evidenceBoard && (
           <section>
             <div className="mb-4 flex items-end justify-between gap-4">
               <div className="min-w-0">
-                <Eyebrow>لوحة الأدلة</Eyebrow>
-                <h2 className="mt-1 text-xl font-bold">الأدلة</h2>
+                <Eyebrow>{pick("لوحة الأدلة", "Evidence board")}</Eyebrow>
+                <h2 className="mt-1 text-xl font-bold">{pick("الأدلة", "Evidence")}</h2>
               </div>
-              <CaseTag tone="evidence">الأدلة المكتشفة: {unlocked.length}</CaseTag>
+              <CaseTag tone="evidence">
+                {pick(`الأدلة المكتشفة: ${unlocked.length}`, `Evidence found: ${unlocked.length}`)}
+              </CaseTag>
             </div>
             <EvidenceBoard
               unlockedIds={unlocked}
@@ -169,7 +188,7 @@ function Dashboard() {
                   title: link.title,
                   insight: link.insight,
                   evidenceIds: link.pair,
-                  author: me?.name ?? "محقق",
+                  author: me?.name ?? pick("محقق", "Detective"),
                 })
               }
               onUseDeduction={(text, suspectId) =>
@@ -210,7 +229,7 @@ function Dashboard() {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Users className="size-4 text-muted-foreground" />
-                <h2 className="font-display text-sm font-bold">بالغرفة الآن</h2>
+                <h2 className="font-display text-sm font-bold">{pick("بالغرفة الآن", "In the room now")}</h2>
               </div>
               <CaseTag>{room?.players.length ?? 0}</CaseTag>
             </div>
@@ -235,18 +254,20 @@ function Dashboard() {
           <RoundActionsPanel />
 
           <Panel className="cine-in">
-            <Eyebrow>مرجع مشترك</Eyebrow>
-            <h2 className="mt-1.5 text-base font-bold">دفتر القضية</h2>
+            <Eyebrow>{pick("مرجع مشترك", "Shared reference")}</Eyebrow>
+            <h2 className="mt-1.5 text-base font-bold">{pick("دفتر القضية", "Case notebook")}</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              كل ما اكتشفه الفريق: الأدلة، أقوال المشتبه فيهم، التناقضات، التسلسل الزمني
-              وملاحظاتكم — متزامن لحظياً.
+              {pick(
+                "كل ما اكتشفه الفريق: الأدلة، أقوال المشتبه فيهم، التناقضات، التسلسل الزمني وملاحظاتكم — متزامن لحظياً.",
+                "Everything the team has found: evidence, suspect statements, contradictions, the timeline and your notes — synced live.",
+              )}
             </p>
             <ActionButton
               variant="outline"
               className="mt-4 w-full"
               onClick={() => navigate({ to: "/notebook" })}
             >
-              <NotebookPen className="size-4" /> افتح دفتر القضية
+              <NotebookPen className="size-4" /> {pick("افتح دفتر القضية", "Open the case notebook")}
             </ActionButton>
           </Panel>
 
@@ -256,27 +277,42 @@ function Dashboard() {
           <NotesPanel />
 
           <Panel className="cine-in">
-            <Eyebrow>المرحلة الأخيرة</Eyebrow>
-            <h2 className="mt-1.5 text-base font-bold">القرار الأخير</h2>
+            <Eyebrow>{pick("المرحلة الأخيرة", "Final stage")}</Eyebrow>
+            <h2 className="mt-1.5 text-base font-bold">{pick("القرار الأخير", "The final decision")}</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               {accusationOpen
-                ? "التصويت مفتوح — كل واحد يصوت من جهازه بشكل سري."
+                ? pick(
+                    "التصويت مفتوح — كل واحد يصوت من جهازه بشكل سري.",
+                    "Voting is open — everyone votes secretly from their own device.",
+                  )
                 : confirmFinal
-                  ? "متأكدين إنكم جاهزين للقرار الأخير؟ بعد هالخطوة ما تقدرون ترجعون للتحقيق."
+                  ? pick(
+                      "متأكدين إنكم جاهزين للقرار الأخير؟ بعد هالخطوة ما تقدرون ترجعون للتحقيق.",
+                      "Are you sure you're ready for the final decision? After this step you can't go back to investigating.",
+                    )
                   : isHost
                     ? allInterrogated
-                      ? "خلصتوا التحقيق مع كل المشتبهين. أنت قائد الغرفة، تقدر تفتح القرار الأخير."
-                      : `باقي ${suspects.length - interrogated} استجواب — وأنت قائد الغرفة تقدر تقرر متى تفتحون القرار الأخير.`
-                    : "انتظروا قائد الغرفة يفتح القرار الأخير."}
+                      ? pick(
+                          "خلصتوا التحقيق مع كل المشتبهين. أنت قائد الغرفة، تقدر تفتح القرار الأخير.",
+                          "You've interrogated every suspect. You're the room host — you can open the final decision.",
+                        )
+                      : pick(
+                          `باقي ${suspects.length - interrogated} استجواب — وأنت قائد الغرفة تقدر تقرر متى تفتحون القرار الأخير.`,
+                          `${suspects.length - interrogated} interrogation(s) left — as the host you decide when to open the final decision.`,
+                        )
+                    : pick(
+                        "انتظروا قائد الغرفة يفتح القرار الأخير.",
+                        "Wait for the room host to open the final decision.",
+                      )}
             </p>
             {accusationOpen ? (
               <ActionButton className="mt-4 w-full" onClick={() => navigate({ to: "/accusation" })}>
-                <Gavel className="size-4" /> روح للتصويت
+                <Gavel className="size-4" /> {pick("روح للتصويت", "Go to the vote")}
               </ActionButton>
             ) : confirmFinal ? (
               <div className="mt-4 flex flex-col gap-2">
                 <ActionButton variant="outline" onClick={() => setConfirmFinal(false)}>
-                  نرجع نحقق
+                  {pick("نرجع نحقق", "Back to investigating")}
                 </ActionButton>
                 <ActionButton
                   variant="danger"
@@ -286,7 +322,7 @@ function Dashboard() {
                     navigate({ to: "/accusation" });
                   }}
                 >
-                  <Gavel className="size-4" /> إي، جاهزين
+                  <Gavel className="size-4" /> {pick("إي، جاهزين", "Yes, we're ready")}
                 </ActionButton>
               </div>
             ) : (
@@ -297,7 +333,9 @@ function Dashboard() {
                 onClick={() => setConfirmFinal(true)}
               >
                 <Gavel className="size-4" />{" "}
-                {isHost ? "الانتقال للاتهام النهائي" : "بانتظار قائد الغرفة"}
+                {isHost
+                  ? pick("الانتقال للاتهام النهائي", "Move to the final accusation")
+                  : pick("بانتظار قائد الغرفة", "Waiting for the room host")}
               </ActionButton>
             )}
           </Panel>
@@ -310,6 +348,7 @@ function Dashboard() {
 
 function NotesPanel() {
   const { room, me, actions } = useRoom();
+  const { pick } = useI18n();
   const [text, setText] = useState("");
 
   const save = () => {
@@ -323,7 +362,7 @@ function NotesPanel() {
     <Panel className="cine-in">
       <div className="flex items-center gap-2">
         <NotebookPen className="size-4 text-muted-foreground" />
-        <h2 className="font-display text-sm font-bold">دفتر المحققين</h2>
+        <h2 className="font-display text-sm font-bold">{pick("دفتر المحققين", "Detectives' notes")}</h2>
       </div>
       <form
         className="mt-3"
@@ -336,7 +375,7 @@ function NotesPanel() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={3}
-          placeholder="اكتب ملاحظة عن مشتبه أو دليل..."
+          placeholder={pick("اكتب ملاحظة عن مشتبه أو دليل...", "Write a note about a suspect or a piece of evidence...")}
           className="w-full resize-none rounded-xl border border-input bg-surface-2 px-3.5 py-3 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-primary/60"
         />
         <ActionButton
@@ -345,14 +384,14 @@ function NotesPanel() {
           className="mt-2 w-full py-2.5"
           disabled={!text.trim()}
         >
-          احفظ الملاحظة
+          {pick("احفظ الملاحظة", "Save the note")}
         </ActionButton>
       </form>
 
       <ul className="mt-4 max-h-72 space-y-2 overflow-y-auto pe-1">
         {(room?.notes ?? []).length === 0 && (
           <li className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">
-            ما في ملاحظات بعد
+            {pick("ما في ملاحظات بعد", "No notes yet")}
           </li>
         )}
         {room?.notes.map((n) => (
@@ -364,7 +403,7 @@ function NotesPanel() {
               <button
                 type="button"
                 onClick={() => actions.removeNote(n.id)}
-                aria-label="حذف الملاحظة"
+                aria-label={pick("حذف الملاحظة", "Delete the note")}
                 className="shrink-0 text-muted-foreground transition-colors hover:text-primary"
               >
                 <Trash2 className="size-3.5" />
@@ -379,7 +418,7 @@ function NotesPanel() {
         to="/accusation"
         className="mt-4 block text-center font-display text-xs text-muted-foreground transition-colors hover:text-primary"
       >
-        جاهزين للاتهام؟
+        {pick("جاهزين للاتهام؟", "Ready to accuse?")}
       </Link>
     </Panel>
   );
