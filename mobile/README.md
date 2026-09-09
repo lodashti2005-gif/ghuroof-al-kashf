@@ -53,3 +53,27 @@ App Store submission requirements without further edits.
 - Change the loaded URL in `App.js` (`GAME_URL`) if you use a custom domain.
 - `ios.bundleIdentifier` in `app.json` must match the App Store identifier you own.
 - The first `eas build` run adds an `extra.eas.projectId` to `app.json` automatically.
+
+## Android builds
+
+Same app identity, icon, splash and URL as iOS. Android `package` is
+`com.waralsalfa.app`; only the `INTERNET` permission is requested (everything
+else is explicitly blocked), which is all the WebView shell needs.
+
+Installable test APK (no Play account needed):
+
+```bash
+cd mobile
+npm install
+npx eas-cli@latest build --platform android --profile trial
+```
+
+Google Play release bundle (`.aab`):
+
+```bash
+npx eas-cli@latest build --platform android --profile production
+npx eas-cli@latest submit --platform android --profile production
+```
+
+The `preview` profile also produces an APK; `production` is the only Android
+profile that outputs an AAB.
