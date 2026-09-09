@@ -84,7 +84,7 @@ export const askLastTripSuspect = createServerFn({ method: "POST" })
 
     const confrontId = evidenceId || witnessId || null;
     const isCulprit = data.suspectId === LAST_TRIP_CULPRIT_ID;
-    const scripted = isCulprit ? getJassimConfrontLine(confrontId) : null;
+    const scripted = isCulprit ? getJassimConfrontLine(confrontId, data.lang ?? "ar") : null;
 
     /** التحمّل ثابت لكل شخصية: الفاعل أعلى تحمّلاً من البقية. */
     const tolerance = isCulprit ? 60 : 40;
@@ -139,7 +139,9 @@ export const askLastTripSuspect = createServerFn({ method: "POST" })
         scripted ??
         (confrontId
           ? (data.lang === "en" ? "And what does that prove about me?" : "وهذا شنو يثبت علي؟")
-          : rules.scriptedAnswers[0]?.answer ?? (data.lang === "en" ? "I don't know what more you want me to say." : "مادري شنو تبيني أقول أكثر."));
+          : data.lang === "en"
+            ? "I don't know what more you want me to say."
+            : rules.scriptedAnswers[0]?.answer ?? "مادري شنو تبيني أقول أكثر.");
       return {
         text: repeated
           ? (data.lang === "en" ? `I already told you… ${fallback}` : `قلت لك… ${fallback}`)
