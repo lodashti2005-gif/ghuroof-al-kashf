@@ -16,7 +16,12 @@ import { useState } from "react";
 import { ActionButton } from "@/components/game/shell";
 import { SceneCrop } from "@/components/game/scene-crop";
 import { CaseTag, Eyebrow } from "@/components/game/ui";
-import { evidence as allEvidence, findEvidenceLink, suspects } from "@/game/case-data";
+import {
+  evidence as allEvidence,
+  findEvidenceLink,
+  getEvidenceLink,
+  suspects,
+} from "@/game/case-data";
 import { useI18n } from "@/i18n";
 import type { Deduction, EvidenceItem } from "@/game/types";
 
