@@ -66,6 +66,7 @@ function useKeys() {
 
 /** عصا تحكم لمس (أسفل يسار الشاشة). */
 function Joystick({ controls }: { controls: React.RefObject<Floor13Controls> }) {
+  const { pick } = useI18n();
   const base = useRef<HTMLDivElement>(null);
   const [knob, setKnob] = useState({ x: 0, y: 0 });
 
@@ -113,12 +114,13 @@ function Joystick({ controls }: { controls: React.RefObject<Floor13Controls> }) 
         className="absolute left-1/2 top-1/2 h-14 w-14 rounded-full border border-amber-200/40 bg-amber-100/20"
         style={{ transform: `translate(calc(-50% + ${knob.x}px), calc(-50% + ${knob.y}px))` }}
       />
-      <span className="absolute -top-6 right-0 text-[11px] text-amber-100/50">{useI18n().pick(F13.move.ar, F13.move.en)}</span>
+      <span className="absolute -top-6 right-0 text-[11px] text-amber-100/50">{pick(F13.move.ar, F13.move.en)}</span>
     </div>
   );
 }
 
 export function Floor13Experience({ onExit }: { onExit: () => void }) {
+  const { pick } = useI18n();
   const controls = useRef<Floor13Controls>({ move: { x: 0, y: 0 }, look: { dx: 0, dy: 0 } });
   const keys = useKeys();
   const [entered, setEntered] = useState(false);
@@ -295,6 +297,7 @@ function LoadingVeil({ label }: { label: string }) {
 
 /** شاشة تحميل سينمائية قصيرة قبل دخول الـ3D (وتضمن إيماءة مستخدم على الجوال). */
 function IntroGate({ onEnter, onExit }: { onEnter: () => void; onExit: () => void }) {
+  const { pick } = useI18n();
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setReady(true), 1600);
