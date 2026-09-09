@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, BackHandler, Platform, StyleSheet, View } from "react-native";
+import { ActivityIndicator, BackHandler, Linking, Platform, StyleSheet, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { WebView } from "react-native-webview";
+
 
 // The game itself is untouched: the iOS app loads the published web build.
 const GAME_URL = "https://waralsalfa.com";
@@ -36,6 +37,9 @@ export default function App() {
           originWhitelist={["*"]}
           allowsInlineMediaPlayback
           mediaPlaybackRequiresUserAction={false}
+          allowsFullscreenVideo
+          keyboardDisplayRequiresUserAction={false}
+          pullToRefreshEnabled={false}
           allowsBackForwardNavigationGestures
           javaScriptEnabled
           domStorageEnabled
@@ -43,9 +47,22 @@ export default function App() {
           thirdPartyCookiesEnabled
           setSupportMultipleWindows={false}
           onLoadEnd={() => setLoading(false)}
+          onShouldStartLoadWithRequest={(req) => {
+            // mailto/tel/whatsapp تُفتح بتطبيقات النظام؛ بقية الروابط (بما فيها
+            // صفحات الدفع) تبقى داخل التطبيق حتى لا يتأثر مسار الشراء.
+            const url = req.url ?? "";
+            const external =
+              /^(mailto:|tel:|sms:|whatsapp:)/i.test(url) || /^https?:\/\/(wa\.me|api\.whatsapp\.com)/i.test(url);
+            if (external) {
+              void Linking.openURL(url);
+              return false;
+            }
+            return true;
+          }}
           onNavigationStateChange={(state) => {
             canGoBack.current = state.canGoBack;
           }}
+
         />
         {loading ? (
           <View style={styles.loader} pointerEvents="none">
