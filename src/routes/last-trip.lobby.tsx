@@ -52,12 +52,15 @@ function LastTripLobby() {
 
   const inLastTripRoom = !!room && room.caseId === LAST_TRIP_CASE_ID;
 
-  // إذا المضيف بدأ القضية، كل اللاعبين ينتقلون للمقدمة بنفس الوقت.
+  // إذا المضيف بدأ القضية، كل اللاعبين ينتقلون لنفس المرحلة الحالية.
   useEffect(() => {
-    if (inLastTripRoom && room && room.phase !== "lobby") {
-      navigate({ to: "/last-trip/intro" });
-    }
+    if (!inLastTripRoom || !room || room.phase === "lobby") return;
+    if (room.phase === "intro") navigate({ to: "/last-trip/intro" });
+    else if (room.phase === "voting") navigate({ to: "/last-trip/accusation" });
+    else if (room.phase === "reveal") navigate({ to: "/last-trip/ending" });
+    else navigate({ to: "/last-trip/scene" });
   }, [inLastTripRoom, room, navigate]);
+
 
   const copy = () => {
     if (!room) return;

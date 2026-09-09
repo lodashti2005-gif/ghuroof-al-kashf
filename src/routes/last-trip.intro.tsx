@@ -484,10 +484,13 @@ function LastTripIntroRoute() {
           </ActionButton>
           <Link
             to="/last-trip/scene"
+            replace
+            onClick={() => markIntroSeen(room?.code)}
             className="font-mono text-[11px] text-muted-foreground underline-offset-4 hover:underline"
           >
             {lastTripT(lang, "skipIntro")}
           </Link>
+
         </div>
       </div>
     </main>
