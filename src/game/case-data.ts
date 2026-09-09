@@ -358,15 +358,15 @@ export const solution = {
   methodEn:
     "He left in front of everyone at 11:55 PM to build himself an alibi, then drove back at 1:38 AM and let himself in with the spare key without forcing the door. He handed Badr a cup of coffee laced with a sedative, and once Badr had slowed down, a confrontation broke out that ended in his death, cracking the watch at 1:47. Before leaving at 2:04, he took Badr's phone to erase the transfer records.",
   timeline: [
-    { time: "11:48 م", text: "يوسف يرسل رسالة تهديد لبدر عشان يوقف موضوع المحامي.", textEn: "Yousef sends Badr a threatening message to shut down the lawyer idea." },
-    { time: "11:55 م", text: "يوسف يطلع من الشاليه قدام الجميع ويخلي انطباع إنه ترك القعدة.", textEn: "Yousef leaves the chalet in front of everyone, giving the impression he'd left for good." },
-    { time: "01:15 ص", text: "نورة تطلع، وبعدها ترجع خفية عشان ترد الخاتم.", textEn: "Noura leaves, then quietly comes back to return the ring." },
-    { time: "01:29 ص", text: "بدر يفتح ملف التحويلات البنكية بتلفونه.", textEn: "Badr opens the bank transfer file on his phone." },
-    { time: "01:38 ص", text: "كاميرا المدخل تسجل سيارة يوسف داخلة مرة ثانية.", textEn: "The entrance camera records Yousef's car coming back in." },
-    { time: "01:42 ص", text: "يوسف يدخل بالمفتاح الاحتياطي ويقدم لبدر فنجال قهوة فيه مهدئ.", textEn: "Yousef lets himself in with the spare key and hands Badr a coffee laced with a sedative." },
-    { time: "01:47 ص", text: "المشادة تصير، الساعة تتكسر وتوقف على هذا الوقت.", textEn: "The confrontation happens; the watch is cracked and stops at this time." },
-    { time: "01:48 ص", text: "دانة تسمع باب ينسد وخطوات بالممر.", textEn: "Dana hears a door close and footsteps in the hallway." },
-    { time: "02:04 ص", text: "يوسف يطلع وياه تلفون بدر عشان يخفي أدلة التحويلات.", textEn: "Yousef leaves, taking Badr's phone with him to hide the transfer evidence." },
+    { time: "11:48 م", timeEn: "11:48 PM", text: "يوسف يرسل رسالة تهديد لبدر عشان يوقف موضوع المحامي.", textEn: "Yousef sends Badr a threatening message to shut down the lawyer idea." },
+    { time: "11:55 م", timeEn: "11:55 PM", text: "يوسف يطلع من الشاليه قدام الجميع ويخلي انطباع إنه ترك القعدة.", textEn: "Yousef leaves the chalet in front of everyone, giving the impression he'd left for good." },
+    { time: "01:15 ص", timeEn: "1:15 AM", text: "نورة تطلع، وبعدها ترجع خفية عشان ترد الخاتم.", textEn: "Noura leaves, then quietly comes back to return the ring." },
+    { time: "01:29 ص", timeEn: "1:29 AM", text: "بدر يفتح ملف التحويلات البنكية بتلفونه.", textEn: "Badr opens the bank transfer file on his phone." },
+    { time: "01:38 ص", timeEn: "1:38 AM", text: "كاميرا المدخل تسجل سيارة يوسف داخلة مرة ثانية.", textEn: "The entrance camera records Yousef's car coming back in." },
+    { time: "01:42 ص", timeEn: "1:42 AM", text: "يوسف يدخل بالمفتاح الاحتياطي ويقدم لبدر فنجال قهوة فيه مهدئ.", textEn: "Yousef lets himself in with the spare key and hands Badr a coffee laced with a sedative." },
+    { time: "01:47 ص", timeEn: "1:47 AM", text: "المشادة تصير، الساعة تتكسر وتوقف على هذا الوقت.", textEn: "The confrontation happens; the watch is cracked and stops at this time." },
+    { time: "01:48 ص", timeEn: "1:48 AM", text: "دانة تسمع باب ينسد وخطوات بالممر.", textEn: "Dana hears a door close and footsteps in the hallway." },
+    { time: "02:04 ص", timeEn: "2:04 AM", text: "يوسف يطلع وياه تلفون بدر عشان يخفي أدلة التحويلات.", textEn: "Yousef leaves, taking Badr's phone with him to hide the transfer evidence." },
   ],
   decisive: {
     title: "توقيت كاميرا المدخل + المفتاح الاحتياطي",
@@ -435,7 +435,9 @@ export interface EvidenceLink {
   id: string;
   pair: [string, string];
   title: string;
+  titleEn?: string;
   insight: string;
+  insightEn?: string;
 }
 
 export const evidenceLinks: EvidenceLink[] = [
@@ -443,45 +445,65 @@ export const evidenceLinks: EvidenceLink[] = [
     id: "time-inside",
     pair: ["watch", "camera"],
     title: "أحد كان داخل الشاليه وقت الوفاة",
+    titleEn: "Someone was inside the chalet at the time of death",
     insight:
       "الساعة واقفة على 01:47، والكاميرا تسجل سيارة داخلة 01:38 وطالعة 02:04 — يعني في أحد كان جوّه بنفس اللحظة، ورواية «الجميع طلعوا قبل 01:30» ما تمشي.",
+    insightEn:
+      "The watch stopped at 01:47, and the camera records a car entering at 01:38 and leaving at 02:04 — so someone was inside at that exact moment, and the \"everyone left before 01:30\" story does not hold.",
   },
   {
     id: "silent-entry",
     pair: ["key", "camera"],
     title: "دخول بدون كسر باب",
+    titleEn: "Entry with no forced door",
     insight:
       "المفتاح الاحتياطي الناقص يفسر ليش الباب ما كان مكسور، والكاميرا تحدد وقت الدخول الثاني — الدخول كان بهدوء وبمعرفة مكان المفاتيح.",
+    insightEn:
+      "The missing spare key explains why the door wasn't broken, and the camera pins the second entry time — the entry was quiet and by someone who knew where the keys were.",
   },
   {
     id: "sedated-then-struck",
     pair: ["cup", "watch"],
     title: "مهدئ قبل المشادة",
+    titleEn: "A sedative before the struggle",
     insight:
       "فنجال فيه مهدئ وفنجال ثاني مقابله، وبعدها ساعة تتكسر من ضربة على 01:47 — أحد جلس معه بهدوء أول، والمشادة صارت بعدها.",
+    insightEn:
+      "One cup holds a sedative and a second cup sits across from it, then a watch breaks from a blow at 01:47 — someone sat with him calmly first, and the struggle came after.",
   },
   {
     id: "hidden-motive",
     pair: ["phone", "message"],
     title: "التلفون انشال عشان يخفي شي",
+    titleEn: "The phone was taken to hide something",
     insight:
       "الرسالة تحذّر بدر من إنه يوصّل الموضوع للمحامي، والتلفون نفسه مفقود والشاحن بمكانه — اللي أخذ التلفون كان يبي يخفي محتواه، مو يسرقه.",
+    insightEn:
+      "The message warns Badr against taking the matter to the lawyer, and the phone itself is missing while the charger stays in place — whoever took the phone wanted to hide its contents, not steal it.",
   },
   {
     id: "threat-and-return",
     pair: ["message", "camera"],
     title: "تهديد قبل الرجعة",
+    titleEn: "A threat before the return",
     insight:
       "رسالة تهديد 11:48 مساءً من رقم مسجل باسم الشركة، وبعدها بساعتين سيارة ترجع للشاليه — التهديد ما وقف عند الكلام.",
+    insightEn:
+      "A threatening message at 11:48 PM from a number registered to the company, and two hours later a car returns to the chalet — the threat didn't stop at words.",
   },
   {
     id: "key-and-cup",
     pair: ["key", "cup"],
     title: "أحد يعرف المطبخ",
+    titleEn: "Someone who knows the kitchen",
     insight:
       "المفتاح الاحتياطي كان معلّق بالمطبخ، ونفس المطبخ فيه الفنجالين — اللي سوّى هذا يعرف الشاليه من داخل مو زائر غريب.",
+    insightEn:
+      "The spare key hung in the kitchen, and the same kitchen holds the two cups — whoever did this knows the chalet from the inside, not a stranger visiting.",
   },
 ];
+
+export const getEvidenceLink = (id: string) => evidenceLinks.find((l) => l.id === id);
 
 export const findEvidenceLink = (a: string, b: string) =>
   evidenceLinks.find(

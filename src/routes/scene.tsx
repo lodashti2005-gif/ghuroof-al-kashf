@@ -208,7 +208,7 @@ function SceneRoute() {
                     aria-label={t("scene.inspectAria")}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setMiss(d.message);
+                      setMiss(pick(d.message, d.messageEn));
                     }}
                     className="absolute z-10 -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none"
                     style={{
@@ -282,7 +282,7 @@ function SceneRoute() {
                   </button>
                 )}
                 <span className="pointer-events-auto rounded-lg bg-black/50 px-2.5 py-1 font-mono text-[11px] tracking-widest text-white/80">
-                  {view.label}
+                  {pick(view.label, view.labelEn)}
                 </span>
               </div>
 

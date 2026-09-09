@@ -690,7 +690,7 @@ function InterrogationRoom() {
                       onClick={() => void send(q.text)}
                       className="rounded-lg border border-evidence/45 bg-evidence/10 px-3 py-1.5 text-xs text-evidence transition-colors hover:bg-evidence/20 disabled:opacity-45"
                     >
-                      {q.text}
+                      {pick(q.text, q.textEn)}
                     </button>
                   ))}
                 </div>

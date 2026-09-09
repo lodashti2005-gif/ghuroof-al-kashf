@@ -619,12 +619,34 @@ function update(mutate: (s: RoomState) => void) {
   void flushMutations();
 }
 
+/** رموز أخطاء الغرفة — تُترجم في الواجهة حسب اللغة النشطة. */
+export type RoomErrorCode =
+  | "create_failed"
+  | "not_entitled"
+  | "unknown_case"
+  | "check_name"
+  | "network"
+  | "not_found"
+  | "room_full"
+  | "name_taken";
+
+export const ROOM_ERROR_EN: Record<RoomErrorCode, string> = {
+  create_failed: "We couldn't open the room, please try again",
+  not_entitled: "This case is locked — start the free trial or buy the case",
+  unknown_case: "This case isn't available right now",
+  check_name: "Check the name and try again",
+  network: "We couldn't reach the server, check your connection",
+  not_found: "No room found with this code",
+  room_full: "The room is full",
+  name_taken: "That name is already used in the room, try another",
+};
+
 export const generateRoomCode = () => String(Math.floor(Math.random() * 1000000)).padStart(6, "0");
 
 export async function createRoom(
   hostName: string,
   caseId: string = caseFile.id,
-): Promise<{ ok: boolean; code?: string; error?: string }> {
+): Promise<{ ok: boolean; code?: string; error?: string; errorCode?: RoomErrorCode }> {
   const playerId = uid();
   // معرّف الجهاز يسمح للاعب بفتح غرفة تجربة بدون حساب. منطق الشراء/الملكية
   // كما هو: الملكية المؤكدة تفتح القضية كاملة.
@@ -640,12 +662,12 @@ export async function createRoom(
       _state: freshShared(caseId),
       _device_id: deviceId ?? "",
     });
-    if (error) return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
+    if (error) return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية", errorCode: "create_failed" };
     if (result === "code_taken") continue; // code collision, retry
     if (result === "not_entitled")
-      return { ok: false, error: "هذي القضية مقفلة — ابدأ التجربة المجانية أو اشترِ القضية" };
-    if (result === "unknown_case") return { ok: false, error: "القضية غير متوفرة حالياً" };
-    if (result !== "ok") return { ok: false, error: "تأكد من الاسم وجرب مرة ثانية" };
+      return { ok: false, error: "هذي القضية مقفلة — ابدأ التجربة المجانية أو اشترِ القضية", errorCode: "not_entitled" };
+    if (result === "unknown_case") return { ok: false, error: "القضية غير متوفرة حالياً", errorCode: "unknown_case" };
+    if (result !== "ok") return { ok: false, error: "تأكد من الاسم وجرب مرة ثانية", errorCode: "check_name" };
 
 
 
@@ -655,14 +677,17 @@ export async function createRoom(
     saveProgress();
     return { ok: true, code };
   }
-  return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية" };
+  return { ok: false, error: "ما قدرنا نفتح الغرفة، جرب مرة ثانية", errorCode: "create_failed" };
 }
 
 /**
  * الدخول للغرفة: الحساب المسجل يرجع بنفس هوية اللاعب حتى من جهاز أو متصفح ثاني
  * (بدون إنشاء صف لاعب جديد)، والغرفة محدودة بـ٦ لاعبين فعليين.
  */
-export async function joinRoom(code: string, name: string): Promise<{ ok: boolean; error?: string }> {
+export async function joinRoom(
+  code: string,
+  name: string,
+): Promise<{ ok: boolean; error?: string; errorCode?: RoomErrorCode }> {
   const clean = code.trim();
   const playerId = uid();
   const { data, error } = await rpc<{ status: string; player_id?: string }>("room_join_v2", {
@@ -670,12 +695,12 @@ export async function joinRoom(code: string, name: string): Promise<{ ok: boolea
     _player_id: playerId,
     _name: name,
   });
-  if (error) return { ok: false, error: "ما قدرنا نتصل بالسيرفر، تحقق من النت" };
+  if (error) return { ok: false, error: "ما قدرنا نتصل بالسيرفر، تحقق من النت", errorCode: "network" };
   const result = data?.status;
-  if (result === "not_found") return { ok: false, error: "ما لقينا غرفة بهذا الرمز" };
-  if (result === "room_full") return { ok: false, error: "الغرفة مكتملة" };
-  if (result === "name_taken") return { ok: false, error: "الاسم مستخدم بالغرفة، جرب اسم ثاني" };
-  if (result !== "ok") return { ok: false, error: "تأكد من الاسم وجرب مرة ثانية" };
+  if (result === "not_found") return { ok: false, error: "ما لقينا غرفة بهذا الرمز", errorCode: "not_found" };
+  if (result === "room_full") return { ok: false, error: "الغرفة مكتملة", errorCode: "room_full" };
+  if (result === "name_taken") return { ok: false, error: "الاسم مستخدم بالغرفة، جرب اسم ثاني", errorCode: "name_taken" };
+  if (result !== "ok") return { ok: false, error: "تأكد من الاسم وجرب مرة ثانية", errorCode: "check_name" };
 
   session = { code: clean, playerId: data?.player_id ?? playerId };
   saveSession();

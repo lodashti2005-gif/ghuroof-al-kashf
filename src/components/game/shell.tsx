@@ -63,10 +63,10 @@ export function GameShell({
             {myRole && (
               <span
                 className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary px-2.5 py-1.5 text-xs"
-                title={myRole.mission}
+                title={pick(myRole.mission, myRole.missionEn)}
               >
                 <RoleGlyph icon={myRole.icon} className="size-3.5 text-primary" />
-                <span className="hidden sm:inline">{myRole.title}</span>
+                <span className="hidden sm:inline">{pick(myRole.title, myRole.titleEn)}</span>
               </span>
             )}
             {right}

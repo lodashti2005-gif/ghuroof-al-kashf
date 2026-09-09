@@ -86,7 +86,7 @@ function Reveal() {
             <li key={item.time} className="relative">
               <span className="absolute -end-[1.6rem] top-1.5 size-2.5 rounded-full bg-primary" />
               <p dir="ltr" className="text-start font-mono text-xs text-muted-foreground">
-                {item.time}
+                {pick(item.time, item.timeEn)}
               </p>
               <p className="mt-1 text-sm leading-relaxed">{pick(item.text, item.textEn)}</p>
             </li>

@@ -13,6 +13,7 @@ import {
   activeCase,
 } from "@/game/game-meta";
 import { useI18n } from "@/i18n";
+import { ROOM_ERROR_EN } from "@/game/room-store";
 import { useRoom } from "@/game/use-room";
 
 
@@ -177,7 +178,10 @@ function EntryModal({ mode, onClose }: { mode: "create" | "join"; onClose: () =>
         : await actions.joinRoom(code.trim(), nickname);
     setBusy(false);
     if (!res.ok) {
-      setError(res.error ?? pick("ما قدرنا ندخلك الغرفة", "We couldn't get you into the room"));
+      const en = res.errorCode ? ROOM_ERROR_EN[res.errorCode] : undefined;
+      setError(
+        pick(res.error, en) ?? pick("ما قدرنا ندخلك الغرفة", "We couldn't get you into the room"),
+      );
       return;
     }
     navigate({ to: "/lobby" });
