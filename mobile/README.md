@@ -26,6 +26,22 @@ Then submit with:
 npx eas-cli@latest submit --platform ios --profile production
 ```
 
+## Trial build without a paid Apple Developer account
+
+Use the `trial` profile — it builds an iOS **Simulator** `.app` that needs no
+Apple certificates or provisioning:
+
+```bash
+cd mobile
+npm install
+npx eas-cli@latest build --platform ios --profile trial
+```
+
+The only manual step: sign in to your Expo account when prompted
+(`npx eas-cli@latest login`). Download the resulting `.app` from expo.dev and
+drag it onto any iOS Simulator to try the app. Device builds and App Store
+submission still require the paid Apple Developer account.
+
 ## Build image
 
 `eas.json` uses `"image": "latest"` for iOS, so EAS always picks the newest
