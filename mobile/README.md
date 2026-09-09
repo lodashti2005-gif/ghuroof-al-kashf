@@ -2,7 +2,7 @@
 
 This folder wraps the existing web game in a native iOS shell. The game code,
 design, Supabase backend and gameplay logic are untouched — the app loads the
-published site (`https://ghuroof-al-kashf.lovable.app`) inside a full-screen
+published site (`https://waralsalfa.com`) inside a full-screen
 WebView.
 
 ## Building from GitHub

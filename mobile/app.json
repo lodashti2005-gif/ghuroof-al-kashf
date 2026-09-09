@@ -5,12 +5,12 @@
     "slug": "wara-al-salfa",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "ghuroofalkashf",
+    "scheme": "waralsalfa",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0b0c0f",
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "bundleIdentifier": "app.lovable.ghuroofalkashf",
+      "bundleIdentifier": "com.waralsalfa.app",
       "buildNumber": "1",
       "supportsTablet": true,
       "requireFullScreen": false,
@@ -30,7 +30,7 @@
       "eas": {
         "projectId": "ba44bdc5-142a-4f69-ba6d-2e83649a983d"
       },
-      "gameUrl": "https://ghuroof-al-kashf.lovable.app"
+      "gameUrl": "https://waralsalfa.com"
     }
   }
 }
