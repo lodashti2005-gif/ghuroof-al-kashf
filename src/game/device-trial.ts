@@ -103,10 +103,17 @@ export function useDeviceTrial(caseId: string) {
   const [loading, setLoading] = useState(true);
 
   const sync = useCallback(async () => {
-    const next = await fetchDeviceTrial(caseId);
-    setTrial(next ?? readCache(caseId));
-    setLoading(false);
+    try {
+      const next = await fetchDeviceTrial(caseId);
+      setTrial(next ?? readCache(caseId));
+    } catch {
+      // انقطاع شبكة: نكمل بالحالة المحفوظة محلياً بدل تعليق الشاشة.
+      setTrial((t) => t ?? readCache(caseId));
+    } finally {
+      setLoading(false);
+    }
   }, [caseId]);
+
 
   const start = useCallback(async () => {
     const next = await startDeviceTrial(caseId);
