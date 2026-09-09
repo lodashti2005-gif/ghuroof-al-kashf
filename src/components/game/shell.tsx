@@ -7,6 +7,7 @@ import { caseFile } from "@/game/case-data";
 import { useRoom } from "@/game/use-room";
 import { roleById } from "@/game/roles";
 import { RoleGlyph } from "@/components/game/role-glyph";
+import { useI18n } from "@/i18n";
 
 /**
  * Shell for every in-game screen. Guards the route: a player without a room is
@@ -25,6 +26,7 @@ export function GameShell({
 }) {
   const { room, me } = useRoom();
   const navigate = useNavigate();
+  const { pick } = useI18n();
   const myRole = roleById(me ? room?.roles?.[me.id] : undefined);
 
   useEffect(() => {
@@ -44,10 +46,10 @@ export function GameShell({
               <ShieldAlert className="size-4.5" />
             </Link>
             <div className="min-w-0">
-              <p className="truncate font-display text-sm font-bold">{title ?? caseFile.title}</p>
+              <p className="truncate font-display text-sm font-bold">{title ?? pick(caseFile.title, caseFile.titleEn)}</p>
               <p className="truncate font-mono text-[0.68rem] text-muted-foreground">
-                ملف {caseFile.code}
-                {room ? ` · غرفة ${room.code}` : ""}
+                {pick(`ملف ${caseFile.code}`, `File ${caseFile.code}`)}
+                {room ? pick(` · غرفة ${room.code}`, ` · Room ${room.code}`) : ""}
               </p>
             </div>
           </div>
@@ -120,6 +122,7 @@ export function ActionButton({
 export function LeaveRoomButton() {
   const { actions } = useRoom();
   const navigate = useNavigate();
+  const { pick } = useI18n();
   return (
     <button
       type="button"
@@ -128,7 +131,7 @@ export function LeaveRoomButton() {
         navigate({ to: "/" });
       }}
       className="grid size-9 place-items-center rounded-lg border border-border bg-secondary text-muted-foreground transition-colors hover:text-primary"
-      aria-label="خروج من الغرفة"
+      aria-label={pick("خروج من الغرفة", "Leave the room")}
     >
       <LogOut className="size-4" />
     </button>
