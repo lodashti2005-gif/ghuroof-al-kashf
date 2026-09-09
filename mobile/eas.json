@@ -10,6 +10,10 @@
       "ios": {
         "image": "latest",
         "simulator": true
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
       }
     },
     "trial": {
@@ -17,6 +21,9 @@
       "ios": {
         "image": "macos-sonoma-14.6-xcode-16.1",
         "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
       }
     },
     "preview": {
@@ -24,6 +31,9 @@
       "ios": {
         "image": "latest",
         "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "apk"
       }
     },
     "production": {
@@ -34,12 +44,16 @@
         "image": "latest",
         "resourceClass": "m-medium",
         "buildConfiguration": "Release"
+      },
+      "android": {
+        "buildType": "app-bundle"
       }
     }
   },
   "submit": {
     "production": {
-      "ios": {}
+      "ios": {},
+      "android": {}
     }
   }
 }

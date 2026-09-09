@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, BackHandler, Platform, StyleSheet, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { WebView } from "react-native-webview";
@@ -10,6 +10,20 @@ const GAME_URL = "https://waralsalfa.com";
 export default function App() {
   const webRef = useRef(null);
   const [loading, setLoading] = useState(true);
+  const canGoBack = useRef(false);
+
+  // Android hardware back button navigates inside the web game first.
+  useEffect(() => {
+    if (Platform.OS !== "android") return undefined;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (canGoBack.current && webRef.current) {
+        webRef.current.goBack();
+        return true;
+      }
+      return false;
+    });
+    return () => sub.remove();
+  }, []);
 
   return (
     <SafeAreaProvider>
@@ -29,6 +43,9 @@ export default function App() {
           thirdPartyCookiesEnabled
           setSupportMultipleWindows={false}
           onLoadEnd={() => setLoading(false)}
+          onNavigationStateChange={(state) => {
+            canGoBack.current = state.canGoBack;
+          }}
         />
         {loading ? (
           <View style={styles.loader} pointerEvents="none">
