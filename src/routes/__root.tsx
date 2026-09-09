@@ -23,7 +23,11 @@ function NotFoundComponent() {
   // بوابة الجذر: مزوّد اللغة غير متاح هنا، فنقرأ اللغة من عنصر html.
   const [en, setEn] = useState(false);
   useEffect(() => {
-    setEn(document.documentElement.lang === "en");
+    try {
+      setEn(window.localStorage.getItem("wr_lang") === "en");
+    } catch {
+      /* التخزين محجوب — نبقى على العربية. */
+    }
   }, []);
 
   return (
