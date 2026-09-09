@@ -129,9 +129,15 @@ export function actAs(id: string | null) {
   emit({ ...getSnapshot(), asId: id });
 }
 
+/** لغة الواجهة الحالية — نقراها من عنصر الصفحة اللي يضبطه نظام اللغة. */
+function activeLang(): "ar" | "en" {
+  if (typeof document === "undefined") return "ar";
+  return document.documentElement.lang === "en" ? "en" : "ar";
+}
+
 const simPlayer = (p: SimPlayer): Player => ({
   id: p.id,
-  name: `${p.name} (محاكاة)`,
+  name: `${p.name} ${activeLang() === "en" ? "(sim)" : "(محاكاة)"}`,
   isHost: false,
   joinedAt: Date.now(),
 });
