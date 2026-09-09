@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ActionButton, GameShell, LeaveRoomButton } from "@/components/game/shell";
 import { Eyebrow, Panel, CaseTag } from "@/components/game/ui";
 import { caseFile } from "@/game/case-data";
+import { useI18n } from "@/i18n";
 import { useRoom } from "@/game/use-room";
 
 export const Route = createFileRoute("/lobby")({
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/lobby")({
 
 function Lobby() {
   const { room, isHost, actions } = useRoom();
+  const { pick } = useI18n();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
@@ -39,10 +41,10 @@ function Lobby() {
   };
 
   return (
-    <GameShell title="غرفة الانتظار" right={<LeaveRoomButton />}>
+    <GameShell title={pick("غرفة الانتظار", "Waiting room")} right={<LeaveRoomButton />}>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
         <Panel className="cine-in">
-          <Eyebrow>رمز الغرفة</Eyebrow>
+          <Eyebrow>{pick("رمز الغرفة", "Room code")}</Eyebrow>
           <div className="mt-3 flex items-center gap-3">
             <p dir="ltr" className="font-mono text-4xl tracking-[0.35em] sm:text-5xl">
               {room?.code ?? "······"}
@@ -50,21 +52,24 @@ function Lobby() {
             <button
               type="button"
               onClick={copy}
-              aria-label="نسخ الرمز"
+              aria-label={pick("نسخ الرمز", "Copy code")}
               className="grid size-10 shrink-0 place-items-center rounded-xl border border-border bg-secondary text-muted-foreground transition-colors hover:text-primary"
             >
               {copied ? <Check className="size-4 text-evidence" /> : <Copy className="size-4" />}
             </button>
           </div>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            عطِ أصحابك هالرمز عشان يدخلون نفس الغرفة. كل واحد يختار اسمه، وبعدين المضيف يبدأ القضية.
+            {pick(
+              "عطِ أصحابك هالرمز عشان يدخلون نفس الغرفة. كل واحد يختار اسمه، وبعدين المضيف يبدأ القضية.",
+              "Share this code with your friends so they join the same room. Everyone picks a name, then the host starts the case.",
+            )}
           </p>
 
           <div className="mt-6 rounded-xl border border-border bg-surface-2 p-4">
-            <Eyebrow>القضية المختارة</Eyebrow>
-            <h2 className="mt-1.5 text-xl font-bold">{caseFile.title}</h2>
+            <Eyebrow>{pick("القضية المختارة", "Selected case")}</Eyebrow>
+            <h2 className="mt-1.5 text-xl font-bold">{pick(caseFile.title, caseFile.titleEn)}</h2>
             <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-              {caseFile.victim.summary}
+              {pick(caseFile.victim.summary, caseFile.victim.summaryEn)}
             </p>
           </div>
 
@@ -77,11 +82,11 @@ function Lobby() {
               }}
 
             >
-              <Play className="size-4.5" /> ابدأ القضية
+              <Play className="size-4.5" /> {pick("ابدأ القضية", "Start the case")}
             </ActionButton>
           ) : (
             <p className="mt-6 rounded-xl border border-border bg-secondary/60 px-4 py-3 text-center text-sm text-muted-foreground">
-              انتظر المضيف يبدأ القضية
+              {pick("انتظر المضيف يبدأ القضية", "Waiting for the host to start the case")}
             </p>
           )}
         </Panel>
@@ -90,7 +95,7 @@ function Lobby() {
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Users className="size-4 text-muted-foreground" />
-              <h2 className="font-display text-base font-bold">المحققون بالغرفة</h2>
+              <h2 className="font-display text-base font-bold">{pick("المحققون بالغرفة", "Investigators in the room")}</h2>
             </div>
             <CaseTag>{room?.players.length ?? 0}</CaseTag>
           </div>
@@ -109,7 +114,7 @@ function Lobby() {
                 </div>
                 {p.isHost && (
                   <CaseTag tone="danger">
-                    <Crown className="size-3" /> المضيف
+                    <Crown className="size-3" /> {pick("المضيف", "Host")}
                   </CaseTag>
                 )}
               </li>
@@ -117,7 +122,10 @@ function Lobby() {
           </ul>
 
           <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
-            الغرفة أونلاين وتتحدث لحظياً — أي لاعب يدخل من أي جهاز يبين هنا على طول.
+            {pick(
+              "الغرفة أونلاين وتتحدث لحظياً — أي لاعب يدخل من أي جهاز يبين هنا على طول.",
+              "The room is online and live — any player who joins from any device shows up here instantly.",
+            )}
           </p>
         </Panel>
       </div>

@@ -6,6 +6,7 @@ import { CaseTag, Eyebrow, Panel, SuspectCard } from "@/components/game/ui";
 import { caseFile, suspects } from "@/game/case-data";
 import { useRoom } from "@/game/use-room";
 import { useEffect } from "react";
+import { useI18n } from "@/i18n";
 export const Route = createFileRoute("/case")({
   head: () => ({
     meta: [
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/case")({
 
 function CaseIntro() {
   const { room, isHost, actions } = useRoom();
+  const { lang, dir, pick } = useI18n();
   const navigate = useNavigate();
   const v = caseFile.victim;
   const contradictions = room?.contradictions ?? [];
@@ -32,13 +34,13 @@ useEffect(() => {
   }
 }, [room?.phase, navigate]);
   return (
-    <GameShell title={caseFile.title} right={<LeaveRoomButton />}>
+    <GameShell title={pick(caseFile.title, caseFile.titleEn)} right={<LeaveRoomButton />}>
       <section className="cine-in surface-panel overflow-hidden p-0">
         <div className="grid gap-0 md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
           <div className="relative min-h-[19rem] md:min-h-[26rem]">
             <img
               src={v.portrait}
-              alt={`صورة الضحية ${v.name}`}
+              alt={pick(`صورة الضحية ${v.name}`, `Portrait of the victim ${v.nameEn}`)}
               width={912}
               height={1104}
               className="absolute inset-0 size-full object-cover object-top grayscale-[45%]"
@@ -49,28 +51,31 @@ useEffect(() => {
               aria-hidden="true"
             />
             <span className="absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-md file-tape px-2.5 py-1 font-display text-[0.7rem]">
-              <Skull className="size-3" /> الضحية
+              <Skull className="size-3" /> {pick("الضحية", "Victim")}
             </span>
           </div>
 
           <div className="p-6 sm:p-8">
-            <Eyebrow>ملف {caseFile.code} · قضية مفتوحة</Eyebrow>
-            <h1 className="mt-2 text-3xl font-extrabold sm:text-4xl">{v.name}</h1>
-            <p className="mt-1 font-mono text-sm text-muted-foreground">العمر {v.age} سنة</p>
+            <Eyebrow>{pick(`ملف ${caseFile.code} · قضية مفتوحة`, `File ${caseFile.code} · Open case`)}</Eyebrow>
+            <h1 className="mt-2 text-3xl font-extrabold sm:text-4xl">{pick(v.name, v.nameEn)}</h1>
+            <p className="mt-1 font-mono text-sm text-muted-foreground">{pick(`العمر ${v.age} سنة`, `Age ${v.age}`)}</p>
 
             <dl className="mt-6 grid gap-4 sm:grid-cols-2">
               <Detail
                 icon={<Clock className="size-3.5" />}
-                label="وقت الوفاة"
-                value={v.timeOfDeath}
+                label={pick("وقت الوفاة", "Time of death")}
+                value={pick(v.timeOfDeath, v.timeOfDeathEn)}
               />
-              <Detail icon={<MapPin className="size-3.5" />} label="الموقع" value={v.location} />
-              <Detail label="سبب الوفاة" value={v.cause} />
-              <Detail label="عدد المشتبهين" value="أربعة أشخاص" />
+              <Detail icon={<MapPin className="size-3.5" />} label={pick("الموقع", "Location")} value={pick(v.location, v.locationEn)} />
+              <Detail label={pick("سبب الوفاة", "Cause of death")} value={pick(v.cause, v.causeEn)} />
+              <Detail
+                label={pick("عدد المشتبهين", "Suspects")}
+                value={pick("أربعة أشخاص", "Four people")}
+              />
             </dl>
 
             <p className="mt-6 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-              {v.summary}
+              {pick(v.summary, v.summaryEn)}
             </p>
           </div>
         </div>
@@ -80,10 +85,10 @@ useEffect(() => {
       <section className="mt-8">
         <div className="mb-4 flex items-end justify-between gap-4">
           <div className="min-w-0">
-            <Eyebrow>قائمة المشتبهين</Eyebrow>
-            <h2 className="mt-1 text-2xl font-bold">أربعة كانوا بالشاليه</h2>
+            <Eyebrow>{pick("قائمة المشتبهين", "Suspect list")}</Eyebrow>
+            <h2 className="mt-1 text-2xl font-bold">{pick("أربعة كانوا بالشاليه", "Four were at the chalet")}</h2>
           </div>
-          <CaseTag tone="danger">كلهم يخبون شي</CaseTag>
+          <CaseTag tone="danger">{pick("كلهم يخبون شي", "Every one is hiding something")}</CaseTag>
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
           {suspects.map((s) => (
@@ -95,17 +100,25 @@ useEffect(() => {
       <section className="mt-8">
         <div className="mb-4 flex items-end justify-between gap-4">
           <div className="min-w-0">
-            <Eyebrow>سجل الاستجواب</Eyebrow>
-            <h2 className="mt-1 text-2xl font-bold">التناقضات</h2>
+            <Eyebrow>{pick("سجل الاستجواب", "Interrogation log")}</Eyebrow>
+            <h2 className="mt-1 text-2xl font-bold">{pick("التناقضات", "Contradictions")}</h2>
           </div>
           <CaseTag tone={contradictions.length > 0 ? "evidence" : "muted"}>
-            {contradictions.length > 0 ? `${contradictions.length} تناقض مرصود` : "ما فيه شي بعد"}
+            {contradictions.length > 0
+              ? pick(
+                  `${contradictions.length} تناقض مرصود`,
+                  `${contradictions.length} flagged`,
+                )
+              : pick("ما فيه شي بعد", "Nothing yet")}
           </CaseTag>
         </div>
         <Panel className="cine-in">
           {contradictions.length === 0 ? (
             <p className="text-sm leading-relaxed text-muted-foreground">
-              أي تناقض ينرصد بكلام المشتبه فيهم أثناء الاستجواب ينسجل هنا تلقائياً لكل الفريق.
+              {pick(
+                "أي تناقض ينرصد بكلام المشتبه فيهم أثناء الاستجواب ينسجل هنا تلقائياً لكل الفريق.",
+                "Any contradiction spotted during interrogation is logged here automatically for the whole team.",
+              )}
             </p>
           ) : (
             <ul className="space-y-3">
@@ -119,28 +132,28 @@ useEffect(() => {
                       <AlertTriangle className="size-3.5" /> {c.suspectName}
                     </span>
                     <span dir="ltr" className="font-mono text-[0.7rem] text-muted-foreground">
-                      {new Date(c.createdAt).toLocaleTimeString("ar-KW", {
+                      {new Date(c.createdAt).toLocaleTimeString(lang === "ar" ? "ar-KW" : "en-GB", {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
                     </span>
                   </div>
                   <p className="mt-2 text-muted-foreground">
-                    <span className="text-foreground">قوله:</span> «{c.claim}»
+                    <span className="text-foreground">{pick("قوله:", "Said:")}</span> «{c.claim}»
                   </p>
                   <p className="mt-1 text-muted-foreground">
                     <span className="text-foreground">
                       {c.source === "evidence"
-                        ? "يتعارض مع دليل:"
+                        ? pick("يتعارض مع دليل:", "Conflicts with evidence:")
                         : c.source === "timeline"
-                          ? "يتعارض مع وقائع القضية:"
-                          : "يتعارض مع قوله السابق:"}
+                          ? pick("يتعارض مع وقائع القضية:", "Conflicts with the case facts:")
+                          : pick("يتعارض مع قوله السابق:", "Conflicts with an earlier statement:")}
                     </span>{" "}
                     {c.conflictsWith}
                   </p>
                   <p className="mt-1.5 font-mono text-[0.7rem] text-muted-foreground/80">
-                    رصده {c.author}
-                    {c.confronted ? " · تمت المواجهة" : ""}
+                    {pick("رصده", "Flagged by")} {c.author}
+                    {c.confronted ? pick(" · تمت المواجهة", " · Confronted") : ""}
                   </p>
                 </li>
               ))}
@@ -158,7 +171,8 @@ useEffect(() => {
               navigate({ to: "/dashboard" });
             }}
           >
-            ادخل اللعبة <ArrowLeft className="size-4" />
+            {pick("ادخل اللعبة", "Enter the game")}{" "}
+            <ArrowLeft className={`size-4 ${dir === "ltr" ? "rotate-180" : ""}`} />
           </ActionButton>
         ) : (
           <ActionButton
@@ -167,7 +181,9 @@ useEffect(() => {
             disabled={room?.phase === "intro"}
             onClick={() => navigate({ to: "/dashboard" })}
           >
-            {room?.phase === "intro" ? "انتظر المضيف" : "ادخل اللعبة"}
+            {room?.phase === "intro"
+              ? pick("انتظر المضيف", "Wait for the host")
+              : pick("ادخل اللعبة", "Enter the game")}
           </ActionButton>
         )}
       </div>
