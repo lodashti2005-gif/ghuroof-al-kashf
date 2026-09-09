@@ -109,6 +109,7 @@ export const en = {
     trialBadge: "10-minute trial",
     purchased: "Purchased ✓",
     startCase: "Start case",
+    playNow: "Play now",
     buyCase: "Buy case",
     startPlay: "Start playing",
     continuePlay: "Continue playing",

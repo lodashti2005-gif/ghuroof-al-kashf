@@ -50,7 +50,7 @@ export function DeviceTrialGate({
   children: React.ReactNode;
 }) {
   const { room, isHost, sim } = useRoom();
-  const { entitlement } = useCaseEntitlement(caseId);
+  const { entitlement, loading: entLoading, signedIn } = useCaseEntitlement(caseId);
   const { trial, loading, start } = useDeviceTrial(caseId);
   const { lang, dir, pick } = useI18n();
   const [busy, setBusy] = useState(false);
@@ -70,7 +70,9 @@ export function DeviceTrialGate({
 
   if (purchased || guest || sim.active) return <>{children}</>;
 
-  if (loading && !trial) {
+  // ما نعرض أي شاشة تجربة قبل ما نتأكد من حالة الملكية — المشتري ما لازم يشوف
+  // «جرّب النسخة المجانية» ولا لحظة واحدة.
+  if (entLoading || signedIn === null || (loading && !trial)) {
     return (
       <div dir={dir} className="grid min-h-screen place-items-center bg-background px-4">
         <p className="font-mono text-xs text-muted-foreground">{pick("لحظة...", "One moment...")}</p>

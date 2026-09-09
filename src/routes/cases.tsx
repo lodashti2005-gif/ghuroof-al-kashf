@@ -126,7 +126,8 @@ function CasesPage() {
                     to={item.id === "last-trip" ? "/last-trip/lobby" : "/play"}
                     className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 font-display text-xs font-bold text-primary-foreground"
                   >
-                    <Play className="size-3.5" /> {t("store.startCase")}
+                    <Play className="size-3.5" />{" "}
+                    {item.purchased ? t("store.playNow") : t("store.startCase")}
                   </Link>
                 </div>
               ))}
@@ -248,7 +249,11 @@ function CaseCard({ item, signedIn }: { item: StoreCase; signedIn: boolean }) {
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-display text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.02]"
             >
               <Play className="size-4" />{" "}
-              {item.free && !item.purchased ? t("store.tryFirstTen") : t("store.startCase")}
+              {item.purchased
+                ? t("store.playNow")
+                : item.free
+                  ? t("store.tryFirstTen")
+                  : t("store.startCase")}
             </Link>
 
           ) : soon ? (
