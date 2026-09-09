@@ -208,7 +208,7 @@ function SceneRoute() {
                     aria-label={t("scene.inspectAria")}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setMiss(d.message);
+                      setMiss(pick(d.message, d.messageEn));
                     }}
                     className="absolute z-10 -translate-x-1/2 -translate-y-1/2 cursor-crosshair bg-transparent focus:outline-none"
                     style={{
