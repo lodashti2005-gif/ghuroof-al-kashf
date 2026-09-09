@@ -5,7 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { WebView } from "react-native-webview";
 
 // The game itself is untouched: the iOS app loads the published web build.
-const GAME_URL = "https://ghuroof-al-kashf.lovable.app";
+const GAME_URL = "https://waralsalfa.com";
 
 export default function App() {
   const webRef = useRef(null);
