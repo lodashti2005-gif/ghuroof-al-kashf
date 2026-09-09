@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { ActionButton } from "@/components/game/shell";
 import { CaseTag, Eyebrow, Panel } from "@/components/game/ui";
 import { getCaseById } from "@/game/game-meta";
+import { ROOM_ERROR_EN } from "@/game/room-store";
 import { useRoom } from "@/game/use-room";
 import { useI18n } from "@/i18n";
 import { lastTripT } from "@/game/cases/last-trip-strings";
@@ -230,7 +231,9 @@ function EntryModal({ mode, onClose }: { mode: "create" | "join"; onClose: () =>
         : await actions.joinRoom(code.trim(), nickname);
     setBusy(false);
     if (!res.ok) {
-      setError(res.error ?? tt("couldNotJoin"));
+      const localized =
+        lang === "en" && res.errorCode ? ROOM_ERROR_EN[res.errorCode] : res.error;
+      setError(localized ?? tt("couldNotJoin"));
       return;
     }
     onClose();
