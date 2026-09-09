@@ -435,7 +435,9 @@ export interface EvidenceLink {
   id: string;
   pair: [string, string];
   title: string;
+  titleEn?: string;
   insight: string;
+  insightEn?: string;
 }
 
 export const evidenceLinks: EvidenceLink[] = [
@@ -443,45 +445,65 @@ export const evidenceLinks: EvidenceLink[] = [
     id: "time-inside",
     pair: ["watch", "camera"],
     title: "أحد كان داخل الشاليه وقت الوفاة",
+    titleEn: "Someone was inside the chalet at the time of death",
     insight:
       "الساعة واقفة على 01:47، والكاميرا تسجل سيارة داخلة 01:38 وطالعة 02:04 — يعني في أحد كان جوّه بنفس اللحظة، ورواية «الجميع طلعوا قبل 01:30» ما تمشي.",
+    insightEn:
+      "The watch stopped at 01:47, and the camera records a car entering at 01:38 and leaving at 02:04 — so someone was inside at that exact moment, and the \"everyone left before 01:30\" story does not hold.",
   },
   {
     id: "silent-entry",
     pair: ["key", "camera"],
     title: "دخول بدون كسر باب",
+    titleEn: "Entry with no forced door",
     insight:
       "المفتاح الاحتياطي الناقص يفسر ليش الباب ما كان مكسور، والكاميرا تحدد وقت الدخول الثاني — الدخول كان بهدوء وبمعرفة مكان المفاتيح.",
+    insightEn:
+      "The missing spare key explains why the door wasn't broken, and the camera pins the second entry time — the entry was quiet and by someone who knew where the keys were.",
   },
   {
     id: "sedated-then-struck",
     pair: ["cup", "watch"],
     title: "مهدئ قبل المشادة",
+    titleEn: "A sedative before the struggle",
     insight:
       "فنجال فيه مهدئ وفنجال ثاني مقابله، وبعدها ساعة تتكسر من ضربة على 01:47 — أحد جلس معه بهدوء أول، والمشادة صارت بعدها.",
+    insightEn:
+      "One cup holds a sedative and a second cup sits across from it, then a watch breaks from a blow at 01:47 — someone sat with him calmly first, and the struggle came after.",
   },
   {
     id: "hidden-motive",
     pair: ["phone", "message"],
     title: "التلفون انشال عشان يخفي شي",
+    titleEn: "The phone was taken to hide something",
     insight:
       "الرسالة تحذّر بدر من إنه يوصّل الموضوع للمحامي، والتلفون نفسه مفقود والشاحن بمكانه — اللي أخذ التلفون كان يبي يخفي محتواه، مو يسرقه.",
+    insightEn:
+      "The message warns Badr against taking the matter to the lawyer, and the phone itself is missing while the charger stays in place — whoever took the phone wanted to hide its contents, not steal it.",
   },
   {
     id: "threat-and-return",
     pair: ["message", "camera"],
     title: "تهديد قبل الرجعة",
+    titleEn: "A threat before the return",
     insight:
       "رسالة تهديد 11:48 مساءً من رقم مسجل باسم الشركة، وبعدها بساعتين سيارة ترجع للشاليه — التهديد ما وقف عند الكلام.",
+    insightEn:
+      "A threatening message at 11:48 PM from a number registered to the company, and two hours later a car returns to the chalet — the threat didn't stop at words.",
   },
   {
     id: "key-and-cup",
     pair: ["key", "cup"],
     title: "أحد يعرف المطبخ",
+    titleEn: "Someone who knows the kitchen",
     insight:
       "المفتاح الاحتياطي كان معلّق بالمطبخ، ونفس المطبخ فيه الفنجالين — اللي سوّى هذا يعرف الشاليه من داخل مو زائر غريب.",
+    insightEn:
+      "The spare key hung in the kitchen, and the same kitchen holds the two cups — whoever did this knows the chalet from the inside, not a stranger visiting.",
   },
 ];
+
+export const getEvidenceLink = (id: string) => evidenceLinks.find((l) => l.id === id);
 
 export const findEvidenceLink = (a: string, b: string) =>
   evidenceLinks.find(
